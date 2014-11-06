@@ -17,7 +17,12 @@ import Network.HTTP.Conduit (simpleHttp)
 import System.Locale
 import Text.HTML.TagSoup
 import Text.Hastache
+import Text.Hastache.Context
 import Web.Scotty
+
+newtype Restaurants = Restaurants
+  { restaurants :: [Restaurant]
+  } deriving (Eq, Show, Data, Typeable)
 
 data Restaurant = Restaurant
   { name :: T.Text
@@ -30,15 +35,11 @@ data Menu = Menu
   } deriving (Eq, Show, Data, Typeable)
 
 main = scotty 5007 $ do
-  template <- T.readFile "template.html"
   rref <- liftIO refresh
   get "/" $ do
     rs <- liftIO $ readIORef rref
-    html $ T.concat
-      [ "<pre>"
-      , T.intercalate "\n\n" . map ppRestaurant $ rs
-      , "</pre>"
-      ]
+    site <- liftIO $ hastacheFile defaultConfig "template.html" (mkGenericContext rs)
+    html site
 
 ppRestaurant :: Restaurant -> T.Text
 ppRestaurant (Restaurant name menus) = T.concat
@@ -55,9 +56,9 @@ ppMenu (Menu lunch stuff) = T.concat
   ]
 
 -- | Refreshes menus hourly.
-refresh :: IO (IORef [Restaurant])
+refresh :: IO (IORef Restaurants)
 refresh = do
-  ref <- newIORef []
+  ref <- newIORef (Restaurants [])
   update >>= writeIORef ref
   forkIO . forever $ do
     forkIO (update >>= writeIORef ref)
@@ -65,8 +66,8 @@ refresh = do
   return ref
 
 -- | Get menus.
-update :: IO [Restaurant]
-update = mapM (uncurry getRest)
+update :: IO Restaurants
+update = liftM Restaurants $ mapM (uncurry getRest)
   [ ("Linsen", "http://cm.lskitchen.se/johanneberg/linsen/sv/%F.rss")
   , ("Kårrestaurangen", "http://cm.lskitchen.se/johanneberg/karrestaurangen/sv/%F.rss")
   ]
