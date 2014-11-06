@@ -62,7 +62,6 @@ executable mat-dtek
     , mtl
     , scotty
     , hastache
-    , scotty-hastache
     , text
     , http-conduit
     , tagsoup
