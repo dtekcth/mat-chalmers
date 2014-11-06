@@ -10,101 +10,64 @@
   <meta name="author" content="Johan Bowald">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
   <link href='http://fonts.googleapis.com/css?family=Anonymous+Pro:400,700' rel='stylesheet' type='text/css'>
   <style>
-    .main {
-      height:100vh;
+    body {
+      font-family: 'Anonymous Pro';
       background: #fdf7e2;
     }
 
-    .foodBox-main {
-      margin-top: 20px !important;
-      margin: 0 auto; 
+    .main {
+      height:100vh;
     }
 
-    .section{
-      font-family: 'Anonymous Pro';
-      border-bottom: 1px solid #cccccc;
-      font-weight: 700;
-      font-size: 20px;
-      width: 50%;
-      padding-bottom: 5px;
-      margin: 15px auto;
-      text-align: center;
-      color:#ba8a00;
+    h1, h2 {
+      margin: 0;
     }
 
-    .subsection{
-      font-family: 'Anonymous Pro';
-      color: #de0064;
-      font-size: 12px; 
-      font-weight: 700;
+    h1 {
+      font-size: 140%;
+      font-weight: bold;
+      margin-bottom: 10px;
     }
 
-    .foodBox-upper{
-      width: 100%;
-      position: relative;
+    h2 {
+      display: inline-block;
+      font-size: 100%;
+      font-weight: bold;
+      color: #BD3613;
     }
 
-    .foodBox-img{
-      width: 60%;
-      margin: 0 auto;
-    }
-
-    hr{
+    ul {
       padding: 0;
-      width: 50%;
-      color: #cccccc;
-      background-color: #cccccc;
-    }
-
-    ul{
-
-      padding:5px;
-      margin: 0 auto;
       list-style-type: none;
     }
 
-    li{
+    li {
       width: 100%;
-      font-size: 12px;
-      font-family: 'Anonymous Pro';
       font-weight: 400;
       padding-bottom: 3px;
     }
 
-    .relativ{
+    .food {
       position: relative; 
+      margin-top: 20px;
     }
   </style>
-
-
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
-
 </head>
 <body>
   <div class="container-fluid main">
     <div class"row">
       {{#restaurants}}
-        <div class="col-xs-12 col-md-4 col-sm-6 relativ">
-        <div class="foodBox-main">
-          <div class="foodBox-upper">
-            <div class="foodBox-title">
-              <h1 class='section'>
-                {{name}}
-              </h1>
-            </div>
-          </div>
-
-          <div class="foodBox-lower">
-            <ul class="food-menu">
-              {{#menu}}
-                <li><span class="subsection">{{lunch}}</span> {{spec}}</li>
-              {{/menu}}
-            </ul>
-          </div>
+        <div class="col-xs-12 col-md-4 col-sm-6 food">
+          <h1>{{name}}</h1>
+          <ul class="food-menu">
+            {{#menu}}
+              <li><h2>{{lunch}}</h2> {{spec}}</li>
+            {{/menu}}
+          </ul>
         </div>
-      </div>
       {{/restaurants}}
     </div>
   </div>
