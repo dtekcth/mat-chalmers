@@ -9,6 +9,7 @@ import Data.Data
 import Data.Typeable
 import Data.IORef
 import qualified Data.Text.Lazy as T
+import qualified Data.Text.Lazy.IO as T
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.Time.Clock
 import Data.Time.Format
@@ -16,8 +17,7 @@ import Network.HTTP.Conduit (simpleHttp)
 import System.Locale
 import Text.HTML.TagSoup
 import Text.Hastache
-import Web.Scotty.Trans as S
-import Web.Scotty.Hastache
+import Web.Scotty
 
 data Restaurant = Restaurant
   { name :: T.Text
@@ -29,7 +29,8 @@ data Menu = Menu
   , spec :: T.Text
   } deriving (Eq, Show, Data, Typeable)
 
-main = scottyH 5007 $ do
+main = scotty 5007 $ do
+  template <- T.readFile "template.html"
   rref <- liftIO refresh
   get "/" $ do
     rs <- liftIO $ readIORef rref
