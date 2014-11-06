@@ -1,29 +1,31 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 module Main where
-
 
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad
 import Control.Monad.Trans (liftIO)
+import Data.Data
+import Data.Typeable
 import Data.IORef
-import Data.Time.Clock
-import Data.Time.Format
 import qualified Data.Text.Lazy as T
 import Data.Text.Lazy.Encoding (decodeUtf8)
+import Data.Time.Clock
+import Data.Time.Format
 import Network.HTTP.Conduit (simpleHttp)
 import System.Locale
-import Web.Scotty
 import Text.HTML.TagSoup
+import Web.Scotty
 
 data Restaurant = Restaurant
   { name :: T.Text
   , menu :: [Menu]
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 data Menu = Menu
   { lunch :: T.Text
   , spec :: T.Text
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 main = scotty 5007 $ do
   rref <- liftIO refresh
