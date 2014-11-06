@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-module Main where
+module Main (main) where
 
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad
@@ -20,15 +20,18 @@ import Text.Hastache
 import Text.Hastache.Context
 import Web.Scotty
 
+-- | All our pretty restaurants.
 newtype Restaurants = Restaurants
   { restaurants :: [Restaurant]
   } deriving (Eq, Show, Data, Typeable)
 
+-- | One pretty restaurant.
 data Restaurant = Restaurant
   { name :: T.Text
   , menu :: [Menu]
   } deriving (Eq, Show, Data, Typeable)
 
+-- | Menu of a restaurant.
 data Menu = Menu
   { lunch :: T.Text
   , spec :: T.Text
@@ -40,20 +43,6 @@ main = scotty 5007 $ do
     rs <- liftIO $ readIORef rref
     site <- liftIO $ hastacheFile defaultConfig "template.html" (mkGenericContext rs)
     html site
-
-ppRestaurant :: Restaurant -> T.Text
-ppRestaurant (Restaurant name menus) = T.concat
-  [ T.toUpper name
-  , "\n"
-  , T.intercalate "\n" $ map ppMenu menus
-  ]
-
-ppMenu :: Menu -> T.Text
-ppMenu (Menu lunch stuff) = T.concat
-  [ lunch
-  , ": "
-  , stuff
-  ]
 
 -- | Refreshes menus hourly.
 refresh :: IO (IORef Restaurants)
