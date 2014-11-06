@@ -25,7 +25,7 @@ data Menu = Menu
   , spec :: T.Text
   } deriving (Eq, Show)
 
-main = scotty 3000 $ do
+main = scotty 5007 $ do
   rref <- liftIO refresh
   get "/" $ do
     rs <- liftIO $ readIORef rref
