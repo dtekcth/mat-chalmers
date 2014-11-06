@@ -26,6 +26,7 @@ data Menu = Menu
   } deriving (Eq, Show)
 
 main = scotty 5007 $ do
+  setTemplatesDir "templates"
   rref <- liftIO refresh
   get "/" $ do
     rs <- liftIO $ readIORef rref
