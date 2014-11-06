@@ -15,7 +15,9 @@ import Data.Time.Format
 import Network.HTTP.Conduit (simpleHttp)
 import System.Locale
 import Text.HTML.TagSoup
-import Web.Scotty
+import Text.Hastache
+import Web.Scotty.Trans as S
+import Web.Scotty.Hastache
 
 data Restaurant = Restaurant
   { name :: T.Text
@@ -27,7 +29,7 @@ data Menu = Menu
   , spec :: T.Text
   } deriving (Eq, Show, Data, Typeable)
 
-main = scotty 5007 $ do
+main = scottyH 5007 $ do
   rref <- liftIO refresh
   get "/" $ do
     rs <- liftIO $ readIORef rref

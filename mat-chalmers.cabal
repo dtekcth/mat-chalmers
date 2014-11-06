@@ -61,6 +61,7 @@ executable mat-dtek
       base >=4.7 && <4.8
     , mtl
     , scotty
+    , scotty-hastache
     , text
     , http-conduit
     , tagsoup
