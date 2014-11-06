@@ -68,16 +68,19 @@ update = mapM (uncurry getRest)
   , ("Kårrestaurangen", "http://cm.lskitchen.se/johanneberg/karrestaurangen/sv/%F.rss")
   ]
 
+-- | Get a restaurang that kåren has.
 getRest :: T.Text -> String -> IO Restaurant
 getRest name format = do
   url <- liftM (formatTime defaultTimeLocale format) getCurrentTime
   rss <- simpleHttp url
   let doc = parseTags (decodeUtf8 rss)
       items = partitions (~== ("<item>" :: String)) doc
-      title is = (!! 1) . head . sections (~== ("<title>" :: String)) $ is
-      desc is = (!! 1) . head . sections (~== ("<description>" :: String)) $ is
-      menus = map (\i -> Menu (getTT (title i)) (getTT (desc i))) items
+      title = findContentOf "<title>"
+      desc = T.takeWhile (/= '@') . findContentOf "<description>"
+      menus = map (\i -> Menu (title i) (desc i)) items
   return $ Restaurant name menus
  where
   getTT (TagText t) = t
   getTT _ = ""
+  findContentOf :: String -> [Tag T.Text] -> T.Text
+  findContentOf tag = getTT . (!! 1) . head . sections (~== tag)
