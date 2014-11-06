@@ -48,7 +48,6 @@ main = scotty 5007 $ do
 refresh :: IO (IORef Restaurants)
 refresh = do
   ref <- newIORef (Restaurants [])
-  update >>= writeIORef ref
   forkIO . forever $ do
     forkIO (update >>= writeIORef ref)
     threadDelay (1000000 * 60 * 60)
