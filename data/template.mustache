@@ -22,17 +22,21 @@
       height:100vh;
     }
 
-    h1, h2 {
+    h2, h3 {
       margin: 0;
     }
 
     h1 {
+      padding-left: 15px;
+    }
+
+    h2 {
       font-size: 140%;
       font-weight: bold;
       margin-bottom: 10px;
     }
 
-    h2 {
+    h3 {
       margin-right: 5px;
       display: inline-block;
       font-size: 100%;
@@ -59,13 +63,17 @@
 </head>
 <body>
   <div class="container-fluid main">
-    <div class"row">
+    <h1>{{date}}</h1>
+    <div>
       {{#restaurants}}
         <div class="col-xs-12 col-md-4 col-sm-6 food">
-          <h1>{{name}}</h1>
+          <h2>{{name}}</h2>
           <ul class="food-menu">
             {{#menu}}
-              <li><h2>{{lunch}}</h2> {{spec}}</li>
+              <li><h3>{{lunch}}</h3> {{spec}}</li>
+            {{/menu}}
+            {{^menu}}
+              <li>Ingen lunch idag!</li>
             {{/menu}}
           </ul>
         </div>

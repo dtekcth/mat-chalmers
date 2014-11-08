@@ -1,6 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-module Main (main) where
+module M 
+  ( refresh
+  , View (..)
+  , Restaurant (..)
+  , Menu (..)
+  ) where
 
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad
@@ -16,13 +21,12 @@ import Data.Time.Format
 import Network.HTTP.Conduit (simpleHttp)
 import System.Locale
 import Text.HTML.TagSoup
-import Text.Hastache
-import Text.Hastache.Context
-import Web.Scotty
 
--- | All our pretty restaurants.
-newtype Restaurants = Restaurants
+
+-- | What to pass to template.
+data View = View
   { restaurants :: [Restaurant]
+  , date :: T.Text
   } deriving (Eq, Show, Data, Typeable)
 
 -- | One pretty restaurant.
@@ -37,42 +41,42 @@ data Menu = Menu
   , spec :: T.Text
   } deriving (Eq, Show, Data, Typeable)
 
-main = scotty 5007 $ do
-  rref <- liftIO refresh
-  get "/" $ do
-    rs <- liftIO $ readIORef rref
-    site <- liftIO $ hastacheFile defaultConfig "template.html" (mkGenericContext rs)
-    html site
-
 -- | Refreshes menus hourly.
-refresh :: IO (IORef Restaurants)
+refresh :: IO (IORef View)
 refresh = do
-  ref <- newIORef (Restaurants [])
+  ref <- newIORef (View [] "")
   forkIO . forever $ do
-    forkIO (update >>= writeIORef ref)
+    update >>= writeIORef ref
     threadDelay (1000000 * 60 * 60)
   return ref
-
--- | Get menus.
-update :: IO Restaurants
-update = liftM Restaurants $ mapM (uncurry getRest)
-  [ ("Linsen", "http://cm.lskitchen.se/johanneberg/linsen/sv/%F.rss")
-  , ("Kårrestaurangen", "http://cm.lskitchen.se/johanneberg/karrestaurangen/sv/%F.rss")
-  ]
+ where
+  update = do
+    rest <- mapM (uncurry getKaren)
+      [ ("Linsen", "http://cm.lskitchen.se/johanneberg/linsen/sv/%F.rss")
+      , ("Kårrestaurangen", "http://cm.lskitchen.se/johanneberg/karrestaurangen/sv/%F.rss")
+      ]
+    date <- liftM (T.pack . formatTime defaultTimeLocale "%F") getCurrentTime
+    return (View rest date)
 
 -- | Get a restaurang that kåren has.
-getRest :: T.Text -> String -> IO Restaurant
-getRest name format = do
+getKaren :: T.Text -> String -> IO Restaurant
+getKaren name format = do
   url <- liftM (formatTime defaultTimeLocale format) getCurrentTime
   rss <- simpleHttp url
   let doc = parseTags (decodeUtf8 rss)
-      items = partitions (~== ("<item>" :: String)) doc
-      title = findContentOf "<title>"
-      desc = T.takeWhile (/= '@') . findContentOf "<description>"
-      menus = map (\i -> Menu (title i) (desc i)) items
+      items = partitions (~== ss "<item>") doc
+      lunch = contentOf "<title>"
+      spec = T.takeWhile (/= '@') . contentOf "<description>"
+      menus = map (\i -> Menu (lunch i) (spec i)) items
   return $ Restaurant name menus
+ where
+
+contentOf tag = getTT . (!! 1) . head . sections (~== ss tag)
  where
   getTT (TagText t) = t
   getTT _ = ""
-  findContentOf :: String -> [Tag T.Text] -> T.Text
-  findContentOf tag = getTT . (!! 1) . head . sections (~== tag)
+
+
+-- | To force type to be String
+ss :: String -> String
+ss = id
