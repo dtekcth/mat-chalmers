@@ -9,17 +9,18 @@ module M
 
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad
-import Control.Monad.Trans (liftIO)
-import Data.Data
-import Data.Typeable
 import Data.IORef
+
+import Data.Data
+
 import qualified Data.Text.Lazy as T
-import qualified Data.Text.Lazy.IO as T
 import Data.Text.Lazy.Encoding (decodeUtf8)
+
 import Data.Time.Clock
 import Data.Time.Format
-import Network.HTTP.Conduit (simpleHttp)
 import System.Locale
+
+import Network.HTTP.Conduit (simpleHttp)
 import Text.HTML.TagSoup
 
 
@@ -51,10 +52,12 @@ refresh = do
   return ref
  where
   update = do
-    rest <- mapM (uncurry getKaren)
+    karen <- mapM (uncurry getKaren)
       [ ("Linsen", "http://cm.lskitchen.se/johanneberg/linsen/sv/%F.rss")
       , ("Kårrestaurangen", "http://cm.lskitchen.se/johanneberg/karrestaurangen/sv/%F.rss")
       ]
+    einstein <- getEinstein
+    let rest = karen ++ [einstein]
     date <- liftM (T.pack . formatTime defaultTimeLocale "%F") getCurrentTime
     return (View rest date)
 
@@ -69,13 +72,24 @@ getKaren name format = do
       spec = T.takeWhile (/= '@') . contentOf "<description>"
       menus = map (\i -> Menu (lunch i) (spec i)) items
   return $ Restaurant name menus
- where
 
+-- | Get Einstein menu
+getEinstein :: IO Restaurant
+getEinstein = do
+  menuSite <- simpleHttp "http://butlercatering.se/einstein"
+  dayOfWeek <- liftM (pred . read . formatTime defaultTimeLocale "%w") getCurrentTime
+  let tags = parseTags (decodeUtf8 menuSite)
+      days = partitions (~== ss "<div class=\"field-day\">") tags
+      menus = map (take 2 . map (head . drop 1) . partitions (~== ss "<p>")) days
+      menus' = map (map (Menu "Lunch" . getTT)) menus
+  print dayOfWeek
+  return (Restaurant "Einstein" (concat . take 1 . drop dayOfWeek $ menus'))
+
+contentOf :: String -> [Tag T.Text] -> T.Text
 contentOf tag = getTT . (!! 1) . head . sections (~== ss tag)
- where
-  getTT (TagText t) = t
-  getTT _ = ""
 
+getTT (TagText t) = t
+getTT _ = ""
 
 -- | To force type to be String
 ss :: String -> String
