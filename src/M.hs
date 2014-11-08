@@ -82,7 +82,6 @@ getEinstein = do
       days = partitions (~== ss "<div class=\"field-day\">") tags
       menus = map (take 2 . map (head . drop 1) . partitions (~== ss "<p>")) days
       menus' = map (map (Menu "Lunch" . getTT)) menus
-  print dayOfWeek
   return (Restaurant "Einstein" (concat . take 1 . drop dayOfWeek $ menus'))
 
 contentOf :: String -> [Tag T.Text] -> T.Text
