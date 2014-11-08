@@ -87,6 +87,7 @@ getEinstein = do
 contentOf :: String -> [Tag T.Text] -> T.Text
 contentOf tag = getTT . (!! 1) . head . sections (~== ss tag)
 
+getTT :: Tag T.Text -> T.Text
 getTT (TagText t) = t
 getTT _ = ""
 
