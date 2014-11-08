@@ -12,6 +12,7 @@ import Control.Monad
 import Data.IORef
 
 import Data.Data
+import Data.Maybe
 
 import qualified Data.Text.Lazy as T
 import Data.Text.Lazy.Encoding (decodeUtf8)
@@ -61,7 +62,7 @@ refresh = do
     date <- liftM (T.pack . formatTime defaultTimeLocale "%F") getCurrentTime
     return (View rest date)
 
--- | Get a restaurang that kåren has.
+-- | Get a restaurant that kåren has.
 getKaren :: T.Text -> String -> IO Restaurant
 getKaren name format = do
   url <- liftM (formatTime defaultTimeLocale format) getCurrentTime
@@ -82,7 +83,7 @@ getEinstein = do
       days = partitions (~== ss "<div class=\"field-day\">") tags
       menus = map (take 2 . map (head . drop 1) . partitions (~== ss "<p>")) days
       menus' = map (map (Menu "Lunch" . getTT)) menus
-  return (Restaurant "Einstein" (concat . take 1 . drop dayOfWeek $ menus'))
+  return . Restaurant "Einstein" $ fromMaybe [] (menus' !!? dayOfWeek)
 
 contentOf :: String -> [Tag T.Text] -> T.Text
 contentOf tag = getTT . (!! 1) . head . sections (~== ss tag)
@@ -94,3 +95,11 @@ getTT _ = ""
 -- | To force type to be String
 ss :: String -> String
 ss = id
+
+-- | Safe list index
+(!!?) :: [a] -> Int -> Maybe a
+[]     !!? _ = Nothing
+(a:as) !!? n
+  | n < 0 = Nothing
+  | n == 0 = Just a
+  | otherwise = as !!? pred n
