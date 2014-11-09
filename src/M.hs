@@ -86,7 +86,7 @@ getEinstein = do
   return . Restaurant "Einstein" $ fromMaybe [] (menus' !!? dayOfWeek)
 
 contentOf :: String -> [Tag T.Text] -> T.Text
-contentOf tag = getTT . (!! 1) . head . sections (~== ss tag)
+contentOf tag = maybe "" getTT . (!!? 1) . head . sections (~== ss tag)
 
 getTT :: Tag T.Text -> T.Text
 getTT (TagText t) = t
