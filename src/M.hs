@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module M 
   ( refresh
-  , View (..)
   , Restaurant (..)
   , Menu (..)
   ) where
@@ -25,12 +24,6 @@ import Network.HTTP.Conduit (simpleHttp)
 import Text.HTML.TagSoup
 
 
--- | What to pass to template.
-data View = View
-  { restaurants :: [Restaurant]
-  , date :: T.Text
-  } deriving (Eq, Show, Data, Typeable)
-
 -- | One pretty restaurant.
 data Restaurant = Restaurant
   { name :: T.Text
@@ -44,9 +37,9 @@ data Menu = Menu
   } deriving (Eq, Show, Data, Typeable)
 
 -- | Refreshes menus hourly.
-refresh :: IO (IORef View)
+refresh :: IO (IORef [Restaurant])
 refresh = do
-  ref <- newIORef (View [] "")
+  ref <- newIORef []
   forkIO . forever $ do
     update >>= writeIORef ref
     threadDelay (1000000 * 60 * 60)
@@ -59,8 +52,7 @@ refresh = do
       ]
     einstein <- getEinstein
     let rest = karen ++ [einstein]
-    date <- liftM (T.pack . formatTime defaultTimeLocale "%F") getCurrentTime
-    return (View rest date)
+    return rest
 
 -- | Get a restaurant that kåren has.
 getKaren :: T.Text -> String -> IO Restaurant
