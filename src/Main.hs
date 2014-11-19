@@ -26,7 +26,7 @@ data View = View
 
 main = scotty 5007 $ do
   template <- liftIO $ getDataFileName "data/template.mustache"
-  icon <- liftIO $ getDataFileName "icon.png"
+  icon <- liftIO $ getDataFileName "data/icon.png"
   rref <- liftIO refresh
   get "/icon.png" (file icon)
   get "/" $ do
