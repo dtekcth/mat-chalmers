@@ -7,6 +7,7 @@ module M
   ) where
 
 import Control.Concurrent (forkIO, threadDelay)
+import Control.Exception
 import Control.Monad
 import Data.IORef
 
@@ -20,7 +21,7 @@ import Data.Time.Clock
 import Data.Time.Format
 import System.Locale
 
-import Network.HTTP.Conduit (simpleHttp)
+import Network.HTTP.Conduit
 import Text.HTML.TagSoup
 
 
@@ -51,31 +52,32 @@ refresh = do
       , ("Kårrestaurangen", "http://cm.lskitchen.se/johanneberg/karrestaurangen/sv/%F.rss")
       ]
     einstein <- getEinstein
-    let rest = karen ++ [einstein]
+    let rest = catMaybes (karen ++ [einstein])
     return rest
 
 -- | Get a restaurant that kåren has.
-getKaren :: T.Text -> String -> IO Restaurant
+getKaren :: T.Text -> String -> IO (Maybe Restaurant)
 getKaren name format = do
   url <- liftM (formatTime defaultTimeLocale format) getCurrentTime
-  rss <- simpleHttp url
-  let doc = parseTags (decodeUtf8 rss)
-      items = partitions (~== ss "<item>") doc
-      lunch = contentOf "<title>"
-      spec = T.takeWhile (/= '@') . contentOf "<description>"
-      menus = map (\i -> Menu (lunch i) (spec i)) items
-  return $ Restaurant name menus
+  handle' (const (return Nothing)) $ do
+    rss <- simpleHttp url
+    let doc = parseTags (decodeUtf8 rss)
+        items = partitions (~== ss "<item>") doc
+        lunch = contentOf "<title>"
+        spec = T.takeWhile (/= '@') . contentOf "<description>"
+        menus = map (\i -> Menu (lunch i) (spec i)) items
+    return . Just $ Restaurant name menus
 
 -- | Get Einstein menu
-getEinstein :: IO Restaurant
-getEinstein = do
+getEinstein :: IO (Maybe Restaurant)
+getEinstein = handle' (const (return Nothing)) $ do
   menuSite <- simpleHttp "http://butlercatering.se/einstein"
   dayOfWeek <- liftM (pred . read . formatTime defaultTimeLocale "%w") getCurrentTime
   let tags = parseTags (decodeUtf8 menuSite)
       days = partitions (~== ss "<div class=\"field-day\">") tags
       menus = map (take 2 . map (head . drop 1) . partitions (~== ss "<p>")) days
       menus' = map (map (Menu "Lunch" . getTT)) menus
-  return . Restaurant "Einstein" $ fromMaybe [] (menus' !!? dayOfWeek)
+  return . Just . Restaurant "Einstein" $ fromMaybe [] (menus' !!? dayOfWeek)
 
 contentOf :: String -> [Tag T.Text] -> T.Text
 contentOf tag = maybe "" getTT . (!!? 1) . head . sections (~== ss tag)
@@ -87,6 +89,10 @@ getTT _ = ""
 -- | To force type to be String
 ss :: String -> String
 ss = id
+
+-- | Handler for HttpExceptions
+handle' :: (HttpException -> IO a) -> IO a -> IO a
+handle' = handle
 
 -- | Safe list index
 (!!?) :: [a] -> Int -> Maybe a
