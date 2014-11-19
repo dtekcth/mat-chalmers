@@ -50,7 +50,7 @@ data-files:
   data/icon.png
 
 
-executable mat-dtek
+executable mat-chalmers
   -- .hs or .lhs file containing the Main module.
   main-is: Main.hs
   
