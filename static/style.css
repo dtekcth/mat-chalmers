@@ -1,0 +1,46 @@
+body {
+  font-family: 'Anonymous Pro';
+  background: #fdf7e2;
+}
+
+.main {
+  height:100vh;
+}
+
+h2, h3 {
+  margin: 0;
+}
+
+h1 {
+  padding-left: 15px;
+}
+
+h2 {
+  font-size: 140%;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+h3 {
+  margin-right: 10px;
+  display: inline-block;
+  font-size: 100%;
+  font-weight: bold;
+  color: #BD3613;
+}
+
+ul {
+  padding: 0;
+  list-style-type: none;
+}
+
+li {
+  width: 100%;
+  font-weight: 400;
+  padding-bottom: 5px;
+}
+
+.food {
+  position: relative; 
+  margin-top: 20px;
+}

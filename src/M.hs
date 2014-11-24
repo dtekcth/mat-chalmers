@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 module M 
   ( refresh
   , Restaurant (..)
@@ -10,17 +9,12 @@ import Control.Concurrent (forkIO, threadDelay)
 import Control.Exception
 import Control.Monad
 import Data.IORef
-
-import Data.Data
 import Data.Maybe
-
 import qualified Data.Text.Lazy as T
 import Data.Text.Lazy.Encoding (decodeUtf8)
-
 import Data.Time.Clock
 import Data.Time.Format
 import System.Locale
-
 import Network.HTTP.Conduit
 import Text.HTML.TagSoup
 
@@ -29,13 +23,13 @@ import Text.HTML.TagSoup
 data Restaurant = Restaurant
   { name :: T.Text
   , menu :: [Menu]
-  } deriving (Eq, Show, Data, Typeable)
+  } deriving (Eq, Show)
 
 -- | Menu of a restaurant.
 data Menu = Menu
   { lunch :: T.Text
   , spec :: T.Text
-  } deriving (Eq, Show, Data, Typeable)
+  } deriving (Eq, Show)
 
 -- | Refreshes menus hourly.
 refresh :: IO (IORef [Restaurant])

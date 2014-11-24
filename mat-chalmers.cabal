@@ -46,8 +46,8 @@ build-type: Simple
 cabal-version: >=1.10
 
 data-files:
-  data/template.mustache
-  data/icon.png
+  static/style.css
+  static/icon.png
 
 
 executable mat-chalmers
@@ -70,7 +70,8 @@ executable mat-chalmers
       base >=4.7 && <4.8
     , mtl
     , scotty
-    , hastache
+    , wai-middleware-static
+    , lucid
     , text
     , http-conduit
     , tagsoup
