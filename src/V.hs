@@ -34,7 +34,7 @@ renderView (View restaurants date) = doctypehtml_ $ do
 
   body_ $
     div_ [class_ "container-fluid main"] $ do
-      h1_ (toHtmlLazy date)
+      h1_ (toHtml date)
       div_ (mconcat (map renderRest restaurants))
       div_ [class_ "col-xs-12 col-sm-12 col-md-12"] $
         a_ [href_ "https://github.com/adamse/mat-chalmers"] "Kod på Github"
@@ -42,7 +42,7 @@ renderView (View restaurants date) = doctypehtml_ $ do
 
 renderRest :: Restaurant -> Html ()
 renderRest (Restaurant name menus) = div_ [class_ "col-xs-12 col-sm-6 col-md-4 food"] $ do
-  h2_ (toHtmlLazy name)
+  h2_ (toHtml name)
   ul_ [class_ "food-menu"] $
     if null menus
       then li_ "Ingen lunch idag!"
@@ -50,8 +50,5 @@ renderRest (Restaurant name menus) = div_ [class_ "col-xs-12 col-sm-6 col-md-4 f
 
 renderMenu :: Menu -> Html ()
 renderMenu (Menu item spec) = li_ $ do
-  h3_ (toHtmlLazy item)
-  toHtmlLazy spec
-
-toHtmlLazy :: T.Text -> Html ()
-toHtmlLazy = toHtml . T.toStrict
+  h3_ (toHtml item)
+  toHtml spec
