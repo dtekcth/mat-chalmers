@@ -18,6 +18,7 @@ data View = View
   } deriving (Eq, Show)
 
 
+render :: View -> T.Text
 render (View restaurants date) = renderText . doctypehtml_ $ do
   head_ $ do
     with meta_ [charset_ "utf-8"]
@@ -32,18 +33,24 @@ render (View restaurants date) = renderText . doctypehtml_ $ do
 
   body_ $
     with div_ [class_ "container-fluid main"] $ do
-      h1_ (toHtml date)
+      h1_ (toHtmlLazy date)
       div_ (mconcat (map renderRest restaurants))
       with div_ [class_ "col-xs-12 col-sm-12 col-md-12"] $
         with a_ [href_ "https://github.com/adamse/mat-chalmers"] "Kod på Github"
 
+
+renderRest :: Restaurant -> Html ()
 renderRest (Restaurant name menus) = with div_ [class_ "col-xs-12 col-sm-6 col-md-4 food"] $ do
-  h2_ (toHtml name)
+  h2_ (toHtmlLazy name)
   with ul_ [class_ "food-menu"] $
     if null menus
       then li_ "Ingen lunch idag!"
       else mconcat (map renderMenu menus)
 
+renderMenu :: Menu -> Html ()
 renderMenu (Menu item spec) = li_ $ do
-  h3_ (toHtml item)
-  toHtml spec
+  h3_ (toHtmlLazy item)
+  toHtmlLazy spec
+
+toHtmlLazy :: T.Text -> Html ()
+toHtmlLazy = toHtml . T.toStrict
