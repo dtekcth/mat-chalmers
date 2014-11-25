@@ -71,7 +71,7 @@ executable mat-chalmers
     , mtl
     , scotty
     , wai-middleware-static
-    , lucid
+    , lucid >= 2
     , text
     , http-conduit
     , tagsoup
