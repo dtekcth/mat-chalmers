@@ -1,23 +1,29 @@
 {-# LANGUAGE OverloadedStrings #-}
-module M 
+module M
   ( refresh
   , Restaurant (..)
   , Menu (..)
+  , View (..)
   ) where
 
-import Control.Concurrent (forkIO, threadDelay)
-import Control.Exception
-import Control.Monad
-import Data.IORef
-import Data.Maybe
+import           Control.Concurrent (forkIO, threadDelay)
+import           Control.Exception
+import           Control.Monad
+import           Data.IORef
+import           Data.Maybe
 import qualified Data.Text.Lazy as T
-import Data.Text.Lazy.Encoding (decodeUtf8)
-import Data.Time.Clock
-import Data.Time.Format
-import System.Locale
-import Network.HTTP.Conduit
-import Text.HTML.TagSoup
+import           Data.Text.Lazy.Encoding (decodeUtf8)
+import           Data.Time.Clock
+import           Data.Time.Format
+import           Network.HTTP.Conduit
+import           System.Locale
+import           Text.HTML.TagSoup
 
+-- | What to pass to template.
+data View = View
+  { restaurants :: [Restaurant]
+  , date :: T.Text
+  } deriving (Eq, Show)
 
 -- | One pretty restaurant.
 data Restaurant = Restaurant
@@ -32,46 +38,51 @@ data Menu = Menu
   } deriving (Eq, Show)
 
 -- | Refreshes menus hourly.
-refresh :: IO (IORef [Restaurant])
-refresh = do
-  ref <- newIORef []
-  forkIO . forever $ do
-    update >>= writeIORef ref
-    threadDelay (1000000 * 60 * 60)
-  return ref
- where
-  update = do
-    karen <- mapM (uncurry getKaren)
-      [ ("Linsen", "http://cm.lskitchen.se/johanneberg/linsen/sv/%F.rss")
-      , ("Kårrestaurangen", "http://cm.lskitchen.se/johanneberg/karrestaurangen/sv/%F.rss")
-      ]
-    einstein <- getEinstein
-    let rest = catMaybes (karen ++ [einstein])
-    return rest
+refresh :: IO (IORef View)
+refresh =
+  do ref <- newIORef (View [] "")
+     (forkIO . forever) $
+       do update >>= writeIORef ref
+          threadDelay (1000000 * 60 * 60)
+     return ref
+  where update =
+          do date <- getCurrentTime
+             karen <- mapM (uncurry (getKaren date)) restaurants
+             einstein <- getEinstein date
+             let rest =
+                   catMaybes (karen ++
+                              [einstein])
+             return (View rest "Idag")
+        restaurants =
+          [("Linsen","http://cm.lskitchen.se/johanneberg/linsen/sv/%F.rss")
+          ,("K\229rrestaurangen"
+           ,"http://cm.lskitchen.se/johanneberg/karrestaurangen/sv/%F.rss")]
 
 -- | Get a restaurant that kåren has.
-getKaren :: T.Text -> String -> IO (Maybe Restaurant)
-getKaren name format = do
-  url <- liftM (formatTime defaultTimeLocale format) getCurrentTime
-  handle' (const (return Nothing)) $ do
-    rss <- simpleHttp url
-    let doc = parseTags (decodeUtf8 rss)
-        items = partitions (~== ss "<item>") doc
-        lunch = contentOf "<title>"
-        spec = T.takeWhile (/= '@') . contentOf "<description>"
-        menus = map (\i -> Menu (lunch i) (spec i)) items
-    return . Just $ Restaurant name menus
+getKaren :: UTCTime -> T.Text -> String -> IO (Maybe Restaurant)
+getKaren date name format =
+  do let url = (formatTime defaultTimeLocale format) date
+     handle' (do rss <- simpleHttp url
+                 return (getRestaurant rss))
+  where getRestaurant rss = Restaurant name menus
+          where doc = parseTags (decodeUtf8 rss)
+                items = partitions (~== ss "<item>") doc
+                lunch = contentOf "<title>"
+                spec = T.takeWhile (/= '@') . contentOf "<description>"
+                menus = map (\i -> Menu (lunch i) (spec i)) items
 
 -- | Get Einstein menu
-getEinstein :: IO (Maybe Restaurant)
-getEinstein = handle' (const (return Nothing)) $ do
-  menuSite <- simpleHttp "http://butlercatering.se/einstein"
-  dayOfWeek <- liftM (pred . read . formatTime defaultTimeLocale "%w") getCurrentTime
-  let tags = parseTags (decodeUtf8 menuSite)
-      days = partitions (~== ss "<div class=\"field-day\">") tags
-      menus = map (take 2 . map (head . drop 1) . partitions (~== ss "<p>")) days
-      menus' = map (map (Menu "Lunch" . getTT)) menus
-  return . Just . Restaurant "Einstein" $ fromMaybe [] (menus' !!? dayOfWeek)
+getEinstein :: UTCTime -> IO (Maybe Restaurant)
+getEinstein date =
+  handle' (do menuSite <- simpleHttp "http://butlercatering.se/einstein"
+              return (getRestaurant menuSite))
+  where getRestaurant site = Restaurant "Einstein" menus''
+          where dayOfWeek = (pred . read . formatTime defaultTimeLocale "%w") date
+                tags = parseTags (decodeUtf8 site)
+                days = partitions (~== ss "<div class=\"field-day\">") tags
+                menus = map (take 2 . map (head . drop 1) . partitions (~== ss "<p>")) days
+                menus' = map (map (Menu "Lunch" . getTT)) menus
+                menus'' = fromMaybe [] (menus' !!? dayOfWeek)
 
 contentOf :: String -> [Tag T.Text] -> T.Text
 contentOf tag = maybe "" getTT . (!!? 1) . head . sections (~== ss tag)
@@ -85,8 +96,10 @@ ss :: String -> String
 ss = id
 
 -- | Handler for HttpExceptions
-handle' :: (HttpException -> IO a) -> IO a -> IO a
-handle' = handle
+handle' :: IO a -> IO (Maybe a)
+handle' a = handle handler (liftM Just a)
+  where handler :: HttpException -> IO (Maybe a)
+        handler _ = return Nothing
 
 -- | Safe list index
 (!!?) :: [a] -> Int -> Maybe a
