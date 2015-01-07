@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main (main) where
 
-
 import Control.Monad.Trans (liftIO)
 import Data.IORef
 import Network.Wai.Middleware.Static
@@ -18,7 +17,6 @@ main =
          (do rref <- liftIO refresh
              staticDir <- liftIO (getDataFileName "static")
              middleware (staticPolicy (noDots >-> addBase staticDir))
-             get "/"
-                 (do rests <- liftIO (readIORef rref)
-                     let site = render rests
-                     html site))
+             get "/" (site rref))
+  where site rref = (do view <- liftIO (readIORef rref)
+                        html (render view))
