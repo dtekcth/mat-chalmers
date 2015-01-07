@@ -59,7 +59,7 @@ refresh =
                                    then "Imorgon"
                                    else "Idag"))
         maybeAddDay :: ZonedTime -> (Bool, ZonedTime)
-        maybeAddDay zt@(ZonedTime lt tz) = if hour > 16
+        maybeAddDay zt@(ZonedTime lt tz) = if hour > 14
                                               then (True, newZt)
                                               else (False, zt)
           where hour = todHour (localTimeOfDay lt)
@@ -90,8 +90,10 @@ getEinstein date =
   where (_, _, weekday) = toWeekDate (localDay (zonedTimeToLocalTime date))
         getRestaurant tags = Restaurant "Einstein" menus''
           where days = partitions (~==  ss "<div class=\"field-day\">") tags
-                menus = map (take 2 . map (!! 1) . partitions (~== ss "<p>")) days
-                menus' = map (map (Menu "Lunch" . getTT)) menus
+                forDay d = map forP (partitions (~== ss "<p>") d)
+                forP p = Menu "Lunch" . T.concat . map fromTagText . filter isTagText $ p
+
+                menus' = map (map forDay) days
                 menus'' = fromMaybe [] (menus' !!? weekday)
 
 
