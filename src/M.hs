@@ -34,7 +34,7 @@ update c =
            if (dateNow ^. (_localTimeOfDay . _todHour)) > nextDayHour c
               then (True, dateNow & (_localDay . gregorian . _ymdDay) %~ (+ 1))
               else (False, dateNow)
-     karen <- mapM (uncurry (getKaren date)) restaurants
+     karen <- mapM (uncurry (getKaren date)) (rssFeeds c)
      einstein <- getEinstein date
      let rest =
            catMaybes (karen ++
@@ -43,7 +43,3 @@ update c =
                   (if tomorrow
                       then "Imorgon"
                       else "Idag"))
-  where restaurants =
-          [("Linsen","http://cm.lskitchen.se/johanneberg/linsen/sv/%F.rss")
-          ,("K\229rrestaurangen"
-           ,"http://cm.lskitchen.se/johanneberg/karrestaurangen/sv/%F.rss")]

@@ -4,10 +4,8 @@
 module M.Karen where
 
 import           Control.Lens
-
 import qualified Data.Text.Lazy as T
 import           Data.Thyme
-
 import           System.Locale (defaultTimeLocale)
 import           Text.Taggy
 import           Text.Taggy.Lens as TT
