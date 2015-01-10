@@ -15,7 +15,7 @@ import           M.Internal hiding (menu)
 -- | Get a restaurant that kåren has.
 getKaren :: LocalTime -> T.Text -> String -> IO (Maybe Restaurant)
 getKaren date name format =
-  handle' (fmap (getRestaurant name) (getAndParse url))
+  handle' (fmap (getRestaurant name) (get url))
   where url = (formatTime defaultTimeLocale format) date
 
 getRestaurant name tags = Restaurant name today

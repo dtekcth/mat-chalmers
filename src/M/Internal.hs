@@ -1,4 +1,4 @@
--- |
+-- | Types and internal functions
 
 module M.Internal where
 
@@ -27,8 +27,8 @@ data Menu = Menu
   } deriving (Eq, Show)
 
 
-getAndParse :: String -> IO T.Text
-getAndParse url = liftM decodeUtf8 (simpleHttp url)
+get :: String -> IO T.Text
+get url = liftM decodeUtf8 (simpleHttp url)
 
 -- | Safe list index
 (!!?) :: [a] -> Int -> Maybe a

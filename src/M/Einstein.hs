@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
--- |
 
+-- | Get daily menu for Einstein
 module M.Einstein where
 
 import           Control.Lens
@@ -17,10 +17,9 @@ import           M.Internal hiding (menu)
 getEinstein :: LocalTime -> IO (Maybe Restaurant)
 getEinstein date =
   handle' (fmap (getRestaurant weekday)
-                (getAndParse "http://butlercatering.se/einstein"))
+                (get "http://butlercatering.se/einstein"))
   where weekday =
-          date ^.
-          (_localDay . mondayWeek . _mwDay)
+          date ^. (_localDay . mondayWeek . _mwDay)
 
 getRestaurant :: Int -> T.Text -> Restaurant
 getRestaurant weekday tags =
