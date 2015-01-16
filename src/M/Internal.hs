@@ -30,14 +30,6 @@ data Menu = Menu
 get :: String -> IO T.Text
 get url = liftM decodeUtf8 (simpleHttp url)
 
--- | Safe list index
-(!!?) :: [a] -> Int -> Maybe a
-[]     !!? _ = Nothing
-(a:as) !!? n
-  | n < 0 = Nothing
-  | n == 0 = Just a
-  | otherwise = as !!? pred n
-
 -- | Handler for HttpExceptions
 handle' :: IO a -> IO (Maybe a)
 handle' a = handle handler (liftM Just a)

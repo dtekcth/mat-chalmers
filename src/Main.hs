@@ -8,9 +8,9 @@ import Web.Scotty
 
 import Paths_mat_chalmers
 
+import Config
 import M
 import V (render)
-import Config
 
 main :: IO ()
 main =

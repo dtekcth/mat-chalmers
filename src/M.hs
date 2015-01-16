@@ -6,25 +6,26 @@ module M
   , View (..)
   ) where
 
-import           Control.Concurrent (forkIO, threadDelay)
-import           Control.Lens
-import           Control.Monad
-import           Data.IORef
-import           Data.Maybe
-import           Data.Thyme
+import Control.Concurrent (forkIO, threadDelay)
+import Control.Lens
+import Control.Monad
+import Data.Bool
+import Data.IORef
+import Data.Maybe
+import Data.Thyme
 
-import           Config
-import           M.Einstein
-import           M.Karen
-import           M.Internal hiding (restaurants)
+import Config
+import M.Einstein
+import M.Karen
+import M.Internal hiding (restaurants)
 
 -- | Refreshes menus hourly.
 refresh :: Config -> IO (IORef View)
 refresh c =
   do ref <- newIORef (View [] "")
-     (forkIO . forever) $
-       do update c >>= writeIORef ref
-          threadDelay (updateInterval c)
+     _ <- (forkIO . forever)
+            (do update c >>= writeIORef ref
+                threadDelay (updateInterval c))
      return ref
 
 update :: Config -> IO View
@@ -39,7 +40,4 @@ update c =
      let rest =
            catMaybes (karen ++
                       [einstein])
-     return (View rest
-                  (if tomorrow
-                      then "Imorgon"
-                      else "Idag"))
+     return (View rest (bool "Imorgon" "Idag" tomorrow))

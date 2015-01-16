@@ -46,8 +46,8 @@ build-type: Simple
 cabal-version: >=1.10
 
 data-files:
-  static/style.css
-  static/icon.png
+           static/style.css
+           static/icon.png
 
 
 executable mat-chalmers
@@ -58,27 +58,29 @@ executable mat-chalmers
   hs-source-dirs: src
 
   -- Modules included in this executable, other than Main.
-  other-modules: M, V, Config
+  other-modules: M
+               , M.Internal
+               , M.Einstein
+               , M.Karen
+               , V
+               , Config
 
   -- LANGUAGE extensions used by modules in this package.
-  other-extensions:
-      OverloadedStrings
-    , DeriveDataTypeable
+  other-extensions: OverloadedStrings
 
   -- Other library packages from which modules are imported.
-  build-depends:
-      base >=4.7 && <4.8
-    , mtl
-    , scotty
-    , wai-middleware-static
-    , lucid >= 2
-    , text
-    , http-conduit
-    , taggy
-    , taggy-lens
-    , thyme
-    , lens
-    , old-locale
+  build-depends: base >=4.7 && <4.8
+               , mtl
+               , scotty
+               , wai-middleware-static
+               , lucid >= 2
+               , text
+               , http-conduit
+               , taggy
+               , taggy-lens
+               , thyme
+               , lens
+               , old-locale
 
   -- Base language which the package is written in.
   default-language: Haskell2010
