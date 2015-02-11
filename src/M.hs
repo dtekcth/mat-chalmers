@@ -17,7 +17,7 @@ import Data.Thyme
 import Config
 import M.Einstein
 import M.Karen
-import M.Internal hiding (restaurants)
+import M.Internal
 
 -- | Refreshes menus hourly.
 refresh :: Config -> IO (IORef View)

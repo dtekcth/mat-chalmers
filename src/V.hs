@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 module V
   ( View (..)
   , render
@@ -14,7 +15,7 @@ render :: View -> T.Text
 render v = renderText (renderView v)
 
 renderView :: View -> Html ()
-renderView (View rests date) =
+renderView (View{..}) =
   doctypehtml_
     (do head_
           (do meta_ [charset_ "utf-8"]
@@ -30,21 +31,21 @@ renderView (View rests date) =
         body_
           (do div_ [class_ "container-fluid main"]
                    (do h1_ (toHtml date)
-                       div_ (mconcat (map renderRest rests))
+                       div_ (mconcat (map renderRest restaurants))
                        div_ [class_ "col-xs-12 col-sm-12 col-md-12"]
                             (a_ [href_ "https://github.com/adamse/mat-chalmers"]
                                 "Kod p\229 Github"))))
 
 renderRest :: Restaurant -> Html ()
-renderRest (Restaurant name menus) =
+renderRest (Restaurant{..}) =
   div_ [class_ "col-xs-12 cols-sm-6 col-md-4 food"]
        (do h2_ (toHtml name)
            ul_ [class_ "food-menu"]
-               (if null menus
+               (if null menu
                    then li_ "Ingen lunch!"
-                   else mconcat (map renderMenu menus)))
+                   else mconcat (map renderMenu menu)))
 
 renderMenu :: Menu -> Html ()
-renderMenu (Menu item spec) =
-  li_ (do h3_ (toHtml item)
+renderMenu (Menu{..}) =
+  li_ (do h3_ (toHtml lunch)
           toHtml spec)
