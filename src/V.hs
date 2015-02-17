@@ -38,14 +38,16 @@ renderView (View{..}) =
 
 renderRest :: Restaurant -> Html ()
 renderRest (Restaurant{..}) =
-  div_ [class_ "col-xs-12 cols-sm-6 col-md-4 food"]
-       (do h2_ (toHtml name)
-           ul_ [class_ "food-menu"]
-               (if null menu
-                   then li_ "Ingen lunch!"
-                   else mconcat (map renderMenu menu)))
+  box (do h2_ (toHtml name)
+          ul_ [class_ "food-menu"]
+              (if null menu
+                  then li_ "Ingen lunch!"
+                  else mconcat (map renderMenu menu)))
 
 renderMenu :: Menu -> Html ()
 renderMenu (Menu{..}) =
   li_ (do h3_ (toHtml lunch)
           toHtml spec)
+
+box :: Html () -> Html ()
+box = div_ [class_ "col-xs-12 cols-sm-6 col-md-4 food"]

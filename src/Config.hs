@@ -21,7 +21,7 @@ data Config =
 -- | Default configuration
 def :: Config
 def =
-  Config 12
+  Config 14
          (1000000 * 60 * 60)
          [ ("Linsen", "http://cm.lskitchen.se/johanneberg/linsen/sv/%F.rss")
          , ("K\229rrestaurangen", "http://cm.lskitchen.se/johanneberg/karrestaurangen/sv/%F.rss")
