@@ -32,10 +32,10 @@ renderView (View{..}) =
           (do div_ [class_ "container-fluid main"]
                    (do h1_ (toHtml date)
                        div_ (mconcat (map renderRest restaurants))
-                       div_ [class_ "col-xs-12 col-sm-12 col-md-12"]
-                            (do a_ [href_ "https://github.com/adamse/mat-chalmers"]
-                                   "Kod p\229 Github"
-                                " // Stavfel och andra konstigheter är någon annans fel."))))
+                       footer_ [class_ "col-xs-12 col-sm-12 col-md-12"]
+                                   (do a_ [href_ "https://github.com/adamse/mat-chalmers"]
+                                          "Kod p\229 Github"
+                                       " // Stavfel och andra konstigheter är någon annans fel."))))
 
 renderRest :: Restaurant -> Html ()
 renderRest (Restaurant{..}) =
