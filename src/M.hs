@@ -39,5 +39,8 @@ update c =
      einstein <- getEinstein date
      let rest =
            catMaybes (karen ++
+
                       [einstein])
-     return (View rest (bool "Imorgon" "Idag" tomorrow))
+     return (View rest (if tomorrow
+                           then "Imorgon"
+                           else "Idag"))
