@@ -7,9 +7,9 @@ module M
   ) where
 
 import Control.Concurrent (forkIO, threadDelay)
+import Control.Concurrent.MVar
 import Control.Lens
 import Control.Monad
-import Data.Bool
 import Data.IORef
 import Data.Maybe
 import Data.Thyme
@@ -19,14 +19,13 @@ import M.Einstein
 import M.Karen
 import M.Internal
 
--- | Refreshes menus hourly.
-refresh :: Config -> IO (IORef View)
-refresh c =
+-- | Refreshes menus.
+refresh :: Config -> IO (IORef View, MVar () -> IO ())
+refresh c  =
   do ref <- newIORef (View [] "")
-     _ <- (forkIO . forever)
-            (do update c >>= writeIORef ref
-                threadDelay (updateInterval c))
-     return ref
+     return (ref, \upd -> do takeMVar upd
+                             putStrLn "Upd"
+                             update c >>= writeIORef ref)
 
 update :: Config -> IO View
 update c =
@@ -39,7 +38,6 @@ update c =
      einstein <- getEinstein date
      let rest =
            catMaybes (karen ++
-
                       [einstein])
      return (View rest (if tomorrow
                            then "Imorgon"

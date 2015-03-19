@@ -6,7 +6,7 @@ module Config
   , nextDayHour
   , updateInterval
   , rssFeeds
-  , def
+  , config
   ) where
 
 import Data.Text.Lazy as T
@@ -19,8 +19,8 @@ data Config =
          }
 
 -- | Default configuration
-def :: Config
-def =
+config :: Config
+config =
   Config 14
          (1000000 * 60 * 60)
          [ ("Linsen", "http://cm.lskitchen.se/johanneberg/linsen/sv/%F.rss")
