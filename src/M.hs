@@ -31,7 +31,7 @@ update :: Config -> IO View
 update c =
   do dateNow <- fmap (view _zonedTimeToLocalTime) getZonedTime
      let (tomorrow, date) =
-           if (dateNow ^. (_localTimeOfDay . _todHour)) > nextDayHour c
+           if (dateNow ^. (_localTimeOfDay . _todHour)) >= nextDayHour c
               then (True, dateNow & (_localDay . gregorian . _ymdDay) %~ (+ 1))
               else (False, dateNow)
      karen <- mapM (uncurry (getKaren date)) (rssFeeds c)
