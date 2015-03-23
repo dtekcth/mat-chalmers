@@ -37,8 +37,7 @@ update c =
      karen <- mapM (uncurry (getKaren date)) (rssFeeds c)
      einstein <- getEinstein date
      let rest =
-           catMaybes (karen ++
-                      [einstein])
+           catMaybes (einstein : karen)
      return (View rest (if tomorrow
                            then "Imorgon"
                            else "Idag"))
