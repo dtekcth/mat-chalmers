@@ -77,7 +77,7 @@ executable mat-chalmers
                , lucid >= 2
                , text
                , http-conduit
-               , taggy
+               , taggy >= 0.2.0
                , taggy-lens
                , thyme
                , lens

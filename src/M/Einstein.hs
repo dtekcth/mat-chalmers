@@ -40,4 +40,4 @@ menus day =
      . to menu)
 
 menu :: Element -> Menu
-menu spec = Menu "Lunch" (LT.fromStrict (innerText spec))
+menu spec = Menu "Lunch" (LT.fromStrict (spec ^. contents))
