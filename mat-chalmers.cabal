@@ -74,6 +74,7 @@ executable mat-chalmers
                , mtl
                , scotty
                , wai-middleware-static
+               , wai-extra
                , lucid >= 2
                , text
                , http-conduit
