@@ -2,7 +2,6 @@
 module Main (main) where
 
 import Control.Concurrent
-import Control.Concurrent.MVar
 import Control.Monad
 import Control.Monad.Trans (liftIO)
 import Data.IORef
@@ -26,6 +25,7 @@ main =
      staticDir <- liftIO (getDataFileName "static")
      scotty 5007
             (do middleware (staticPolicy (noDots >-> addBase staticDir))
+                middleware logStdout
                 get "/" (site view)
                 get "/r" (liftIO (tryPutMVar upd ()) >> redirect "/"))
   where site rref =
