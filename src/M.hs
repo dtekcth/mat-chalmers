@@ -31,29 +31,27 @@ refresh c =
 
 update :: Config -> IO View
 update c =
-  do dateNow <-
-       fmap (view _zonedTimeToLocalTime) getZonedTime
+  do dateNow <- fmap (view _zonedTimeToLocalTime) getZonedTime
      let (tomorrow,date) =
-           if (dateNow ^.
-               (_localTimeOfDay . _todHour)) >=
-              nextDayHour c
-              then (True
-                   ,dateNow &
-                    (_localDay . gregorian . _ymdDay) %~
-                    (+ 1))
+           if (dateNow ^. (_localTimeOfDay . _todHour)) >= nextDayHour c
+              then (True,dateNow & (_localDay . gregorian . _ymdDay) %~ (+ 1))
               else (False,dateNow)
      rest <-
        fmap catMaybes
-            (sequence [getKaren date
-                                "K\229rrestaurangen"
-                                "http://intern.chalmerskonferens.se/view/restaurant/karrestaurangen/Veckomeny.rss?today=true"
-                      ,getKaren date "Linsen" "http://cm.lskitchen.se/lindholmen/foodcourt/sv/%F.rss"
+            (sequence [getKaren date "K\229rrestaurangen" karen
+                      ,getKaren date "Linsen" linsen
                       ,getEinstein date
-                      ,getKaren date
-                                "L's Kitchen"
-                                "http://intern.chalmerskonferens.se/view/restaurant/l-s-kitchen/Projektor.rss?today=true"
-											,getKaren date "Xpress" "http://intern.chalmerskonferens.se/view/restaurant/express/Vänster.rss?today=true"])
+                      ,getKaren date "L's Kitchen" ls
+                      ,getKaren date "Xpress" xpress])
      return (View rest
                   (if tomorrow
                       then "Tomorrow"
                       else "Today"))
+  where karen =
+          "http://intern.chalmerskonferens.se/view/restaurant/karrestaurangen/Veckomeny.rss?today=true"
+        ls =
+          "http://intern.chalmerskonferens.se/view/restaurant/l-s-kitchen/Projektor.rss?today=true"
+        linsen =
+          "http://intern.chalmerskonferens.se/view/restaurant/linsen/RSS%20Feed.rss?today=true"
+        xpress =
+          "http://intern.chalmerskonferens.se/view/restaurant/express/Vänster.rss?today=true"
