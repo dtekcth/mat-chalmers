@@ -47,11 +47,12 @@ update c =
             (sequence [getKaren date
                                 "K\229rrestaurangen"
                                 "http://intern.chalmerskonferens.se/view/restaurant/karrestaurangen/Veckomeny.rss?today=true"
-                      ,getKaren date "Linsen" "http://cm.lskitchen.se/johanneberg/linsen/sv/%F.rss"
+                      ,getKaren date "Linsen" "http://cm.lskitchen.se/lindholmen/foodcourt/sv/%F.rss"
                       ,getEinstein date
                       ,getKaren date
                                 "L's Kitchen"
-                                "http://cm.lskitchen.se/lindholmen/foodcourt/sv/%F.rss"])
+                                "http://intern.chalmerskonferens.se/view/restaurant/l-s-kitchen/Projektor.rss?today=true"
+											,getKaren date "Xpress" "http://intern.chalmerskonferens.se/view/restaurant/express/Vänster.rss?today=true"])
      return (View rest
                   (if tomorrow
                       then "Tomorrow"
