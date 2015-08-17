@@ -46,7 +46,7 @@ update c =
        fmap catMaybes
             (sequence [getKaren date
                                 "K\229rrestaurangen"
-                                "http://cm.lskitchen.se/johanneberg/karrestaurangen/sv/%F.rss"
+                                "http://intern.chalmerskonferens.se/view/restaurant/karrestaurangen/Veckomeny.rss?today=true"
                       ,getKaren date "Linsen" "http://cm.lskitchen.se/johanneberg/linsen/sv/%F.rss"
                       ,getEinstein date
                       ,getKaren date
