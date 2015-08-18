@@ -43,10 +43,7 @@ update c =
                       ,getEinstein date
                       ,getKaren date "L's Kitchen" ls
                       ,getKaren date "Xpress" xpress])
-     return (View rest
-                  (if tomorrow
-                      then "Tomorrow"
-                      else "Today"))
+     return (View rest "Today")
   where karen =
           "http://intern.chalmerskonferens.se/view/restaurant/karrestaurangen/Veckomeny.rss?today=true"
         ls =
