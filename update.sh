@@ -1,4 +1,4 @@
-!/bin/sh
+#!/bin/sh
 
 git pull
 stack build
