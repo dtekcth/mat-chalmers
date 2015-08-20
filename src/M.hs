@@ -53,4 +53,4 @@ update c =
           "http://intern.chalmerskonferens.se/view/restaurant/linsen/RSS%20Feed.rss?today=true"
         xpress =
           "http://intern.chalmerskonferens.se/view/restaurant/express/Vänster.rss?today=true"
-        formatTitle date = fromString (formatTime defaultTimeLocale "Today -- %F" date)
+        formatTitle date = fromString (formatTime defaultTimeLocale "Today / %F" date)
