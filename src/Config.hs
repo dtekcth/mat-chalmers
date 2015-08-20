@@ -13,6 +13,7 @@ data Config =
   Config { nextDayHour :: Int -- ^ When to show next days menu
          , updateInterval :: Int -- ^ Time to wait between menu updates
          }
+  deriving (Show,Read)
 
 -- | Default configuration
 config :: Config

@@ -9,15 +9,16 @@ module M
 
 import Control.Concurrent.MVar
 import Control.Lens
-
 import Data.IORef
 import Data.Maybe
+import Data.String (fromString)
 import Data.Thyme
+import System.Locale (defaultTimeLocale)
 
 import Config
 import M.Einstein
-import M.Karen
 import M.Internal
+import M.Karen
 
 
 
@@ -32,7 +33,7 @@ refresh c =
 update :: Config -> IO View
 update c =
   do dateNow <- fmap (view _zonedTimeToLocalTime) getZonedTime
-     let (tomorrow,date) =
+     let (_tomorrow,date) =
            if (dateNow ^. (_localTimeOfDay . _todHour)) >= nextDayHour c
               then (True,dateNow & (_localDay . gregorian . _ymdDay) %~ (+ 1))
               else (False,dateNow)
@@ -43,7 +44,7 @@ update c =
                       ,getEinstein date
                       ,getKaren date "L's Kitchen" ls
                       ,getKaren date "Xpress" xpress])
-     return (View rest "Today")
+     return (View rest (formatTitle date))
   where karen =
           "http://intern.chalmerskonferens.se/view/restaurant/karrestaurangen/Veckomeny.rss?today=true"
         ls =
@@ -52,3 +53,4 @@ update c =
           "http://intern.chalmerskonferens.se/view/restaurant/linsen/RSS%20Feed.rss?today=true"
         xpress =
           "http://intern.chalmerskonferens.se/view/restaurant/express/Vänster.rss?today=true"
+        formatTitle date = fromString (formatTime defaultTimeLocale "Today -- %F" date)
