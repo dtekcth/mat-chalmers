@@ -32,11 +32,7 @@ refresh c =
 
 update :: Config -> IO View
 update c =
-  do dateNow <- fmap (view _zonedTimeToLocalTime) getZonedTime
-     -- let (_tomorrow,date) =
-     --       if (dateNow ^. (_localTimeOfDay . _todHour)) >= nextDayHour c
-     --          then (True,dateNow & (_localDay . gregorian . _ymdDay) %~ (+ 1))
-     --          else (False,dateNow)
+  do date <- fmap (view _zonedTimeToLocalTime) getZonedTime
      rest <-
        fmap catMaybes
             (sequence [getKaren date "K\229rrestaurangen" karen
