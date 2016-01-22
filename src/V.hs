@@ -21,7 +21,10 @@ renderView (View{..}) =
         body_
           (do div_ [class_ "container-fluid main"]
                    (do h1_ (toHtml date)
-                       p_ "I'm terribly sorry: it seems something has broken all of the Chalmers restaurants, if you think you know what please send a patch or tell me how to fix it!"
+                       p_ ("I'm terribly sorry: it seems something has broken all of the Chalmers restaurants, if you think you know what please send a patch or tell me how to fix it! "
+                           <> a_ [href_ "http://www.chalmerskonferens.se/dagens-menyer/johanneberg/"] "Johanneberg menus"
+                           <> " and "
+                           <> a_ [href_ "http://www.chalmerskonferens.se/dagens-menyer/lindholmen/"] "Lindholmen menus")
                        div_ (mconcat (map renderRest restaurants))
                        sitefooter)
               toHtmlRaw analytics))
