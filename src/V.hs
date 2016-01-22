@@ -21,6 +21,7 @@ renderView (View{..}) =
         body_
           (do div_ [class_ "container-fluid main"]
                    (do h1_ (toHtml date)
+                       p_ "I'm terribly sorry: it seems something has broken all of the Chalmers reastaurants, if you think you know what please send a patch!"
                        div_ (mconcat (map renderRest restaurants))
                        sitefooter)
               toHtmlRaw analytics))
