@@ -22,22 +22,22 @@ getEinstein date =
           date ^. (_localDay . mondayWeek . _mwDay)
 
 getRestaurant :: Int -> LT.Text -> Restaurant
-getRestaurant weekday tags =
-  fromMaybe (Restaurant "Einstein" []) day
-  where day =
-          (tags ^.. html
-           . allAttributed (ix "class" . only "field-day")
-           . TT.children
-           . to menus)
-          ^? ix (weekday - 1)
+getRestaurant weekday tags = fromMaybe (Restaurant "Einstein" []) day
+  where
+    day =
+        (tags ^.. html . allAttributed (ix "class" . only "field-day") .
+         TT.children .
+         to menus) ^?
+        ix (weekday - 1)
 
 menus :: [Node] -> Restaurant
 menus day =
-  Restaurant
-    "Einstein"
-    (day ^.. each
-     . allNamed (only "p")
-     . to menu)
+    Restaurant
+        "Einstein"
+        (filter
+             (\(Menu _ s) ->
+                   not (LT.null s))
+             (day ^.. each . allNamed (only "p") . to menu))
 
 menu :: Element -> Menu
-menu spec = Menu "Lunch" (LT.fromStrict (spec ^. contents))
+menu spec = Menu "Lunch" (LT.strip (LT.fromStrict (spec ^. contents)))
