@@ -31,7 +31,7 @@ refresh c =
                              update c >>= writeIORef ref)
 
 update :: Config -> IO View
-update c =
+update _ =
   do date <- fmap (view _zonedTimeToLocalTime) getZonedTime
      rest <-
        fmap catMaybes

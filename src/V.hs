@@ -5,7 +5,6 @@ module V
   , render
   ) where
 
-import           Data.Monoid
 import qualified Data.Text.Lazy as T
 import           Lucid
 

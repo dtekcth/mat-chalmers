@@ -79,8 +79,6 @@ executable mat-chalmers
                , text
                , bytestring
                , http-conduit
-               , taggy >= 0.2.0
-               , taggy-lens
                , tagsoup
                , thyme
                , lens

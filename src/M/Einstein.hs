@@ -1,17 +1,14 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 -- | Get daily menu for Einstein
 module M.Einstein where
 
 import           Control.Lens
-import           Data.Maybe
 import qualified Data.Text.Lazy as LT
 import           Data.Thyme
 import           Data.Thyme.Calendar.WeekDate
-import           Text.Taggy
-import           Text.Taggy.Lens as TT
+import           GHC.Exts
+import           Text.HTML.TagSoup
 
-import           M.Internal hiding (menu, spec, date)
+import           M.Internal hiding (menu, date)
 
 -- | Get Einstein menu
 getEinstein :: LocalTime -> IO (Maybe Restaurant)
@@ -22,22 +19,24 @@ getEinstein date =
           date ^. (_localDay . mondayWeek . _mwDay)
 
 getRestaurant :: Int -> LT.Text -> Restaurant
-getRestaurant weekday tags = fromMaybe (Restaurant "Einstein" []) day
-  where
-    day =
-        (tags ^.. html . allAttributed (ix "class" . only "field-day") .
-         TT.children .
-         to menus) ^?
-        ix (weekday - 1)
+getRestaurant weekday tags =
+    menus
+        ((partitions (~== "<div class='field-day'>") (parseTags tags)) !!
+         (weekday - 1))
 
-menus :: [Node] -> Restaurant
+-- menus :: [Node] -> Restaurant
 menus day =
     Restaurant
-        "Einstein"
-        (filter
-             (\(Menu _ s) ->
-                   not (LT.null s))
-             (day ^.. each . allNamed (only "p") . to menu))
+        (fromString "Einstein")
+        (filter (not . LT.null . spec) . map veg . map menu . partitions (~== "<p>") $
+         day)
 
-menu :: Element -> Menu
-menu spec = Menu "Lunch" (LT.strip (LT.fromStrict (spec ^. contents)))
+veg m@(Menu _ spec)
+  | Just suf <- LT.stripPrefix (fromString "Veg:") spec =
+      Menu (fromString "Vegetarisk") (LT.strip suf)
+  | otherwise = m
+
+-- menu :: Element -> Menu
+menu spec = Menu (fromString "Lunch") (LT.strip . innerText . takeNext $ spec)
+
+takeNext = take 1 . drop 1

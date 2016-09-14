@@ -1,6 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
 -- |
-
 module M.Karen where
 
 import qualified Data.Text.Lazy as T
@@ -20,13 +18,15 @@ getRestaurant :: T.Text -> T.Text -> Restaurant
 getRestaurant name text = Restaurant name today
   where
     today = map menu sects
-    sects = sections (~== item) tags :: [[Tag T.Text]]
+    sects = partitions (~== "<item>") tags :: [[Tag T.Text]]
     tags = parseTags text :: [Tag T.Text]
-    item = toTagRep ("<item>" :: String) :: Tag String
 
+menu :: [Tag T.Text] -> Menu
 menu section =
     Menu
-        (innerText . take 1 . drop 3 $ section)
+        (innerText . takeNext . (dropWhile (~/= "<title>")) $ section)
         (T.takeWhile (/= '@') .
-         T.strip . innerText . Prelude.take 1 . Prelude.drop 11 $
+         T.strip . innerText . takeNext . (dropWhile (~/= "<description>")) $
          section)
+  where
+    takeNext = take 1 . drop 1
