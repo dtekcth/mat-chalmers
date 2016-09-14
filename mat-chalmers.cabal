@@ -77,9 +77,11 @@ executable mat-chalmers
                , wai-extra
                , lucid >= 2
                , text
+               , bytestring
                , http-conduit
                , taggy >= 0.2.0
                , taggy-lens
+               , tagsoup
                , thyme
                , lens
                , old-locale
