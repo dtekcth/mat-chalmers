@@ -26,8 +26,7 @@ main =
      scotty 5007
             (do middleware (staticPolicy (noDots >-> addBase staticDir))
                 middleware logStdout
-                get "/" (redirect "http://www.errno.se/mat/"
-                 >> site view)
+                get "/" (site view)
                 get "/r" (liftIO (tryPutMVar upd ()) >> redirect "/"))
   where site rref =
           (do view <- liftIO (readIORef rref)
