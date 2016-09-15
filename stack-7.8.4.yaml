@@ -1,7 +1,0 @@
-flags: {}
-packages:
-- '.'
-extra-deps:
-- taggy-0.2.0
-- taggy-lens-0.1.2
-resolver: lts-2.19

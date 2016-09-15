@@ -20,8 +20,6 @@ import M.Einstein
 import M.Internal
 import M.Karen
 
-
-
 -- | Refreshes menus.
 refresh :: Config -> IO (IORef View, MVar () -> IO ())
 refresh c =
