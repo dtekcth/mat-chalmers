@@ -20,16 +20,17 @@ getEinstein date =
 
 getRestaurant :: Int -> LT.Text -> Restaurant
 getRestaurant weekday tags =
-    menus
-        ((partitions (~== "<div class='field-day'>") (parseTags tags)) !!
-         (weekday - 1))
+  menus
+    ((partitions (~== "<div class='field-day'>") (parseTags tags)) !!
+     (weekday - 1))
 
 -- menus :: [Node] -> Restaurant
 menus day =
-    Restaurant
-        (fromString "Einstein")
-        (filter (not . LT.null . spec) . map veg . map menu . partitions (~== "<p>") $
-         day)
+  Restaurant
+    (fromString "Einstein")
+    (take 4 .
+     filter (not . LT.null . spec) . map veg . map menu . partitions (~== "<p>") $
+     day)
 
 veg m@(Menu _ spec)
   | Just suf <- LT.stripPrefix (fromString "Veg:") spec =
