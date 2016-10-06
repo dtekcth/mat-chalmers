@@ -2,31 +2,36 @@
 module M.Karen where
 
 import qualified Data.Text.Lazy as T
-import           Data.Thyme
-import           System.Locale (defaultTimeLocale)
 import           Text.HTML.TagSoup
 
 import           M.Internal hiding (menu)
+import           Util
 
 -- | Get a restaurant that kåren has.
-getKaren :: LocalTime -> T.Text -> String -> IO (Maybe Restaurant)
-getKaren date name format = handle' (fmap (getRestaurant name) (get url))
-  where
-    url = (formatTime defaultTimeLocale format) date
+getKaren :: Int -> T.Text -> String -> IO (Maybe Restaurant)
+getKaren weekday name url = do
+  text <- handle' (get url)
+  return $ do
+    tags <- fmap parseTags text
+    let days = partitions (~== "<item>") tags
+    day <- safeIdx days weekday
+    return $ (getRestaurant name day)
 
-getRestaurant :: T.Text -> T.Text -> Restaurant
-getRestaurant name text = Restaurant name today
+getRestaurant :: T.Text -> [Tag T.Text] -> Restaurant
+getRestaurant name day = Restaurant name today
   where
-    today = map menu sects
-    sects = partitions (~== "<item>") tags :: [[Tag T.Text]]
-    tags = parseTags text :: [Tag T.Text]
+    today = map getMenu parts
+    parts = partitions (~== "<tr>") day
+    -- sects = partitions (~== "<item>") tags :: [[Tag T.Text]]
 
-menu :: [Tag T.Text] -> Menu
-menu section =
-    Menu
-        (innerText . takeNext . (dropWhile (~/= "<title>")) $ section)
-        (T.takeWhile (/= '@') .
-         T.strip . innerText . takeNext . (dropWhile (~/= "<description>")) $
-         section)
+-- menu :: [Tag T.Text] -> Menu
+getMenu part =
+  Menu
+    (T.strip . innerText . takeNext . (dropWhile (~/= "<b>")) $ s)
+    (T.strip . innerText . takeNext . (dropWhile (~/= "<td>")) $ s)
   where
-    takeNext = take 1 . drop 1
+    s = drop 1 . dropWhile (~/= "<td>") $ part
+
+
+printer :: Show a => a -> IO ()
+printer = putStrLn . take 500 . show

@@ -1,43 +1,37 @@
 -- | Get daily menu for Einstein
 module M.Einstein where
 
-import           Control.Lens
-import qualified Data.Text.Lazy as LT
-import           Data.Thyme
-import           Data.Thyme.Calendar.WeekDate
+import qualified Data.Text.Lazy as T
 import           GHC.Exts
 import           Text.HTML.TagSoup
 
 import           M.Internal hiding (menu, date)
+import           Util
 
 -- | Get Einstein menu
-getEinstein :: LocalTime -> IO (Maybe Restaurant)
-getEinstein date =
-  handle' (fmap (getRestaurant weekday)
-                (get "http://butlercatering.se/einstein"))
-  where weekday =
-          date ^. (_localDay . mondayWeek . _mwDay)
+getEinstein :: Int -> IO (Maybe Restaurant)
+getEinstein weekday = do
+  text <- handle' (get "http://butlercatering.se/einstein")
+  return (text >>= getRestaurant weekday)
 
-getRestaurant :: Int -> LT.Text -> Restaurant
+getRestaurant :: Int -> T.Text -> Maybe Restaurant
 getRestaurant weekday tags =
-  menus
-    ((partitions (~== "<div class='field-day'>") (parseTags tags)) !!
-     (weekday - 1))
+  do let parts = partitions (~== "<div class='field-day'>") (parseTags tags)
+     days <- safeIdx parts weekday
+     return (menus days)
 
 -- menus :: [Node] -> Restaurant
 menus day =
   Restaurant
     (fromString "Einstein")
     (take 4 .
-     filter (not . LT.null . spec) . map veg . map menu . partitions (~== "<p>") $
+     filter (not . T.null . spec) . map veg . map menu . partitions (~== "<p>") $
      day)
 
 veg m@(Menu _ spec)
-  | Just suf <- LT.stripPrefix (fromString "Veg:") spec =
-      Menu (fromString "Vegetarisk") (LT.strip suf)
+  | Just suf <- T.stripPrefix (fromString "Veg:") spec =
+      Menu (fromString "Vegetarisk") (T.strip suf)
   | otherwise = m
 
 -- menu :: Element -> Menu
-menu spec = Menu (fromString "Lunch") (LT.strip . innerText . takeNext $ spec)
-
-takeNext = take 1 . drop 1
+menu spec = Menu (fromString "Lunch") (T.strip . innerText . takeNext $ spec)

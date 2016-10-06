@@ -64,6 +64,7 @@ executable mat-chalmers
                , M.Karen
                , V
                , Config
+               , Util
 
   -- LANGUAGE extensions used by modules in this package.
   other-extensions: OverloadedStrings
