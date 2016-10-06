@@ -7,8 +7,7 @@ Lunch menus on Campus Johanneberg
 
 - `git clone ...`
 - `cd ...`
-- copy the stack file for your preffered GHC version
-  (`stack-7.10.3.yaml` or `stack-7.8.4.yaml`) to `stack.yaml`.
+- copy the stack file for your preferred GHC version to `stack.yaml`.
 - `stack build`
 
 # Credits
