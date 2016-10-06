@@ -24,6 +24,7 @@ getRestaurant weekday tags =
 menus day =
   Restaurant
     (fromString "Einstein")
+    (fromString "http://butlercatering.se/einstein")
     (take 4 .
      filter (not . T.null . spec) . map veg . map menu . partitions (~== "<p>") $
      day)

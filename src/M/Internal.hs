@@ -17,6 +17,7 @@ data View = View
 -- | One pretty restaurant.
 data Restaurant = Restaurant
   { name :: T.Text
+  , url :: T.Text
   , menu :: [Menu]
   } deriving (Eq, Show)
 

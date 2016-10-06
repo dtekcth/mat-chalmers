@@ -35,28 +35,36 @@ refresh c = do
 update :: Config -> IO View
 update c = do
   dateNow <- fmap (view _zonedTimeToLocalTime) getZonedTime
-  let (day,date) =
-           if (dateNow ^. (_localTimeOfDay . _todHour)) >= nextDayHour c
-              then ("Tomorrow",dateNow & (_localDay . gregorian . _ymdDay) %~ (+ 1))
-              else ("Today",dateNow)
+  let (day, date) =
+        if (dateNow ^. (_localTimeOfDay . _todHour)) >= nextDayHour c
+          then ( "Tomorrow"
+               , dateNow & (_localDay . gregorian . _ymdDay) %~ (+ 1))
+          else ("Today", dateNow)
   let weekday = (date ^. (_localDay . mondayWeek . _mwDay)) - 1
   rest <-
     fmap
       catMaybes
       (sequence
-         [ getKaren weekday "K\229rrestaurangen" karen
-         , getKaren weekday "Linsen" linsen
+         [ getKaren weekday "K\229rrestaurangen" karen karenl
+         , getKaren weekday "Linsen" linsen linsenl
          , getEinstein weekday
-         , getKaren weekday "L's Kitchen" ls
-         , getKaren weekday "Xpress" xpress
+         , getKaren weekday "L's Kitchen" ls lsl
+         , getKaren weekday "Xpress" xpress xpressl
          ])
-  return (View rest (fromString (day ++ (formatTime defaultTimeLocale " / %F" date))))
+  return
+    (View rest (fromString (day ++ (formatTime defaultTimeLocale " / %F" date))))
   where
     karen =
       "http://intern.chalmerskonferens.se/view/restaurant/karrestaurangen/Veckomeny.rss"
+    karenl =
+      "http://chalmerskonferens.se/restauranger/johanneberg/karrestaurangen/"
     ls =
       "http://intern.chalmerskonferens.se/view/restaurant/l-s-kitchen/Projektor.rss"
+    lsl = "http://chalmerskonferens.se/restauranger/lindholmen/ls-kitchen/"
     linsen =
       "http://intern.chalmerskonferens.se/view/restaurant/linsen/RSS%20Feed.rss"
+    linsenl =
+      "http://chalmerskonferens.se/restauranger/johanneberg/restaurangcafe-linsen/"
     xpress =
       "http://intern.chalmerskonferens.se/view/restaurant/express/Vänster.rss"
+    xpressl = "http://chalmerskonferens.se/restauranger/johanneberg/express/"

@@ -27,7 +27,7 @@ renderView (View{..}) =
 
 renderRest :: Restaurant -> Html ()
 renderRest (Restaurant{..}) =
-  box (do h2_ (toHtml name)
+  box (do h2_ (toHtml name >> " " >> a_ [href_ (T.toStrict url)] "☛")
           ul_ [class_ "food-menu"]
               (if null menu
                   then li_ "No lunch to-day!"

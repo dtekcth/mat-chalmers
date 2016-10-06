@@ -8,21 +8,20 @@ import           M.Internal hiding (menu)
 import           Util
 
 -- | Get a restaurant that kåren has.
-getKaren :: Int -> T.Text -> String -> IO (Maybe Restaurant)
-getKaren weekday name url = do
-  text <- handle' (get url)
+getKaren :: Int -> T.Text -> String -> T.Text -> IO (Maybe Restaurant)
+getKaren weekday name menuUrl restUrl = do
+  text <- handle' (get menuUrl)
   return $ do
     tags <- fmap parseTags text
     let days = partitions (~== "<item>") tags
     day <- safeIdx days weekday
-    return $ (getRestaurant name day)
+    return $ (getRestaurant name restUrl day)
 
-getRestaurant :: T.Text -> [Tag T.Text] -> Restaurant
-getRestaurant name day = Restaurant name today
+getRestaurant :: T.Text -> T.Text -> [Tag T.Text] -> Restaurant
+getRestaurant name url day = Restaurant name url today
   where
     today = map getMenu parts
     parts = partitions (~== "<tr>") day
-    -- sects = partitions (~== "<item>") tags :: [[Tag T.Text]]
 
 -- menu :: [Tag T.Text] -> Menu
 getMenu part =
