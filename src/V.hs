@@ -7,7 +7,10 @@ module V
 
 import           Data.Monoid
 import qualified Data.Text.Lazy as T
+import           Data.Thyme
 import           Lucid
+import           System.Locale (defaultTimeLocale)
+
 
 import           M
 
@@ -15,31 +18,38 @@ render :: View -> T.Text
 render v = renderText (renderView v)
 
 renderView :: View -> Html ()
-renderView (View{..}) =
-  doctypehtml_
-    (do sitehead
-        body_
-          (do div_ [class_ "container-fluid main"]
-                   (do h1_ (toHtml date)
-                       div_ (mconcat (map renderRest restaurants))
-                       sitefooter)
-              toHtmlRaw analytics))
+renderView (View {..}) =
+  doctypehtml_ $ do
+    sitehead
+    body_ $ do
+      div_ [class_ "container-fluid main"] $ do
+        h1_ $ do
+          toHtml day
+          " / "
+          toHtml (formatTime defaultTimeLocale "%F" date)
+        if null restaurants
+          then div_ . box_ . h3_ $ ("No lunches " >> toHtml day)
+          else div_ (mconcat (map renderRest restaurants))
+        sitefooter
+      toHtmlRaw analytics
 
 renderRest :: Restaurant -> Html ()
-renderRest (Restaurant{..}) =
-  box (do h2_ (toHtml name >> " " >> a_ [href_ (T.toStrict url)] "☛")
-          ul_ [class_ "food-menu"]
-              (if null menu
-                  then li_ "No lunch to-day!"
-                  else mconcat (map renderMenu menu)))
+renderRest (Restaurant {..}) =
+  box_
+    (do h2_ (toHtml name >> " " >> a_ [href_ (T.toStrict url)] "☛")
+        ul_
+          [class_ "food-menu"]
+          (if null menu
+             then li_ "No lunch this day!"
+             else mconcat (map renderMenu menu)))
 
 renderMenu :: Menu -> Html ()
 renderMenu (Menu{..}) =
   li_ (do h3_ (toHtml lunch)
           toHtml spec)
 
-box :: Html () -> Html ()
-box = div_ [class_ "col-xs-12 cols-sm-6 col-md-4 food"]
+box_ :: Html () -> Html ()
+box_ = div_ [class_ "col-xs-12 cols-sm-6 col-md-4 food"]
 
 sitehead :: Html ()
 sitehead =
@@ -57,7 +67,7 @@ sitehead =
 sitefooter :: Html ()
 sitefooter =
   footer_ [class_ "col-xs-12 col-sm-12 col-md-12"]
-          (do "Use at your own risk :) // "
+          (do "Eat at your own risk :) // "
               a_ [href_ "https://github.com/adamse/mat-chalmers"] "Source at Github"
               " // "
               a_ [href_ "http://kortladdning3.chalmerskonferens.se/"] "Charge your card")

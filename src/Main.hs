@@ -17,19 +17,18 @@ import V (render)
 
 main :: IO ()
 main = do
-    upd <- liftIO (newMVar ()) -- putMVar when to update
-    (view,refreshAction) <- liftIO (refresh config)
-    liftIO . forkIO . forever $ refreshAction upd
-    liftIO . forkIO . forever $
-        tryPutMVar upd () >> threadDelay (updateInterval config)
-    staticDir <- liftIO (getDataFileName "static")
-    scotty
-        5007
-        (do middleware (staticPolicy (noDots >-> addBase staticDir))
-            middleware logStdout
-            get "/" (site view)
-            get "/r" (liftIO (tryPutMVar upd ()) >> redirect "/"))
+  upd <- liftIO (newMVar ()) -- putMVar when to update
+  (view, refreshAction) <- liftIO (refresh config)
+  liftIO . forkIO . forever $ refreshAction upd
+  liftIO . forkIO . forever $
+    tryPutMVar upd () >> threadDelay (updateInterval config)
+  staticDir <- liftIO (getDataFileName "static")
+  scotty 5007 $ do
+    middleware (staticPolicy (noDots >-> addBase staticDir))
+    middleware logStdout
+    get "/" (site view)
+    get "/r" (liftIO (tryPutMVar upd ()) >> redirect "/")
   where
-    site rref =
-        (do view <- liftIO (readIORef rref)
-            html (render view))
+    site rref = do
+      view <- liftIO (readIORef rref)
+      html (render view)

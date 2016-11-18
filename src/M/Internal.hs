@@ -6,12 +6,15 @@ import           Control.Exception
 import           Control.Monad
 import qualified Data.Text.Lazy as T
 import           Data.Text.Lazy.Encoding (decodeUtf8)
+import           Data.Thyme
 import           Network.HTTP.Conduit
+
 
 -- | What to pass to template.
 data View = View
   { restaurants :: [Restaurant]
-  , date :: T.Text
+  , day :: T.Text
+  , date :: LocalTime
   } deriving (Eq, Show)
 
 -- | One pretty restaurant.
@@ -26,7 +29,6 @@ data Menu = Menu
   { lunch :: T.Text
   , spec :: T.Text
   } deriving (Eq, Show)
-
 
 get :: String -> IO T.Text
 get url = liftM decodeUtf8 (simpleHttp url)

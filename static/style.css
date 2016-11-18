@@ -41,10 +41,11 @@ li {
 }
 
 .food {
-  position: relative;
-  margin-top: 20px;
+    position: relative;
+    margin-top: 20px;
 }
 
 footer {
-  font-size: 0.9em;
+    font-size: 0.9em;
+    margin-top: 20px;
 }

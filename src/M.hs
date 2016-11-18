@@ -11,10 +11,8 @@ import Control.Concurrent.MVar
 import Control.Lens
 import Data.IORef
 import Data.Maybe
-import Data.String (fromString)
 import Data.Thyme
 import Data.Thyme.Calendar.WeekDate
-import System.Locale (defaultTimeLocale)
 
 import Config
 import M.Einstein
@@ -24,7 +22,8 @@ import M.Karen
 -- | Refreshes menus.
 refresh :: Config -> IO (IORef View, MVar () -> IO ())
 refresh c = do
-  ref <- newIORef (View [] "")
+  date <- fmap (view _zonedTimeToLocalTime) getZonedTime
+  ref <- newIORef (View [] "" date)
   return
     ( ref
     , \upd -> do
@@ -42,17 +41,16 @@ update c = do
           else ("Today", dateNow)
   let weekday = (date ^. (_localDay . mondayWeek . _mwDay)) - 1
   rest <-
-    fmap
-      catMaybes
-      (sequence
-         [ getKaren weekday "K\229rrestaurangen" karen karenl
-         , getKaren weekday "Linsen" linsen linsenl
-         , getEinstein weekday
-         , getKaren weekday "L's Kitchen" ls lsl
-         , getKaren weekday "Xpress" xpress xpressl
-         ])
+    fmap catMaybes $
+    sequence
+      [ getKaren weekday "K\229rrestaurangen" karen karenl
+      , getKaren weekday "Linsen" linsen linsenl
+      , getEinstein weekday
+      , getKaren weekday "L's Kitchen" ls lsl
+      , getKaren weekday "Xpress" xpress xpressl
+      ]
   return
-    (View rest (fromString (day ++ (formatTime defaultTimeLocale " / %F" date))))
+    (View rest day date)
   where
     karen =
       "http://intern.chalmerskonferens.se/view/restaurant/karrestaurangen/Veckomeny.rss"
