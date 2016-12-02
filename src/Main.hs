@@ -19,16 +19,26 @@ main :: IO ()
 main = do
   upd <- liftIO (newMVar ()) -- putMVar when to update
   (view, refreshAction) <- liftIO (refresh config)
-  liftIO . forkIO . forever $ refreshAction upd
-  liftIO . forkIO . forever $
+
+  -- update thread
+  forkIO . forever $ refreshAction upd
+
+  -- timer thread
+  forkIO . forever $
     tryPutMVar upd () >> threadDelay (updateInterval config)
-  staticDir <- liftIO (getDataFileName "static")
-  scotty 5007 $ do
+
+  -- serve webpage
+  serve view upd
+
+serve :: IORef View -- View model
+      -> MVar () -- Update signal
+      -> IO ()
+serve view upd = do
+  staticDir <- getDataFileName "static"
+  scotty (servePort config) $ do
     middleware (staticPolicy (noDots >-> addBase staticDir))
     middleware logStdout
-    get "/" (site view)
-    get "/r" (liftIO (tryPutMVar upd ()) >> redirect "/")
+    get "/" site
+    get "/r" (liftIO (tryPutMVar upd ()) >> redirect "/") -- force update
   where
-    site rref = do
-      view <- liftIO (readIORef rref)
-      html (render view)
+    site = (html . render) =<< liftIO (readIORef view)

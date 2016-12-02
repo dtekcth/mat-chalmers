@@ -20,7 +20,9 @@ import M.Internal
 import M.Karen
 
 -- | Refreshes menus.
-refresh :: Config -> IO (IORef View, MVar () -> IO ())
+refresh :: Config
+        -> IO (IORef View -- view model
+              , MVar () -> IO ()) -- update view
 refresh c = do
   date <- fmap (view _zonedTimeToLocalTime) getZonedTime
   ref <- newIORef (View [] "" date)
