@@ -87,6 +87,7 @@ executable mat-chalmers
                , thyme
                , lens
                , old-locale
+               , descriptive
 
   -- Base language which the package is written in.
   default-language: Haskell2010
