@@ -1,5 +1,9 @@
 flags: {}
 packages:
 - '.'
+- location:
+    git: https://github.com/alpmestan/tagsoup-lens
+    commit: 83ea5b8
+  extra-dep: true
 extra-deps:
 resolver: lts-7.0
