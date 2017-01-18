@@ -83,7 +83,6 @@ executable mat-chalmers
                , bytestring
                , http-conduit
                , tagsoup
-               , tagsoup-lens
                , thyme
                , lens
                , old-locale
