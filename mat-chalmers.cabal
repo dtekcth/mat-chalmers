@@ -87,6 +87,10 @@ executable mat-chalmers
                , lens
                , old-locale
                , descriptive
+               , file-embed
+               , css-text
+               , base64-bytestring
+               , bytestring
 
   -- Base language which the package is written in.
   default-language: Haskell2010

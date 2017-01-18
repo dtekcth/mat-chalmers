@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 module V
   ( View (..)
@@ -7,10 +9,17 @@ module V
 
 -- import           Data.Monoid
 import qualified Data.Text.Lazy as T
+import qualified Data.Text.Lazy.Builder as T
+import qualified Data.Text.Lazy.Encoding as T
+import qualified Data.ByteString.Lazy as B
 import           Data.Thyme
 import           Lucid
 import           System.Locale (defaultTimeLocale)
-
+import qualified Text.CSS.Parse as CSS
+import qualified Text.CSS.Render as CSS
+import           Data.ByteString.Base64.URL as B64
+import           Data.FileEmbed
+import           Data.Monoid
 
 import           M
 
@@ -56,12 +65,12 @@ sitehead =
   head_ (do meta_ [charset_ "utf-8"]
             meta_ [name_ "viewport"
                   ,content_ "width=device-width, initial-scale=1"]
-            link_ [rel_ "icon",type_ "image/png",href_ "icon.png"]
+            link_ [rel_ "icon",type_ "image/png",href_ icon]
             link_ [rel_ "stylesheet"
                   ,href_ "//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css"]
             link_ [rel_ "stylesheet"
                   ,href_ "//fonts.googleapis.com/css?family=Anonymous+Pro:400,700"]
-            link_ [rel_ "stylesheet",href_ "style.css"]
+            style_ [] css
             title_ "Lunch at Chalmers")
 
 sitefooter :: Html ()
@@ -74,3 +83,12 @@ sitefooter =
 
 analytics :: T.Text
 analytics = "<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-60251317-1', 'auto');ga('send', 'pageview');</script>"
+
+css :: T.Text
+css =
+  (either error (T.toLazyText . CSS.renderNestedBlocks) . CSS.parseNestedBlocks)
+    $(embedStringFile "static/style.css")
+
+icon =
+  "data:image/png;base64," <>
+  (T.toStrict . T.decodeUtf8 . B.fromStrict . B64.encode $ $(embedFile "static/icon.png"))
