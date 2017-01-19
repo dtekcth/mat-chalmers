@@ -10,14 +10,11 @@ module V
 -- import           Data.Monoid
 import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.Builder as T
-import qualified Data.Text.Lazy.Encoding as T
-import qualified Data.ByteString.Lazy as B
 import           Data.Thyme
 import           Lucid
 import           System.Locale (defaultTimeLocale)
 import qualified Text.CSS.Parse as CSS
 import qualified Text.CSS.Render as CSS
-import           Data.ByteString.Base64.URL as B64
 import           Data.FileEmbed
 import           Data.Monoid
 
@@ -65,7 +62,7 @@ sitehead =
   head_ (do meta_ [charset_ "utf-8"]
             meta_ [name_ "viewport"
                   ,content_ "width=device-width, initial-scale=1"]
-            link_ [rel_ "icon",type_ "image/png",href_ icon]
+            link_ [rel_ "icon",type_ "image/png",href_ "icon.png"]
             link_ [rel_ "stylesheet"
                   ,href_ "//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css"]
             link_ [rel_ "stylesheet"
@@ -88,7 +85,3 @@ css :: T.Text
 css =
   (either error (T.toLazyText . CSS.renderNestedBlocks) . CSS.parseNestedBlocks)
     $(embedStringFile "static/style.css")
-
-icon =
-  "data:image/png;base64," <>
-  (T.toStrict . T.decodeUtf8 . B.fromStrict . B64.encode $ $(embedFile "static/icon.png"))

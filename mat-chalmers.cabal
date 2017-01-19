@@ -74,23 +74,21 @@ executable mat-chalmers
 
   -- Other library packages from which modules are imported.
   build-depends: base >=4.7
-               , mtl
-               , scotty
-               , wai-middleware-static
-               , wai-extra
-               , lucid >= 2
-               , text
                , bytestring
-               , http-conduit
-               , tagsoup
-               , thyme
-               , lens
-               , old-locale
+               , css-text
                , descriptive
                , file-embed
-               , css-text
-               , base64-bytestring
-               , bytestring
+               , http-conduit
+               , lens
+               , lucid >= 2
+               , mtl
+               , old-locale
+               , scotty
+               , tagsoup
+               , text
+               , thyme
+               , wai-extra
+               , wai-middleware-static-embedded
 
   -- Base language which the package is written in.
   default-language: Haskell2010
