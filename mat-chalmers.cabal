@@ -76,7 +76,6 @@ executable mat-chalmers
   build-depends: base >=4.7
                , bytestring
                , css-text
-               , descriptive
                , file-embed
                , http-conduit
                , lens

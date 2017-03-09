@@ -7,7 +7,7 @@ module V
   , render
   ) where
 
--- import           Data.Monoid
+import           Data.FileEmbed
 import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.Builder as T
 import           Data.Thyme
@@ -15,8 +15,6 @@ import           Lucid
 import           System.Locale (defaultTimeLocale)
 import qualified Text.CSS.Parse as CSS
 import qualified Text.CSS.Render as CSS
-import           Data.FileEmbed
-import           Data.Monoid
 
 import           M
 

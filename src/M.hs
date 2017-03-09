@@ -37,7 +37,7 @@ update :: Config -> IO View
 update c = do
   dateNow <- fmap (view _zonedTimeToLocalTime) getZonedTime
   let (day, date) =
-        if (dateNow ^. (_localTimeOfDay . _todHour)) >= nextDayHour c
+        if (dateNow ^. (_localTimeOfDay . _todHour)) >= view cNextDayHour c
           then ( "Tomorrow"
                , dateNow & (_localDay . gregorian . _ymdDay) %~ (+ 1))
           else ("Today", dateNow)
