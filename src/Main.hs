@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE BangPatterns #-}
 module Main (main) where
 
 import           Control.Concurrent
@@ -31,19 +32,26 @@ opts =
 
 main :: IO ()
 main = do
-  (confs, _, _) <- getOpt Permute opts <$> getArgs
-  let config = foldl (flip id) defaultConfig confs
-  if view cHelp config
-    then putStrLn $ usageInfo "mat-chalmers [OPTION...]" opts
-    else do
-    upd <- newMVar () -- putMVar when to update
-    (viewRef, refreshAction) <- refresh config
-    -- updater thread
-    forkIO . forever $ refreshAction upd
-    -- timer thread
-    forkIO . forever $ tryPutMVar upd () >> threadDelay (view cInterval config)
-    -- serve webpage
-    serve config viewRef upd
+  args <- getArgs
+  case getOpt Permute opts args of
+    (_, _, _:_) -> usage
+    (_, _:_, _) -> usage
+    (!confs, _, _) -> do
+      let config = foldl (flip id) defaultConfig confs
+
+      if view cHelp config
+        then usage
+        else do
+        upd <- newMVar () -- putMVar when to update
+        (viewRef, refreshAction) <- refresh config
+        -- updater thread
+        forkIO . forever $ refreshAction upd
+        -- timer thread
+        forkIO . forever $ tryPutMVar upd () >> threadDelay (view cInterval config)
+        -- serve webpage
+        serve config viewRef upd
+  where
+    usage = putStrLn $ usageInfo "mat-chalmers [OPTION...]" opts
 
 serve
   :: Config

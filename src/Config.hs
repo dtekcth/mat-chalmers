@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE BangPatterns #-}
 -- | Configuration
 
 module Config where
@@ -8,10 +9,10 @@ import Control.Lens
 
 -- | Configuration record
 data Config = Config
-  { _cHelp :: Bool
-  , _cNextDayHour :: Int
-  , _cInterval :: Int
-  , _cPort :: Int
+  { _cHelp :: !Bool
+  , _cNextDayHour :: !Int
+  , _cInterval :: !Int
+  , _cPort :: !Int
   } deriving (Eq, Show)
 
 makeLenses ''Config

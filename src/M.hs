@@ -16,6 +16,7 @@ import Data.Thyme.Calendar.WeekDate
 
 import Config
 import M.Einstein
+import M.Wijkanders
 import M.Internal
 import M.Karen
 
@@ -50,6 +51,7 @@ update c = do
       , getEinstein weekday
       , getKaren weekday "L's Kitchen" ls lsl
       , getKaren weekday "Xpress" xpress xpressl
+      , getWijkanders weekday
       ]
   return
     (View rest day date)
