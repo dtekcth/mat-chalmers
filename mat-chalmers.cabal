@@ -64,6 +64,7 @@ executable mat-chalmers
                , M.Internal
                , M.Einstein
                , M.Karen
+               , M.Wijkanders
                , V
                , Config
                , Util
