@@ -18,9 +18,7 @@ getWijkanders weekday = do
     dayt <- getDay weekday tags
     mst <- getMenus dayt
     let ms = catMaybes $ map mkMenu mst
-    if null ms
-      then Nothing
-      else return (mkRestaurant ms)
+    return (mkRestaurant ms)
 
 getTags :: IO (Maybe ([Tag T.Text]))
 getTags = do
@@ -43,8 +41,10 @@ mkMenu :: [Tag T.Text] -> Maybe Menu
 mkMenu m = do
   what <- safeIdx m 1
   food <- safeIdx m 3
-  let lunch = T.toTitle . T.init . text $ [what]
-  return (Menu lunch (text [food]))
+  let lunch = T.toTitle . T.dropEnd 1 . text $ [what]
+  if T.null lunch
+    then Nothing
+    else return $ Menu lunch (text [food])
 
 text = T.strip . innerText
 
