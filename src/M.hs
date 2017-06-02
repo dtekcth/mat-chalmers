@@ -42,7 +42,7 @@ update c = do
           then ( "Tomorrow"
                , dateNow & (_localDay . gregorian . _ymdDay) %~ (+ 1))
           else ("Today", dateNow)
-  let weekday = (date ^. (_localDay . mondayWeek . _mwDay))
+  let weekday = (date ^. (_localDay . mondayWeek . _mwDay)) - 1
   rest <-
     fmap catMaybes $
     sequence
