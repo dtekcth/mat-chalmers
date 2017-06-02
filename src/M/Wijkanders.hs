@@ -29,7 +29,7 @@ getDay :: Int -> [Tag T.Text] -> Maybe [Tag T.Text]
 getDay weekday tags = do
   post <- safeHead $ partitions (~== "<div class='post-content'>") tags
   let ps = partitions (~== "<p>") post
-  let days = drop 4 ps
+  let days = drop 5 ps
   safeIdx days weekday
 
 getMenus :: [Tag T.Text] -> Maybe [[Tag T.Text]]
