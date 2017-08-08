@@ -74,7 +74,8 @@ executable mat-chalmers
                   , RecordWildCards
 
   -- Other library packages from which modules are imported.
-  build-depends: base >=4.7
+  build-depends: aeson
+               , base >=4.7
                , bytestring
                , css-text
                , file-embed
@@ -87,6 +88,8 @@ executable mat-chalmers
                , tagsoup
                , text
                , thyme
+               , unordered-containers >= 0.2.7.1
+               , vector >= 0.11.0.0
                , wai-extra
                , wai-middleware-static-embedded
 
