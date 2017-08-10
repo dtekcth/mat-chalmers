@@ -1,36 +1,39 @@
+{-# LANGUAGE OverloadedStrings #-}
 -- |
 module M.Karen where
 
 import qualified Data.Text.Lazy as T
-import           Text.HTML.TagSoup
+import           Data.Aeson (decode)
+import           Data.Aeson.Types (Parser(..), fromJSON, parseEither)
 
 import           M.Internal hiding (menu)
+import           M.KarenJSON
 import           Util
 
 -- | Get a restaurant that kåren has.
 getKaren :: Int -> T.Text -> String -> T.Text -> IO (Maybe Restaurant)
-getKaren weekday name menuUrl restUrl = do
-  text <- handle' (get menuUrl)
-  return $ do
-    tags <- fmap parseTags text
-    let days = partitions (~== "<item>") tags
-    day <- safeIdx days weekday
-    return $ (getRestaurant name restUrl day)
+getKaren weekday name restUrl menuUrl = do
+  Just text <- handle' (get' restUrl)
+  case decode text of
+    Just val -> case parseEither parseRestaurants val of
+      Right rests -> return $ safeIndex weekday rests
+                           <*> pure name
+                           <*> pure menuUrl
+      Left msg    -> fail msg
 
-getRestaurant :: T.Text -> T.Text -> [Tag T.Text] -> Restaurant
-getRestaurant name url day = Restaurant name url today
-  where
-    today = map getMenu parts
-    parts = partitions (~== "<tr>") day
+    Nothing  -> fail "could not decode JSON"
 
--- menu :: [Tag T.Text] -> Menu
-getMenu part =
-  Menu
-    (T.strip . innerText . takeNext . (dropWhile (~/= "<b>")) $ s)
-    (T.strip . innerText . takeNext . (dropWhile (~/= "<td>")) $ s)
-  where
-    s = drop 1 . dropWhile (~/= "<td>") $ part
+  where safeIndex :: (Monad m, Num b, Eq b) => b -> [a] -> m a
+        safeIndex 0 (x:_) = pure x
+        safeIndex n (_:xs) = safeIndex (n - 1) xs
+        safeIndex _ _      = fail "safeIndex: index out of bounds"
 
-
-printer :: Show a => a -> IO ()
-printer = putStrLn . take 500 . show
+getDayName :: Int -> T.Text
+getDayName d | d >= 0 && d < 7 =
+               [ "Måndag"
+               , "Tisdag"
+               , "Onsdag"
+               , "Torsdag"
+               , "Fredag"
+               , "Lördag"
+               , "Söndag" ] !! d
