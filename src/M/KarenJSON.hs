@@ -14,32 +14,24 @@ import           Data.Thyme
 import           System.Locale (defaultTimeLocale)
 import           Data.Maybe (catMaybes)
 
-import           M.Internal
+import           M.Internal hiding (name, menu, lunch, url)
 
 -- | Partially applied Restaurant, apply name and url to get a Restaurant
 type RestaurantGen = TL.Text -> TL.Text -> Restaurant
-
--- | Partially applied View, apply name, url, day and date to get a View
-type ViewGen = TL.Text -> TL.Text -> TL.Text -> View
-
--- | Partially applied Menu, apply spec and get a Menu
-type MenuGen = TL.Text -> Menu
 
 mkRestaurant :: [Menu] -> RestaurantGen
 mkRestaurant menus name url = Restaurant name url menus
 
 parseRestaurants :: Value -> Parser [RestaurantGen]
 parseRestaurants = withObject "week lunch menu" $ \obj ->
-  case HM.lookup "menus" obj of
-    Just menus -> withArray' "array of menus" menus $ \arr ->
+  obj .:: "menus" $ \menus ->
+    withArray' "array of menus" menus $ \arr ->
       mapM parseRestaurant (V.toList arr)
-    Nothing    -> typeMismatch "array of menus" (Object obj)
 
 parseRestaurant :: Value -> Parser RestaurantGen
 parseRestaurant = withObject "menu object" $ \obj ->
-  case HM.lookup "recipeCategories" obj of
-    Just rcpCats -> mkRestaurant . catMaybes <$> go "array of recipe types" rcpCats
-    Nothing      -> fail "Key \"recipeCategories was not found\""
+  obj .:: "recipeCategories" $
+     (fmap (mkRestaurant . catMaybes) . go "array of recipe types")
 
   where go :: String -> Value -> Parser [Maybe Menu]
         go str (Array rcpCats) = withArray' str (Array rcpCats) parseMenus
@@ -49,10 +41,8 @@ parseMenus :: Array -> Parser [Maybe Menu]
 parseMenus arr = mapM (withObject "lunch dish" parseMenu') (V.toList arr)
 
   where parseMenu' :: Object -> Parser (Maybe Menu)
-        parseMenu' obj = case HM.lookup "recipes" obj of
-          Just (Array recps) -> parseMenu (lunchText obj) recps
-          Just v             -> typeMismatch "array of recipes" v
-          Nothing            -> fail "Key \"recipes\" was not found."
+        parseMenu' obj = obj .:: "recipes" $ \recps ->
+          withArray "array of recipes" (parseMenu (lunchText obj)) recps
 
         fromJust :: Maybe a -> a
         fromJust (Just a) = a
@@ -64,13 +54,14 @@ parseMenus arr = mapM (withObject "lunch dish" parseMenu') (V.toList arr)
 parseMenu :: TL.Text -> Array -> Parser (Maybe Menu)
 parseMenu lunch arr = case V.toList arr of
   (r:_) -> withObject' "recipe" r $ \obj ->
-    case HM.lookup "displayNames" obj of
-      Just dNames -> fmap (Menu lunch) <$> withArray "array of recipe texts" parseDisplayName dNames
-      Nothing     -> fail "Key \"displayNames\" not found."
+    obj .:: "displayNames"
+      $ (fmap (fmap (Menu lunch)) . withArray expected parseDispName)
   []     -> return Nothing
 
-parseDisplayName :: Array -> Parser (Maybe TL.Text)
-parseDisplayName arr = case V.toList arr of
+  where expected = "array of recipe texts"
+
+parseDispName :: Array -> Parser (Maybe TL.Text)
+parseDispName arr = case V.toList arr of
   (dn:_) -> mconcat $ withObject' <$> pure "recipe text"
                                   <*> pure dn
                                   <*> pure (.: "displayName")
@@ -81,6 +72,13 @@ withArray' expected val parser = withArray expected parser val
 
 withObject' :: String -> Value -> (Object -> Parser a) -> Parser a
 withObject' expected val parser = withObject expected parser val
+
+(.::) :: Object -> TS.Text -> (Value -> Parser a) -> Parser a
+(.::) obj field parser = case HM.lookup field obj of
+                           Just newObj -> parser newObj
+                           Nothing     -> fail $ "key \""
+                                               ++ show field
+                                               ++ "\" was not found"
 
 instance FromJSON RestaurantGen where
   parseJSON = parseRestaurant
