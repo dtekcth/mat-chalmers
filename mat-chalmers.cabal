@@ -49,6 +49,34 @@ data-files:
            static/style.css
            static/icon.png
 
+library
+  hs-source-dirs: src
+  exposed-modules:
+      M
+    , M.Types
+    , M.Einstein
+    , M.Karen
+    , M.Wijkanders
+    , V
+    , Config
+    , Util
+
+  build-depends: aeson
+               , base >=4.7
+               , bytestring
+               , css-text
+               , file-embed
+               , http-conduit
+               , lens
+               , lucid >= 2
+               , mtl
+               , old-locale
+               , scotty
+               , tagsoup
+               , text
+               , thyme
+               , unordered-containers >= 0.2.7.1
+               , vector >= 0.11.0.0
 
 executable mat-chalmers
   -- .hs or .lhs file containing the Main module.
@@ -59,22 +87,13 @@ executable mat-chalmers
   -- Directories containing source files.
   hs-source-dirs: src
 
-  -- Modules included in this executable, other than Main.
-  other-modules: M
-               , M.Internal
-               , M.Einstein
-               , M.Karen
-               , M.Wijkanders
-               , V
-               , Config
-               , Util
-
   -- LANGUAGE extensions used by modules in this package.
   other-extensions: OverloadedStrings
                   , RecordWildCards
 
   -- Other library packages from which modules are imported.
-  build-depends: aeson
+  build-depends: mat-chalmers
+               , aeson
                , base >=4.7
                , bytestring
                , css-text

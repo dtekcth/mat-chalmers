@@ -5,29 +5,35 @@ import qualified Data.Text.Lazy as T
 import           GHC.Exts
 import           Text.HTML.TagSoup
 
-import           M.Internal hiding (menu, date)
+import           M.Types hiding (menu, date)
 import           Util
 
--- | Get Einstein menu
-getEinstein :: Int -> IO (Maybe Restaurant)
-getEinstein weekday = do
-  text <- handle' (get "http://butlercatering.se/einstein")
-  return (text >>= getRestaurant weekday)
+myurl :: String
+myurl = "http://butlercatering.se/einstein"
 
-getRestaurant :: Int -> T.Text -> Maybe Restaurant
-getRestaurant weekday tags =
-  do let parts = partitions (~== "<div class='field-day'>") (parseTags tags)
-     days <- safeIdx parts weekday
-     return (menus days)
+myname :: T.Text
+myname = fromString "Einstein"
+
+-- | Get Einstein menu
+getEinstein :: Int -> IO Restaurant
+getEinstein weekday = do
+  text <- handle' (get myurl)
+  return $
+    Restaurant myname (fromString myurl) . maybe (Left NoLunch) Right $
+    getRestaurant weekday =<< text
+
+getRestaurant :: Int -> T.Text -> Maybe [Menu] -- Restaurant
+getRestaurant weekday tags = do
+  let parts = partitions (~== "<div class='field-day'>") (parseTags tags)
+  day <- safeIdx parts weekday
+  return $ menus day
 
 -- menus :: [Node] -> Restaurant
 menus day =
-  Restaurant
-    (fromString "Einstein")
-    (fromString "http://butlercatering.se/einstein")
-    (take 4 .
-     filter (not . T.null . spec) . map veg . map menu . partitions (~== "<p>") $
-     day)
+  (take 4 .
+   filter (\(Menu _ spec) -> not $ T.null spec) .
+   map veg . map menu . partitions (~== "<p>") $
+   day)
 
 veg m@(Menu _ spec)
   | Just suf <- T.stripPrefix (fromString "Veg:") spec =

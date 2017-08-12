@@ -5,16 +5,16 @@ module V
   , render
   ) where
 
-import           Data.FileEmbed
+import Data.FileEmbed
 import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.Builder as T
-import           Data.Thyme
-import           Lucid
-import           System.Locale (defaultTimeLocale)
+import Data.Thyme
+import Lucid
+import System.Locale (defaultTimeLocale)
 import qualified Text.CSS.Parse as CSS
 import qualified Text.CSS.Render as CSS
 
-import           M
+import M
 
 render :: View -> T.Text
 render v = renderText (renderView v)
@@ -36,17 +36,16 @@ renderView View{..} =
       toHtmlRaw analytics
 
 renderRest :: Restaurant -> Html ()
-renderRest Restaurant{..} =
-  box_
-    (do h2_ (toHtml name >> " " >> a_ [href_ (T.toStrict url)] "☛")
-        ul_
-          [class_ "food-menu"]
-          (if null menu
-             then li_ "No lunch this day!"
-             else mconcat (map renderMenu menu)))
+renderRest Restaurant {..} =
+  box_ $ do
+    h2_ (toHtml name >> " " >> a_ [href_ (T.toStrict url)] "☛")
+    ul_ [class_ "food-menu"] $
+      case menu of
+        Left _ -> li_ "No lunch this day!"
+        Right menus -> mconcat (map renderMenu menus)
 
 renderMenu :: Menu -> Html ()
-renderMenu Menu{..} =
+renderMenu (Menu lunch spec) =
   li_ (do h3_ (toHtml lunch)
           toHtml spec)
 
