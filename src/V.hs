@@ -72,8 +72,6 @@ sitefooter =
               "Problems? "
               a_ [href_ "https://github.com/adamse/mat-chalmers/issues/new"] "File an issue!"
               " // "
-              a_ [href_ "https://github.com/adamse/mat-chalmers"] "Source at Github"
-              " // "
               a_ [href_ "https://kortladdning3.chalmerskonferens.se/"] "Top-up your card")
 
 analytics :: T.Text
