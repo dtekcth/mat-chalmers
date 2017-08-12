@@ -55,14 +55,11 @@ library
 
   build-depends: aeson
                , base >=4.7
-               , bytestring
                , css-text
                , http-conduit
                , lens
                , lucid >= 2
-               , mtl
                , old-locale
-               , scotty
                , tagsoup
                , text
                , file-embed
@@ -81,19 +78,10 @@ executable mat-chalmers
   build-depends: mat-chalmers
                , base >=4.7
                , bytestring
-               , css-text
                , file-embed
-               , http-conduit
                , lens
-               , lucid >= 2
                , mtl
-               , old-locale
                , scotty
-               , tagsoup
-               , text
-               , thyme
-               , unordered-containers >= 0.2.7.1
-               , vector >= 0.11.0.0
                , wai-extra
                , wai-middleware-static-embedded
 
