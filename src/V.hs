@@ -1,7 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings, TemplateHaskell, RecordWildCards #-}
+
 module V
   ( View (..)
   , render
@@ -22,7 +20,7 @@ render :: View -> T.Text
 render v = renderText (renderView v)
 
 renderView :: View -> Html ()
-renderView (View {..}) =
+renderView View{..} =
   doctypehtml_ $ do
     sitehead
     body_ $ do
@@ -38,7 +36,7 @@ renderView (View {..}) =
       toHtmlRaw analytics
 
 renderRest :: Restaurant -> Html ()
-renderRest (Restaurant {..}) =
+renderRest Restaurant{..} =
   box_
     (do h2_ (toHtml name >> " " >> a_ [href_ (T.toStrict url)] "☛")
         ul_
@@ -48,7 +46,7 @@ renderRest (Restaurant {..}) =
              else mconcat (map renderMenu menu)))
 
 renderMenu :: Menu -> Html ()
-renderMenu (Menu{..}) =
+renderMenu Menu{..} =
   li_ (do h3_ (toHtml lunch)
           toHtml spec)
 

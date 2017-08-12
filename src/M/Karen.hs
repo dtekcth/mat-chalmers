@@ -1,36 +1,30 @@
+{-# LANGUAGE OverloadedStrings #-}
 -- |
 module M.Karen where
 
+import           Data.Aeson (decode)
+import           Data.Aeson.Types (parseEither)
 import qualified Data.Text.Lazy as T
-import           Text.HTML.TagSoup
 
-import           M.Internal hiding (menu)
-import           Util
+import           M.Internal hiding (menu, name, url, day)
+import           M.KarenJSON (RestaurantGen, parseRestaurants)
+import           Util (safeIdx)
 
 -- | Get a restaurant that kåren has.
 getKaren :: Int -> T.Text -> String -> T.Text -> IO (Maybe Restaurant)
-getKaren weekday name menuUrl restUrl = do
-  text <- handle' (get menuUrl)
-  return $ do
-    tags <- fmap parseTags text
-    let days = partitions (~== "<item>") tags
-    day <- safeIdx days weekday
-    return $ (getRestaurant name restUrl day)
+getKaren weekday name restUrl menuUrl = do
+  Just text <- handle' (get' restUrl)
+  case decode text of
+    Just val -> case parseEither parseRestaurants val of
+      Right rests -> return . Just $ getRestaurant rests name menuUrl weekday
+      Left  msg   -> fail msg
 
-getRestaurant :: T.Text -> T.Text -> [Tag T.Text] -> Restaurant
-getRestaurant name url day = Restaurant name url today
-  where
-    today = map getMenu parts
-    parts = partitions (~== "<tr>") day
+    Nothing  -> fail "could not decode JSON"
 
--- menu :: [Tag T.Text] -> Menu
-getMenu part =
-  Menu
-    (T.strip . innerText . takeNext . (dropWhile (~/= "<b>")) $ s)
-    (T.strip . innerText . takeNext . (dropWhile (~/= "<td>")) $ s)
-  where
-    s = drop 1 . dropWhile (~/= "<td>") $ part
+getRestaurant :: [RestaurantGen] -> T.Text -> T.Text -> Int -> Restaurant
+getRestaurant rests name url day =
+  noLunchHandler $ (\f -> f name url) <$> safeIdx rests day
 
-
-printer :: Show a => a -> IO ()
-printer = putStrLn . take 500 . show
+  where noLunchHandler :: Maybe Restaurant -> Restaurant
+        noLunchHandler (Just r) = r
+        noLunchHandler Nothing  = Restaurant name url []
