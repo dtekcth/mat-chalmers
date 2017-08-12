@@ -72,6 +72,9 @@ sitefooter :: Html ()
 sitefooter =
   footer_ [class_ "col-xs-12 col-sm-12 col-md-12"]
           (do "Eat at your own risk :) // "
+              "Problems? "
+              a_ [href_ "https://github.com/adamse/mat-chalmers/issues/new"] "File an issue!"
+              " // "
               a_ [href_ "https://github.com/adamse/mat-chalmers"] "Source at Github"
               " // "
               a_ [href_ "https://kortladdning3.chalmerskonferens.se/"] "Top-up your card")
