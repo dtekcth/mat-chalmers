@@ -15,6 +15,7 @@ import qualified Text.CSS.Parse as CSS
 import qualified Text.CSS.Render as CSS
 
 import M
+import M.Types (NoMenu(..))
 
 render :: View -> T.Text
 render v = renderText (renderView v)
@@ -41,7 +42,8 @@ renderRest Restaurant {..} =
     h2_ (toHtml name >> " " >> a_ [href_ (T.toStrict url)] "☛")
     ul_ [class_ "food-menu"] $
       case menu of
-        Left _ -> li_ "No lunch this day!"
+        Left NoLunch -> li_ "No lunch this day!"
+        Left SomethingWrong -> li_ "Something went wrong, please file an issue."
         Right menus -> mconcat (map renderMenu menus)
 
 renderMenu :: Menu -> Html ()
