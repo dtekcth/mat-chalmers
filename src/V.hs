@@ -8,6 +8,7 @@ module V
 import Data.FileEmbed
 import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.Builder as T
+import Data.Monoid
 import Data.Thyme
 import Lucid
 import System.Locale (defaultTimeLocale)
@@ -43,7 +44,8 @@ renderRest Restaurant {..} =
     ul_ [class_ "food-menu"] $
       case menu of
         Left NoLunch -> li_ "No lunch this day!"
-        Left SomethingWrong -> li_ "Something went wrong, please file an issue."
+        Left SomethingWrong -> li_ ("Something went wrong, " <>
+          (a_ [href_ $ T.toStrict "https://github.com/adamse/mat-chalmers/issues/new"] "please file an issue."))
         Right menus -> mconcat (map renderMenu menus)
 
 renderMenu :: Menu -> Html ()
