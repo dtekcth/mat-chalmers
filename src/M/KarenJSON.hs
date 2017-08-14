@@ -5,83 +5,36 @@
 
 module M.KarenJSON where
 
-import           Data.Aeson.Types
-import qualified Data.HashMap.Strict as HM
-import qualified Data.Vector as V
-import qualified Data.Text.Lazy as TL
+import Data.Aeson.Types
 import qualified Data.Text as TS
-import           Data.Thyme
-import           System.Locale (defaultTimeLocale)
-import           Data.Maybe (catMaybes)
+import Data.Thyme
+import System.Locale (defaultTimeLocale)
+import Data.Traversable (traverse)
 
-import           M.Internal hiding (name, menu, lunch, url)
+import M.Types hiding (name, menu, url)
 
--- | Partially applied Restaurant, apply name and url to get a Restaurant
-type RestaurantGen = TL.Text -> TL.Text -> Restaurant
+-- | Get the menu for a specific day. Nothing if there is no menu for
+-- that day.
+parseMenuForDay :: Day -> Value -> Parser (Maybe [Menu])
+parseMenuForDay day = withObject "top" $ \obj -> do
+  menuArray <- obj .: "menus"
+  menus <- traverse parseMenus menuArray
+  return $ lookup day menus
 
-mkRestaurant :: [Menu] -> RestaurantGen
-mkRestaurant menus name url = Restaurant name url menus
+parseMenus :: Value -> Parser (Day, [Menu])
+parseMenus = withObject "days" $ \menu -> do
+  day <- fmap localDay $ menu .: "menuDate"
+  recips <- menu .: "recipeCategories"
+  menu' <- traverse parseMenu recips
+  return (day, menu')
 
-parseRestaurants :: Value -> Parser [RestaurantGen]
-parseRestaurants = withObject "week lunch menu" $ \obj ->
-  obj .:: "menus" $ \menus ->
-    withArray' "array of menus" menus $ \arr ->
-      mapM parseRestaurant (V.toList arr)
-
-parseRestaurant :: Value -> Parser RestaurantGen
-parseRestaurant = withObject "menu object" $ \obj ->
-  obj .:: "recipeCategories" $
-     (fmap (mkRestaurant . catMaybes) . go "array of recipe types")
-
-  where go :: String -> Value -> Parser [Maybe Menu]
-        go str (Array rcpCats) = withArray' str (Array rcpCats) parseMenus
-        go _   obj             = typeMismatch "array of recipe types" obj
-
-parseMenus :: Array -> Parser [Maybe Menu]
-parseMenus arr = mapM (withObject "lunch dish" parseMenu') (V.toList arr)
-
-  where parseMenu' :: Object -> Parser (Maybe Menu)
-        parseMenu' obj = obj .:: "recipes" $ \recps ->
-          withArray "array of recipes" (parseMenu (lunchText obj)) recps
-
-        fromJust :: Maybe a -> a
-        fromJust (Just a) = a
-        fromJust Nothing  = error "fromJust: Nothing"
-
-        lunchText :: Object -> TL.Text
-        lunchText = fromJust . parseMaybe (.: "name")
-
-parseMenu :: TL.Text -> Array -> Parser (Maybe Menu)
-parseMenu lunch arr = case V.toList arr of
-  (r:_) -> withObject' "recipe" r $ \obj ->
-    obj .:: "displayNames"
-      $ (fmap (fmap (Menu lunch)) . withArray expected parseDispName)
-  []     -> return Nothing
-
-  where expected = "array of recipe texts"
-
-parseDispName :: Array -> Parser (Maybe TL.Text)
-parseDispName arr = case V.toList arr of
-  (dn:_) -> mconcat $ withObject' <$> pure "recipe text"
-                                  <*> pure dn
-                                  <*> pure (.: "displayName")
-  []     -> return Nothing
-
-withArray' :: String -> Value -> (Array -> Parser a) -> Parser a
-withArray' expected val parser = withArray expected parser val
-
-withObject' :: String -> Value -> (Object -> Parser a) -> Parser a
-withObject' expected val parser = withObject expected parser val
-
-(.::) :: Object -> TS.Text -> (Value -> Parser a) -> Parser a
-(.::) obj field parser = case HM.lookup field obj of
-                           Just newObj -> parser newObj
-                           Nothing     -> fail $ "key \""
-                                               ++ show field
-                                               ++ "\" was not found"
-
-instance FromJSON RestaurantGen where
-  parseJSON = parseRestaurant
+parseMenu :: Value -> Parser Menu
+parseMenu = withObject "day" $ \obj -> do
+  name <- obj .: "name"
+  (Object recip1:_) <- obj .: "recipes"
+  (Object what:_) <- recip1 .: "displayNames"
+  what' <- what .: "displayName"
+  return $ Menu name what'
 
 instance FromJSON LocalTime where
   parseJSON = withText "local time" $ \str ->

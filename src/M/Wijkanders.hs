@@ -3,22 +3,24 @@
 module M.Wijkanders (getWijkanders) where
 
 import qualified Data.Text.Lazy as T
-import           GHC.Exts
-import           Text.HTML.TagSoup
+import GHC.Exts
+import Text.HTML.TagSoup
 
-import           M.Internal hiding (menu, date)
-import           Util
+import M.Types hiding (menu, date)
+import Util
 import Data.Maybe (catMaybes)
 
-getWijkanders :: Int -> IO (Maybe Restaurant)
+getWijkanders :: Int -> IO Restaurant
 getWijkanders weekday = do
   ts <- getTags
-  return $ do
+  return . mkRestaurant . maybe (Left SomethingWrong) id $ do
     tags <- ts
     dayt <- getDay weekday tags
     mst <- getMenus dayt
     let ms = catMaybes $ map mkMenu mst
-    return (mkRestaurant ms)
+    return $ case ms of
+      [] -> Left NoLunch
+      _ -> Right ms
 
 getTags :: IO (Maybe ([Tag T.Text]))
 getTags = do
@@ -48,8 +50,7 @@ mkMenu m = do
 
 text = T.strip . innerText
 
-mkRestaurant ms =
+mkRestaurant =
   Restaurant
   (fromString "Wijkanders")
   (fromString "http://www.wijkanders.se/restaurangen/")
-  ms

@@ -2,29 +2,24 @@
 -- |
 module M.Karen where
 
-import           Data.Aeson (decode)
-import           Data.Aeson.Types (parseEither)
+import Data.Aeson (decode)
+import Data.Aeson.Types -- (parseMaybe)
 import qualified Data.Text.Lazy as T
+import Data.Thyme
 
-import           M.Internal hiding (menu, name, url, day)
-import           M.KarenJSON (RestaurantGen, parseRestaurants)
-import           Util (safeIdx)
+import M.Types hiding (menu, name, url, day)
+import M.KarenJSON
+import Util
 
 -- | Get a restaurant that kåren has.
-getKaren :: Int -> T.Text -> String -> T.Text -> IO (Maybe Restaurant)
+getKaren :: Day -> T.Text -> String -> T.Text -> IO Restaurant
 getKaren weekday name restUrl menuUrl = do
-  Just text <- handle' (get' restUrl)
-  case decode text of
-    Just val -> case parseEither parseRestaurants val of
-      Right rests -> return . Just $ getRestaurant rests name menuUrl weekday
-      Left  msg   -> fail msg
-
-    Nothing  -> fail "could not decode JSON"
-
-getRestaurant :: [RestaurantGen] -> T.Text -> T.Text -> Int -> Restaurant
-getRestaurant rests name url day =
-  noLunchHandler $ (\f -> f name url) <$> safeIdx rests day
-
-  where noLunchHandler :: Maybe Restaurant -> Restaurant
-        noLunchHandler (Just r) = r
-        noLunchHandler Nothing  = Restaurant name url []
+  text <- handle' (get' restUrl)
+  return $
+    Restaurant name menuUrl . maybe (Left SomethingWrong) id $ do
+      text' <- text
+      val <- decode text'
+      res <- parseMaybe (parseMenuForDay weekday) val
+      return $ case res of
+        Nothing -> Left NoLunch
+        Just l -> Right l

@@ -5,16 +5,17 @@ module V
   , render
   ) where
 
-import           Data.FileEmbed
+import Data.FileEmbed
 import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.Builder as T
-import           Data.Thyme
-import           Lucid
-import           System.Locale (defaultTimeLocale)
+import Data.Thyme
+import Lucid
+import System.Locale (defaultTimeLocale)
 import qualified Text.CSS.Parse as CSS
 import qualified Text.CSS.Render as CSS
 
-import           M
+import M
+import M.Types (NoMenu(..))
 
 render :: View -> T.Text
 render v = renderText (renderView v)
@@ -36,17 +37,17 @@ renderView View{..} =
       toHtmlRaw analytics
 
 renderRest :: Restaurant -> Html ()
-renderRest Restaurant{..} =
-  box_
-    (do h2_ (toHtml name >> " " >> a_ [href_ (T.toStrict url)] "☛")
-        ul_
-          [class_ "food-menu"]
-          (if null menu
-             then li_ "No lunch this day!"
-             else mconcat (map renderMenu menu)))
+renderRest Restaurant {..} =
+  box_ $ do
+    h2_ (toHtml name >> " " >> a_ [href_ (T.toStrict url)] "☛")
+    ul_ [class_ "food-menu"] $
+      case menu of
+        Left NoLunch -> li_ "No lunch this day!"
+        Left SomethingWrong -> li_ "Something went wrong, please file an issue."
+        Right menus -> mconcat (map renderMenu menus)
 
 renderMenu :: Menu -> Html ()
-renderMenu Menu{..} =
+renderMenu (Menu lunch spec) =
   li_ (do h3_ (toHtml lunch)
           toHtml spec)
 
@@ -70,7 +71,8 @@ sitefooter :: Html ()
 sitefooter =
   footer_ [class_ "col-xs-12 col-sm-12 col-md-12"]
           (do "Eat at your own risk :) // "
-              a_ [href_ "https://github.com/adamse/mat-chalmers"] "Source at Github"
+              "Problems? "
+              a_ [href_ "https://github.com/adamse/mat-chalmers/issues/new"] "File an issue!"
               " // "
               a_ [href_ "https://kortladdning3.chalmerskonferens.se/"] "Top-up your card")
 

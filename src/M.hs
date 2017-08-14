@@ -10,14 +10,13 @@ module M
 import Control.Concurrent.MVar
 import Control.Lens
 import Data.IORef
-import Data.Maybe
 import Data.Thyme
 import Data.Thyme.Calendar.WeekDate
 
 import Config
 import M.Einstein
 import M.Wijkanders
-import M.Internal
+import M.Types
 import M.Karen
 
 -- | Refreshes menus.
@@ -37,23 +36,24 @@ refresh c = do
 update :: Config -> IO View
 update c = do
   dateNow <- fmap (view _zonedTimeToLocalTime) getZonedTime
-  let (day, date) =
+  let (textday, date) =
         if (dateNow ^. (_localTimeOfDay . _todHour)) >= view cNextDayHour c
           then ( "Tomorrow"
                , dateNow & (_localDay . gregorian . _ymdDay) %~ (+ 1))
           else ("Today", dateNow)
+  let day = date ^. _localDay
   let weekday = (date ^. (_localDay . mondayWeek . _mwDay)) - 1
   rest <-
-    catMaybes <$> sequence
-      [ getKaren weekday "K\229rrestaurangen" karen johannebergLunch
-      , getKaren weekday "Linsen" linsen johannebergLunch
+    sequence
+      [ getKaren day "K\229rrestaurangen" karen johannebergLunch
+      , getKaren day "Linsen" linsen johannebergLunch
       , getEinstein weekday
-      , getKaren weekday "L's Kitchen" ls lindholmenLunch
-      , getKaren weekday "Xpress" xpress johannebergLunch
+      , getKaren day "L's Kitchen" ls lindholmenLunch
+      , getKaren day "Xpress" xpress johannebergLunch
       , getWijkanders weekday
       ]
   return
-    (View rest day date)
+    (View rest textday date)
   where
     -- Restaurant api links
     karen = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=5"
