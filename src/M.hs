@@ -50,7 +50,7 @@ update c = do
       , getEinstein weekday
       , getKaren day "L's Kitchen" ls lindholmenLunch
       , getKaren day "Xpress" xpress johannebergLunch
-      , getWijkanders weekday
+      , getWijkanders (weekday + 1)
       ]
   return
     (View rest textday date)
