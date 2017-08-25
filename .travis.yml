@@ -38,4 +38,4 @@ install:
 script:
 # Build the package, its tests, and its docs and run the tests
 - stack --no-terminal test --haddock --no-haddock-deps
-- curl -sL https://raw.githubusercontent.com/ndmitchell/weeder/master/misc/travis.sh | sh -s .
+- curl -sL https://raw.github.com/ndmitchell/weeder/master/misc/travis.sh | sh -s .
