@@ -51,6 +51,7 @@ update c = do
       , getKaren day "L's Kitchen" ls lindholmenLunch
       , getKaren day "Xpress" xpress johannebergLunch
       , getWijkanders (weekday + 1)
+      , getKaren day "S.M.A.K." smak johannebergLunch
       ]
   return
     (View rest textday date)
@@ -60,6 +61,7 @@ update c = do
     linsen = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=33"
     xpress = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=7"
     ls = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=8"
+    smak = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=42"
 
     -- Restaurant menu links
     johannebergLunch = "https://chalmerskonferens.se/lunchmenyer-johanneberg/"
