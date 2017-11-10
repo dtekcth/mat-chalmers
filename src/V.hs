@@ -54,7 +54,7 @@ renderMenu (Menu lunch spec) =
           toHtml spec)
 
 box_ :: Html () -> Html ()
-box_ = div_ [class_ "col-xs-12 cols-sm-6 col-md-4 food"]
+box_ = div_ [class_ "col-xs-12 cols-sm-6 col-md-3 food"]
 
 sitehead :: Html ()
 sitehead =
