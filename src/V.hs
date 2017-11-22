@@ -5,6 +5,7 @@ module V
   , render
   ) where
 
+import Control.Lens ((&), (%~), both)
 import Data.FileEmbed
 import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.Builder as T
@@ -33,7 +34,10 @@ renderView View{..} =
           toHtml (formatTime defaultTimeLocale "%F" date)
         if null restaurants
           then div_ . box_ . h3_ $ ("No lunches " >> toHtml day)
-          else div_ (mconcat (map renderRest restaurants))
+          else div_ (
+            (uncurry mappend)
+              ((splitAt 4 (map renderRest restaurants)) & both %~ (div_ [class_ "row"] . mconcat))
+          )
         sitefooter
       toHtmlRaw analytics
 
@@ -54,7 +58,7 @@ renderMenu (Menu lunch spec) =
           toHtml spec)
 
 box_ :: Html () -> Html ()
-box_ = div_ [class_ "col-xs-12 cols-sm-6 col-md-4 food"]
+box_ = div_ [class_ "col-xs-12 cols-sm-6 col-md-3 food"]
 
 sitehead :: Html ()
 sitehead =
