@@ -22,7 +22,7 @@ getKaren weekday name restUrl menuUrl = do
       res <- parseMaybe (parseMenuForDay weekday) val
       return $ case res of
         Nothing -> Left NoLunch
-        Just l -> Right l
+        Just l -> Right (concat l)
 
 getKarenToday :: T.Text -> String -> T.Text -> IO Restaurant
 getKarenToday name restUrl menuUrl = do
@@ -32,4 +32,4 @@ getKarenToday name restUrl menuUrl = do
     text' <- text
     val <- decode text'
     (_, l) <- parseMaybe (parseMenus) val
-    return $ Right l
+    return $ Right (concat l)
