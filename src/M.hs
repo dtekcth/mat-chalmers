@@ -46,7 +46,7 @@ update c = do
   rest <-
     sequence
       [ getKaren day "K\229rrestaurangen" karen johannebergLunch
-      , getKaren day "Linsen" linsen johannebergLunch
+      , getKarenToday "Linsen" linsenToday johannebergLunch
       , getEinstein weekday
       , getKaren day "L's Kitchen" ls lindholmenLunch
       , getKaren day "Xpress" xpress johannebergLunch
@@ -58,7 +58,7 @@ update c = do
   where
     -- Restaurant api links
     karen = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=5"
-    linsen = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=33"
+    linsenToday = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataday?restaurantid=33"
     xpress = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=7"
     ls = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=8"
     smak = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=42"

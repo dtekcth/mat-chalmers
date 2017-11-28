@@ -23,3 +23,13 @@ getKaren weekday name restUrl menuUrl = do
       return $ case res of
         Nothing -> Left NoLunch
         Just l -> Right l
+
+getKarenToday :: T.Text -> String -> T.Text -> IO Restaurant
+getKarenToday name restUrl menuUrl = do
+  text <- handle' (get' restUrl)
+  return $
+    Restaurant name menuUrl . maybe (Left SomethingWrong) id $ do
+    text' <- text
+    val <- decode text'
+    (_, l) <- parseMaybe (parseMenus) val
+    return $ Right l
