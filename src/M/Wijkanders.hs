@@ -25,7 +25,7 @@ getWijkanders weekday = do
 getTags :: IO (Maybe ([Tag T.Text]))
 getTags = do
   text <- handle' (get "http://www.wijkanders.se/restaurangen/")
-  return (text >>= return . parseTags)
+  return (parseTags <$> text)
 
 getDay :: Int -> [Tag T.Text] -> Maybe [Tag T.Text]
 getDay weekday tags = do
