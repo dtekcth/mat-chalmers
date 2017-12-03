@@ -48,7 +48,7 @@ renderRest Restaurant {..} =
     ul_ [class_ "food-menu"] $
       case menu of
         Left NoLunch -> li_ "No lunch this day!"
-        Left SomethingWrong -> li_ ("Something went wrong, " <>
+        Left (SomethingWrong _) -> li_ ("Something went wrong, " <>
           (a_ [href_ $ T.toStrict "https://github.com/adamse/mat-chalmers/issues/new"] "please file an issue."))
         Right menus -> mconcat (map renderMenu menus)
 

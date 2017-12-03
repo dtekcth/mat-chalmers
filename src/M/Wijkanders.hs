@@ -10,22 +10,17 @@ import M.Types hiding (menu, date)
 import Util
 import Data.Maybe (catMaybes)
 
-getWijkanders :: Int -> IO Restaurant
-getWijkanders weekday = do
-  ts <- getTags
-  return . mkRestaurant . maybe (Left SomethingWrong) id $ do
-    tags <- ts
-    dayt <- getDay weekday tags
-    mst <- getMenus dayt
-    let ms = catMaybes $ map mkMenu mst
-    return $ case ms of
-      [] -> Left NoLunch
-      _ -> Right ms
-
-getTags :: IO (Maybe ([Tag T.Text]))
-getTags = do
-  text <- handle' (get "http://www.wijkanders.se/restaurangen/")
-  return (parseTags <$> text)
+getWijkanders :: Int -> Maybe T.Text -> Restaurant
+getWijkanders weekday text =
+  let ts = parseTags <$> text
+  in mkRestaurant . maybe (Left (SomethingWrong text)) id $ do
+       tags <- ts
+       dayt <- getDay weekday tags
+       mst <- getMenus dayt
+       let ms = catMaybes $ map mkMenu mst
+       return $ case ms of
+         [] -> Left NoLunch
+         _ -> Right ms
 
 getDay :: Int -> [Tag T.Text] -> Maybe [Tag T.Text]
 getDay weekday tags = do

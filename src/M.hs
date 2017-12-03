@@ -6,7 +6,6 @@ module M
   , View (..)
   ) where
 
-
 import Control.Concurrent.MVar
 import Control.Lens
 import Data.IORef
@@ -18,6 +17,7 @@ import M.Einstein
 import M.Wijkanders
 import M.Types
 import M.Karen
+import Util
 
 -- | Refreshes menus.
 refresh :: Config
@@ -45,13 +45,13 @@ update c = do
   let weekday = (date ^. (_localDay . mondayWeek . _mwDay)) - 1
   rest <-
     sequence
-      [ getKaren day "K\229rrestaurangen" karen johannebergLunch
-      , getKarenToday "Linsen" linsenToday johannebergLunch
-      , getEinstein weekday
-      , getKaren day "L's Kitchen" ls lindholmenLunch
-      , getKaren day "Xpress" xpress johannebergLunch
-      , getWijkanders (weekday + 1)
-      , getKaren day "S.M.A.K." smak johannebergLunch
+      [ getKaren day "K\229rrestaurangen" johannebergLunch <$> safeGetBS karen
+      , getKarenToday "Linsen" johannebergLunch <$> safeGetBS linsenToday
+      , getEinstein weekday <$> safeGet "http://butlercatering.se/einstein"
+      , getKaren day "L's Kitchen" lindholmenLunch <$> safeGetBS ls
+      , getKaren day "Xpress" johannebergLunch <$> safeGetBS xpress
+      , getWijkanders (weekday + 1) <$> safeGet "http://www.wijkanders.se/restaurangen/"
+      , getKaren day "S.M.A.K." johannebergLunch <$> safeGetBS smak
       ]
   return
     (View rest textday date)

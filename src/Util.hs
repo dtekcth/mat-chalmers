@@ -4,9 +4,10 @@ module Util where
 
 import Control.Exception
 import Control.Monad
-import Network.HTTP.Conduit
+import Data.ByteString.Lazy (ByteString)
+import Data.Text.Lazy (Text)
 import Data.Text.Lazy.Encoding (decodeUtf8)
-import qualified Data.Text.Lazy as T
+import Network.HTTP.Conduit
 
 safeIdx :: [a] -> Int -> Maybe a
 safeIdx [] _ = Nothing
@@ -22,10 +23,17 @@ safeHead _ = Nothing
 takeNext :: [a] -> [a]
 takeNext = take 1 . drop 1
 
-get :: String -> IO T.Text
-get url = liftM decodeUtf8 (simpleHttp url)
+safeGet :: String -> IO (Maybe Text)
+safeGet = handle' . get
 
-get' url = simpleHttp url
+safeGetBS :: String -> IO (Maybe ByteString)
+safeGetBS = handle' . getBS
+
+get :: String -> IO Text
+get = fmap decodeUtf8 . getBS
+
+getBS :: String -> IO ByteString
+getBS = simpleHttp
 
 -- | Handler for HttpExceptions
 handle' :: IO a -> IO (Maybe a)

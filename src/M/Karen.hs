@@ -2,33 +2,31 @@
 -- |
 module M.Karen where
 
-import Data.Aeson (decode)
-import Data.Aeson.Types -- (parseMaybe)
-import qualified Data.Text.Lazy as T
-import Data.Thyme
+import           Data.Aeson (decode)
+import           Data.Aeson.Types -- (parseMaybe)
+import           Data.ByteString.Lazy (ByteString)
+import           Data.Text.Lazy (Text)
+import           Data.Text.Lazy.Encoding (decodeUtf8)
+import           Data.Thyme
 
-import M.Types hiding (menu, name, url, day)
-import M.KarenJSON
-import Util
+import           M.Types hiding (menu, name, url, day)
+import           M.KarenJSON
 
 -- | Get a restaurant that kåren has.
-getKaren :: Day -> T.Text -> String -> T.Text -> IO Restaurant
-getKaren weekday name restUrl menuUrl = do
-  text <- handle' (get' restUrl)
-  return $
-    Restaurant name menuUrl . maybe (Left SomethingWrong) id $ do
-      text' <- text
-      val <- decode text'
-      res <- parseMaybe (parseMenuForDay weekday) val
-      return $ case res of
-        Nothing -> Left NoLunch
-        Just l -> Right (concat l)
+getKaren :: Day -> Text -> Text -> Maybe ByteString -> Restaurant
+getKaren weekday name menuUrl text =
+  Restaurant name menuUrl .
+  maybe (Left (SomethingWrong (fmap decodeUtf8 text))) id $ do
+    text' <- text
+    val <- decode text'
+    res <- parseMaybe (parseMenuForDay weekday) val
+    return $ case res of
+      Nothing -> Left NoLunch
+      Just l -> Right (concat l)
 
-getKarenToday :: T.Text -> String -> T.Text -> IO Restaurant
-getKarenToday name restUrl menuUrl = do
-  text <- handle' (get' restUrl)
-  return $
-    Restaurant name menuUrl . maybe (Left SomethingWrong) id $ do
+getKarenToday :: Text -> Text -> Maybe ByteString -> Restaurant
+getKarenToday name menuUrl text =
+  Restaurant name menuUrl . maybe (Left (SomethingWrong (fmap decodeUtf8 text))) id $ do
     text' <- text
     val <- decode text'
     (_, l) <- parseMaybe (parseMenus) val
