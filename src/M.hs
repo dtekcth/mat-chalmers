@@ -6,7 +6,6 @@ module M
   , View (..)
   ) where
 
-
 import Control.Concurrent.MVar
 import Control.Lens
 import Data.IORef
@@ -18,6 +17,7 @@ import M.Einstein
 import M.Wijkanders
 import M.Types
 import M.Karen
+import Util
 
 -- | Refreshes menus.
 refresh :: Config
@@ -45,23 +45,25 @@ update c = do
   let weekday = (date ^. (_localDay . mondayWeek . _mwDay)) - 1
   rest <-
     sequence
-      [ getKaren day "K\229rrestaurangen" karen johannebergLunch
-      , getKarenToday "Linsen" linsenToday johannebergLunch
-      , getEinstein weekday
-      , getKaren day "L's Kitchen" ls lindholmenLunch
-      , getKaren day "Xpress" xpress johannebergLunch
-      , getWijkanders (weekday + 1)
-      , getKaren day "S.M.A.K." smak johannebergLunch
+      [ getKaren day "K\229rrestaurangen" johannebergLunch <$> safeGetBS karen
+      , getKarenToday "Linsen" johannebergLunch <$> safeGetBS linsenToday
+      , getEinstein weekday <$> safeGet einstein
+      , getKaren day "L's Kitchen" lindholmenLunch <$> safeGetBS ls
+      , getKaren day "Xpress" johannebergLunch <$> safeGetBS xpress
+      , getWijkanders (weekday + 1) <$> safeGet wijkanders
+      , getKaren day "S.M.A.K." johannebergLunch <$> safeGetBS smak
       ]
   return
     (View rest textday date)
   where
     -- Restaurant api links
+    einstein = "http://butlercatering.se/einstein"
     karen = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=5"
     linsenToday = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataday?restaurantid=33"
     xpress = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=7"
     ls = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=8"
     smak = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=42"
+    wijkanders = "http://www.wijkanders.se/restaurangen/"
 
     -- Restaurant menu links
     johannebergLunch = "https://chalmerskonferens.se/lunchmenyer-johanneberg/"

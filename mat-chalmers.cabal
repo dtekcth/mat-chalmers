@@ -62,6 +62,7 @@ library
                , old-locale
                , tagsoup
                , text
+               , bytestring
                , file-embed
                , thyme
 

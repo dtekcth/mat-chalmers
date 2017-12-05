@@ -33,7 +33,7 @@ parseMenus' = withObject "day" $ \obj -> do
   name <- obj .: "name"
   recs <- obj .: "recipes"
   for recs $ withObject "recipe" $ \rec' -> do
-    [Object sv, Object eng] <- rec' .: "displayNames"
+    [Object sv, Object _] <- rec' .: "displayNames"
     what' <- sv .: "displayName"
     return $ Menu name what'
 

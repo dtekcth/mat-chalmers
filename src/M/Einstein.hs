@@ -1,6 +1,7 @@
 -- | Get daily menu for Einstein
 module M.Einstein where
 
+import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
 import           GHC.Exts
 import           Text.HTML.TagSoup
@@ -11,16 +12,15 @@ import           Util
 myurl :: String
 myurl = "http://butlercatering.se/einstein"
 
-myname :: T.Text
+myname :: Text
 myname = fromString "Einstein"
 
 -- | Get Einstein menu
-getEinstein :: Int -> IO Restaurant
-getEinstein weekday = do
-  text <- handle' (get myurl)
-  return $
-    Restaurant myname (fromString myurl) . maybe (Left NoLunch) Right $
-    getMenus weekday =<< text
+getEinstein :: Int -> Maybe Text -> Restaurant
+getEinstein weekday text =
+  Restaurant myname (fromString myurl) .
+  maybe (Left NoLunch) Right $
+  getMenus weekday =<< text
 
 getMenus :: Int -> T.Text -> Maybe [Menu] -- Restaurant
 getMenus weekday tags = do
