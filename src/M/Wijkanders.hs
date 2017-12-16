@@ -9,6 +9,7 @@ import Text.HTML.TagSoup
 import M.Types hiding (menu, date)
 import Util
 import Data.Maybe (catMaybes)
+import Data.Char
 
 getWijkanders :: Int -> IO Restaurant
 getWijkanders weekday = do
@@ -43,10 +44,10 @@ mkMenu :: [Tag T.Text] -> Maybe Menu
 mkMenu m = do
   what <- safeIdx m 1
   food <- safeIdx m 3
-  let lunch = T.toTitle . T.dropEnd 1 . text $ [what]
+  let lunch = T.toTitle . T.takeWhile isAlpha . text $ [what]
   if T.null lunch
     then Nothing
-    else return $ Menu lunch (text [food])
+    else return $ Menu lunch ( T.dropWhile (not . isAlpha) . text $ [food])
 
 text = T.strip . innerText
 
