@@ -47,7 +47,8 @@ update c = do
     sequence
       [ getKaren day "K\229rrestaurangen" johannebergLunch <$> safeGetBS karen
       , getKarenToday "Linsen" johannebergLunch <$> safeGetBS linsenToday
-      , getEinstein weekday <$> safeGet einstein
+--      There is no Einstein at the moment. We'll put it back when their web presence is back.
+--      , getEinstein weekday <$> safeGet einstein
       , getKaren day "L's Kitchen" lindholmenLunch <$> safeGetBS ls
       , getKaren day "Xpress" johannebergLunch <$> safeGetBS xpress
       , getWijkanders (weekday + 1) <$> safeGet wijkanders
@@ -57,7 +58,7 @@ update c = do
     (View rest textday date)
   where
     -- Restaurant api links
-    einstein = "http://butlercatering.se/einstein"
+--    einstein = "http://butlercatering.se/einstein"
     karen = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=5"
     linsenToday = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataday?restaurantid=33"
     xpress = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=7"
