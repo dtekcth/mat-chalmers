@@ -1,7 +1,5 @@
-flags: {}
+resolver: lts-10.10
 packages:
-- '.'
-- location: 'wai-middleware-static-embedded'
-  extra-dep: true
-extra-deps:
-resolver: lts-9.14
+  - "."
+  - location: "wai-middleware-static-embedded"
+    extra-dep: true
