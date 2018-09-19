@@ -51,7 +51,8 @@ update c = do
 --      , getEinstein weekday <$> safeGet einstein
       , getKaren day "L's Kitchen" lindholmenLunch <$> safeGetBS ls
       , getKaren day "Xpress" johannebergLunch <$> safeGetBS xpress
-      , getWijkanders (weekday + 1) <$> safeGet wijkanders
+--      Wijkanders are hard to parse. Put them back when you have a parser.
+--      , getWijkanders (weekday + 1) <$> safeGet wijkanders
       , getKaren day "S.M.A.K." johannebergLunch <$> safeGetBS smak
       ]
   return
