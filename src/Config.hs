@@ -5,7 +5,7 @@
 
 module Config where
 
-import Control.Lens
+import Lens.Micro.Platform
 
 -- | Configuration record
 data Config = Config

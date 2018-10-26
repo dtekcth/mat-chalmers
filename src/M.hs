@@ -7,10 +7,10 @@ module M
   ) where
 
 import Control.Concurrent.MVar
-import Control.Lens
 import Data.IORef
 import Data.Thyme
 import Data.Thyme.Calendar.WeekDate
+import Lens.Micro.Platform
 
 import Config
 import M.Einstein

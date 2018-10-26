@@ -57,7 +57,7 @@ library
                , base >=4.7
                , css-text
                , http-conduit
-               , lens
+               , microlens-platform
                , lucid >= 2
                , old-locale
                , tagsoup
