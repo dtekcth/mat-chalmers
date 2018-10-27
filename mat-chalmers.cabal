@@ -48,6 +48,7 @@ library
                  -- , M.Einstein
                  -- , M.Karen
                  , M.KarenJSON
+                 , M.Karen
                  , M.Wijkanders
                  , V
                  , Config
