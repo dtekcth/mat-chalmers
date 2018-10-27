@@ -45,8 +45,8 @@ library
   hs-source-dirs: src
   exposed-modules: M
                  , M.Types
-                 , M.Einstein
-                 , M.Karen
+                 -- , M.Einstein
+                 -- , M.Karen
                  , M.KarenJSON
                  , M.Wijkanders
                  , V
