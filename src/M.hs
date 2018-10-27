@@ -13,8 +13,6 @@ import Data.Thyme.Calendar.WeekDate
 import Lens.Micro.Platform
 
 import Config
-import M.Einstein
-import M.Wijkanders
 import M.Types
 import M.Karen
 import Util
