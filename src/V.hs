@@ -5,12 +5,12 @@ module V
   , render
   ) where
 
-import Control.Lens ((&), (%~), both)
 import Data.FileEmbed
 import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.Builder as T
 import Data.Monoid
 import Data.Thyme
+import Lens.Micro.Platform ((&), (%~), both)
 import Lucid
 import System.Locale (defaultTimeLocale)
 import qualified Text.CSS.Parse as CSS
