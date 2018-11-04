@@ -4,9 +4,8 @@ let
 
   inherit (nixpkgs) pkgs;
 
-  f = { mkDerivation, aeson, base, bytestring, css-text, file-embed
-      , http-conduit, lens, lucid, mtl, old-locale, scotty, stdenv
-      , tagsoup, text, thyme, wai-extra, wai-middleware-static-embedded
+  f = { mkDerivation, stdenv, haskellPackages
+      , wai-extra, wai-middleware-static-embedded
       }:
       mkDerivation {
         pname = "mat-chalmers";
@@ -14,12 +13,13 @@ let
         src = ./.;
         isLibrary = true;
         isExecutable = true;
+        buildTools = [ haskellPackages.cabal-install ];
         enableSeparateDataOutput = true;
-        libraryHaskellDepends = [
-          aeson base css-text file-embed http-conduit lens lucid old-locale
-          tagsoup text thyme
+        libraryHaskellDepends = with haskellPackages; [
+          aeson base bytestring css-text file-embed http-conduit lucid
+          old-locale microlens-platform old-locale tagsoup text thyme
         ];
-        executableHaskellDepends = [
+        executableHaskellDepends = with haskellPackages; [
           base bytestring file-embed lens mtl scotty wai-extra
           wai-middleware-static-embedded
         ];
