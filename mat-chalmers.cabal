@@ -47,6 +47,7 @@ library
                  , Model.Types
                  -- , M.Einstein
                  -- , M.Karen
+                 , Model.KarenGraphQLApi
                  , Model.KarenJSON
                  , Model.Karen
                  , Model.Wijkanders
@@ -58,6 +59,8 @@ library
                , base >=4.7
                , css-text
                , http-conduit
+               , http-client
+               , http-client-tls
                , microlens-platform
                , lucid >= 2
                , old-locale
