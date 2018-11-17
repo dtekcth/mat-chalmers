@@ -3,7 +3,7 @@
 -- | Module for parsing JSON data from the Student Union Restaurant
 -- api @ http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen
 
-module M.KarenJSON where
+module Model.KarenJSON where
 
 import Data.Aeson.Types
 import qualified Data.Text as TS
@@ -11,7 +11,7 @@ import Data.Thyme
 import System.Locale (defaultTimeLocale)
 import Data.Traversable (traverse, for)
 
-import M.Types hiding (name, menu, url)
+import Model.Types hiding (name, menu, url)
 
 -- | Get the menu for a specific day. Nothing if there is no menu for
 -- that day.

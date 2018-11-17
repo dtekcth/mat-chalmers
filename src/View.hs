@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings, TemplateHaskell, RecordWildCards #-}
 
-module V
+module View
   ( View (..)
   , render
   ) where
@@ -16,8 +16,8 @@ import System.Locale (defaultTimeLocale)
 import qualified Text.CSS.Parse as CSS
 import qualified Text.CSS.Render as CSS
 
-import M
-import M.Types (NoMenu(..))
+import Model
+import Model.Types (NoMenu(..))
 
 render :: View -> T.Text
 render v = renderText (renderView v)
@@ -39,7 +39,6 @@ renderView View{..} =
               ((splitAt 4 (map renderRest restaurants)) & both %~ (div_ [class_ "row"] . mconcat))
           )
         sitefooter
-      toHtmlRaw analytics
 
 renderRest :: Restaurant -> Html ()
 renderRest Restaurant {..} =
@@ -81,9 +80,6 @@ sitefooter =
               a_ [href_ "https://github.com/adamse/mat-chalmers/issues/new"] "File an issue!"
               " // "
               a_ [href_ "https://kortladdning3.chalmerskonferens.se/"] "Top-up your card")
-
-analytics :: T.Text
-analytics = "<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-60251317-1', 'auto',{'allowLinker': true});ga('require','linker');ga('linker:autoLink',['dtek.se']);ga('send', 'pageview');</script>"
 
 css :: T.Text
 css =

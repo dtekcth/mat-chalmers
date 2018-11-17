@@ -1,12 +1,12 @@
 -- | Get daily menu for Einstein
-module M.Einstein where
+module Model.Einstein where
 
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
 import           GHC.Exts
 import           Text.HTML.TagSoup
 
-import           M.Types hiding (menu, date)
+import           Model.Types hiding (menu, date)
 import           Util
 
 myurl :: String

@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module M
+module Model
   ( refresh
   , Restaurant (..)
   , Menu (..)
@@ -11,10 +11,12 @@ import Data.IORef
 import Data.Thyme
 import Data.Thyme.Calendar.WeekDate
 import Lens.Micro.Platform
+import System.Locale (defaultTimeLocale)
 
 import Config
-import M.Types
-import M.Karen
+import Model.Types
+import Model.Karen
+import Model.KarenGraphQLApi
 import Util
 
 -- | Refreshes menus.
@@ -41,17 +43,18 @@ update c = do
           else ("Today", dateNow)
   let day = date ^. _localDay
   let weekday = (date ^. (_localDay . mondayWeek . _mwDay)) - 1
+  let theDate = formatTime defaultTimeLocale "%F" date
   rest <-
     sequence
-      [ getKaren day "K\229rrestaurangen" johannebergLunch <$> safeGetBS karen
+      [ fetchMenu "21f31565-5c2b-4b47-d2a1-08d558129279" theDate >>= return . Restaurant "K\229rrestaurangen" "http://carbonatescreen.azurewebsites.net/menu/week/karrestaurangen/21f31565-5c2b-4b47-d2a1-08d558129279" . transformMenu Swe
+      , fetchMenu "3d519481-1667-4cad-d2a3-08d558129279" theDate >>= return . Restaurant "Express Johanneberg" "http://carbonatescreen.azurewebsites.net/menu/week/johanneberg-express/3d519481-1667-4cad-d2a3-08d558129279" . transformMenu Swe
+      , fetchMenu "3ac68e11-bcee-425e-d2a8-08d558129279" theDate >>= return . Restaurant "S.M.A.K." "http://carbonatescreen.azurewebsites.net/menu/week/smak/3ac68e11-bcee-425e-d2a8-08d558129279" . transformMenu Swe
       , getKarenToday "Linsen" johannebergLunch <$> safeGetBS linsenToday
 --      There is no Einstein at the moment. We'll put it back when their web presence is back.
 --      , getEinstein weekday <$> safeGet einstein
       , getKaren day "L's Kitchen" lindholmenLunch <$> safeGetBS ls
-      , getKaren day "Xpress" johannebergLunch <$> safeGetBS xpress
 --      Wijkanders are hard to parse. Put them back when you have a parser.
 --      , getWijkanders (weekday + 1) <$> safeGet wijkanders
-      , getKaren day "S.M.A.K." johannebergLunch <$> safeGetBS smak
       ]
   return
     (View rest textday date)
