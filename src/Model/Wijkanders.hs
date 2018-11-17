@@ -1,12 +1,12 @@
 -- |
 
-module M.Wijkanders (getWijkanders) where
+module Model.Wijkanders (getWijkanders) where
 
 import qualified Data.Text.Lazy as T
 import GHC.Exts
 import Text.HTML.TagSoup
 
-import M.Types hiding (menu, date)
+import Model.Types hiding (menu, date)
 import Util
 import Data.Maybe (catMaybes)
 import Data.Char

@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module M
+module Model
   ( refresh
   , Restaurant (..)
   , Menu (..)
@@ -13,8 +13,9 @@ import Data.Thyme.Calendar.WeekDate
 import Lens.Micro.Platform
 
 import Config
-import M.Types
-import M.Karen
+import Model.Types
+import Model.Karen
+import Model.KarenGraphQLApi
 import Util
 
 -- | Refreshes menus.

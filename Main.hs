@@ -16,8 +16,8 @@ import           System.Environment
 import           Web.Scotty hiding (options)
 
 import           Config
-import           M
-import           V (render)
+import           Model
+import           View (render)
 
 opts :: [OptDescr (Config -> Config)]
 opts =

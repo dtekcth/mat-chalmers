@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings, TemplateHaskell, RecordWildCards #-}
 
-module V
+module View
   ( View (..)
   , render
   ) where
@@ -16,8 +16,8 @@ import System.Locale (defaultTimeLocale)
 import qualified Text.CSS.Parse as CSS
 import qualified Text.CSS.Render as CSS
 
-import M
-import M.Types (NoMenu(..))
+import Model
+import Model.Types (NoMenu(..))
 
 render :: View -> T.Text
 render v = renderText (renderView v)

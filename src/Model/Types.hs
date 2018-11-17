@@ -1,6 +1,6 @@
 -- | Types and internal functions
 
-module M.Types where
+module Model.Types where
 
 import Data.Text.Lazy (Text)
 import Data.Thyme

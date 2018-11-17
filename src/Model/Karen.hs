@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 -- |
-module M.Karen where
+module Model.Karen where
 
 import           Data.Aeson (decode)
 import           Data.Aeson.Types -- (parseMaybe)
@@ -9,8 +9,8 @@ import           Data.Text.Lazy (Text)
 import           Data.Text.Lazy.Encoding (decodeUtf8)
 import           Data.Thyme
 
-import           M.Types hiding (menu, name, url, day)
-import           M.KarenJSON
+import           Model.Types hiding (menu, name, url, day)
+import           Model.KarenJSON
 
 -- | Get a restaurant that kåren has.
 getKaren :: Day -> Text -> Text -> Maybe ByteString -> Restaurant
