@@ -1,5 +1,7 @@
-resolver: lts-10.10
+resolver: lts-12.20
 packages:
   - "."
   - location: "wai-middleware-static-embedded"
     extra-dep: true
+extra-deps:
+  - thyme-0.3.5.5
