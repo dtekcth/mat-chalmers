@@ -58,6 +58,7 @@ library
   build-depends: aeson
                , base >=4.7
                , css-text
+               , heredoc == 0.2.0.0
                , http-conduit
                , http-client
                , http-client-tls

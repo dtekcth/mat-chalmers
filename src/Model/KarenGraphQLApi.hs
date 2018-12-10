@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, QuasiQuotes #-}
 module Model.KarenGraphQLApi (
  fetchMenu, Date(Date), Err, transformMenu, Language(..)
 )  where
@@ -14,6 +14,7 @@ import qualified Data.Text.Lazy as LT
 import Data.List (intercalate)
 import qualified Data.ByteString.Lazy.Internal as LBS
 import Model.Types (NoMenu (NoLunch, SomethingWrong), Menu (Menu))
+import Text.Heredoc (str)
 
 apiURL :: String
 apiURL = "https://heimdallprod.azurewebsites.net/graphql"
@@ -21,45 +22,45 @@ apiURL = "https://heimdallprod.azurewebsites.net/graphql"
 graphQLName :: String
 graphQLName = "DishOccurrencesByTimeRangeQuery"
 graphQLQuery :: String
-graphQLQuery =
-  "query DishOccurrencesByTimeRangeQuery($mealProvidingUnitID: String, $startDate: String, $endDate: String) {\n\
-  \  dishOccurrencesByTimeRange(mealProvidingUnitID: $mealProvidingUnitID, startDate: $startDate, endDate: $endDate) {\n\
-  \    ...MenuDishOccurrence\n\
-  \  }\n\
-  \}\n\
-  \\n\
-  \fragment MenuDishOccurrence on DishOccurrence {\n\
-  \  displayNames {\n\
-  \    name\n\
-  \    categoryName\n\
-  \  }\n\
-  \  startDate\n\
-  \  dishType {\n\
-  \    name\n\
-  \  }\n\
-  \  dish {\n\
-  \    ...MenuDish\n\
-  \  }\n\
-  \  mealProvidingUnit {\n\
-  \    mealProvidingUnitName\n\
-  \    id\n\
-  \  }\n\
-  \}\n\
-  \\n\
-  \fragment MenuDish on Dish {\n\
-  \  name\n\
-  \  price\n\
-  \  recipes {\n\
-  \    portions\n\
-  \    name\n\
-  \    allergens {\n\
-  \      id\n\
-  \      name\n\
-  \      imageUrl\n\
-  \      sortOrder\n\
-  \    }\n\
-  \  }\n\
-  \}"
+graphQLQuery
+  = [str|query DishOccurrencesByTimeRangeQuery($mealProvidingUnitID: String, $startDate: String, $endDate: String) {
+        |  dishOccurrencesByTimeRange(mealProvidingUnitID: $mealProvidingUnitID, startDate: $startDate, endDate: $endDate) {
+        |    ...MenuDishOccurrence
+        |  }
+        |}
+        |
+        |fragment MenuDishOccurrence on DishOccurrence {
+        |  displayNames {
+        |    name
+        |    categoryName
+        |  }
+        |  startDate
+        |  dishType {
+        |    name
+        |  }
+        |  dish {
+        |    ...MenuDish
+        |  }
+        |  mealProvidingUnit {
+        |    mealProvidingUnitName
+        |    id
+        |  }
+        |}
+        |
+        |fragment MenuDish on Dish {
+        |  name
+        |  price
+        |  recipes {
+        |    portions
+        |    name
+        |    allergens {
+        |      id
+        |      name
+        |      imageUrl
+        |      sortOrder
+        |    }
+        |  }
+        |}|]
 
 requestData :: (ToJSON a, ToJSON b) => a -> b -> b -> Value
 requestData unitID startDate endDate =
