@@ -1,16 +1,16 @@
-mat-chalmers
-============
+# mat-chalmers
 
-Lunch menus on Campus Johanneberg
+Lunch menus on Chalmers in Gothenburg. Issues and pull requests welcome. 
 
 ## Hacking
 
-- `git clone ...`
-- `cd ...`
-- copy the stack file for your preferred GHC version to `stack.yaml`.
-- `stack build`
+```
+git clone https://github.com/dtekcth/mat-chalmers.git
+cd mat-chalmers
+stack build
+```
 
-# Credits
+## Credits
 
 Favicon made by Freepik from <a href="http://www.flaticon.com"
 title="Flaticon">www.flaticon.com</a> is licensed by <a
