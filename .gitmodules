@@ -1,3 +1,0 @@
-[submodule "wai-middleware-static-embedded"]
-	path = wai-middleware-static-embedded
-	url = https://github.com/adamse/wai-middleware-static-embedded.git
