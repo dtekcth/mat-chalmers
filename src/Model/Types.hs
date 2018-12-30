@@ -2,20 +2,20 @@
 
 module Model.Types where
 
-import Data.Text.Lazy (Text)
-import Data.Thyme
+import           Data.Text.Lazy                           ( Text )
+import           Data.Thyme
 
 -- | What to pass to template.
 data View = View
   { restaurants :: [Restaurant]
-  , day :: Text
-  , date :: LocalTime
+  , day         :: Text
+  , date        :: LocalTime
   } deriving (Eq, Show)
 
 -- | One pretty restaurant.
 data Restaurant = Restaurant
   { name :: Text
-  , url :: Text
+  , url  :: Text
   , menu :: Either NoMenu [Menu]
   } deriving (Eq, Show)
 

@@ -1,0 +1,15 @@
+conf_forward:
+  options_ghc:
+    - -XLambdaCase
+    - -XMultiWayIf
+    - -XGADTs
+    - -XPatternGuards
+    - -XViewPatterns
+    - -XRecursiveDo
+    - -XTupleSections
+    - -XExplicitForAll
+    - -XImplicitParams
+    - -XQuasiQuotes
+    - -XTemplateHaskell
+    - -XBangPatterns
+    - -XRecordWildCards

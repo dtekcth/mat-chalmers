@@ -1,26 +1,59 @@
-{-# LANGUAGE OverloadedStrings, QuasiQuotes #-}
-module Model.KarenGraphQLApi (
- fetchMenu, Date(Date), Err, transformMenu, Language(..)
-)  where
+{-# LANGUAGE LambdaCase, OverloadedStrings, QuasiQuotes #-}
 
-import Network.HTTP.Client
-import Network.HTTP.Client.TLS
-import Data.Aeson (object, (.=), encode, FromJSON(parseJSON), ToJSON(toJSON), (.:), withObject, Object, withText, eitherDecode, Value(String), decode)
-import Data.Aeson.Types (Parser, parseEither)
-import Data.Text (Text, pack)
-import Data.List (find)
-import Data.Maybe (fromMaybe, catMaybes)
-import qualified Data.Text.Lazy as LT
-import Data.List (intercalate)
+module Model.KarenGraphQLApi
+  ( fetchMenu
+  , Date(Date)
+  , Err
+  , transformMenu
+  , Language(..)
+  )
+where
+
+import           Network.HTTP.Client
+import           Network.HTTP.Client.TLS
+import           Data.Aeson                               ( object
+                                                          , (.=)
+                                                          , encode
+                                                          , FromJSON(parseJSON)
+                                                          , ToJSON(toJSON)
+                                                          , (.:)
+                                                          , withObject
+                                                          , Object
+                                                          , withText
+                                                          , eitherDecode
+                                                          , Value(String)
+                                                          , decode
+                                                          )
+import           Data.Aeson.Types                         ( Parser
+                                                          , parseEither
+                                                          )
+import           Data.Functor                             ( (<&>) )
+import           Data.Text                                ( Text
+                                                          , pack
+                                                          )
+import           Data.List                                ( find
+                                                          , intercalate
+                                                          )
+import           Data.Maybe                               ( fromMaybe
+                                                          , mapMaybe
+                                                          )
+import qualified Data.Text.Lazy                as LT
 import qualified Data.ByteString.Lazy.Internal as LBS
-import Model.Types (NoMenu (NoLunch, SomethingWrong), Menu (Menu))
-import Text.Heredoc (str)
+import           Model.Types                              ( NoMenu
+                                                            ( NoLunch
+                                                            , SomethingWrong
+                                                            )
+                                                          , Menu(Menu)
+                                                          )
+import           Text.Heredoc                             ( str )
 
 apiURL :: String
 apiURL = "https://heimdallprod.azurewebsites.net/graphql"
 
 graphQLName :: String
 graphQLName = "DishOccurrencesByTimeRangeQuery"
+
+-- brittany-disable-next-binding
 graphQLQuery :: String
 graphQLQuery
   = [str|query DishOccurrencesByTimeRangeQuery($mealProvidingUnitID: String, $startDate: String, $endDate: String) {
@@ -63,17 +96,15 @@ graphQLQuery
         |}|]
 
 requestData :: (ToJSON a, ToJSON b) => a -> b -> b -> Value
-requestData unitID startDate endDate =
-  object
-    [ "query" .= graphQLQuery
-    , "operationName" .= graphQLName
-    , "variables" .=
-      object
-        [ "mealProvidingUnitID" .= unitID
-        , "startDate" .= startDate
-        , "endDate" .= endDate
-        ]
+requestData unitID startDate endDate = object
+  [ "query" .= graphQLQuery
+  , "operationName" .= graphQLName
+  , "variables" .= object
+    [ "mealProvidingUnitID" .= unitID
+    , "startDate" .= startDate
+    , "endDate" .= endDate
     ]
+  ]
 
 data Language
   = Swe
@@ -82,7 +113,7 @@ data Language
 
 instance FromJSON Language where
   parseJSON =
-    withText "asdaf" $ \str -> case str of
+    withText "asdaf" $ \case
       "Swedish" -> return Swe
       "English" -> return Eng
 
@@ -110,10 +141,8 @@ data Meal =
   deriving (Show)
 
 --deepLookup :: [Text] -> Object -> Parser a
-deepLookup [prop]       obj =
-  obj .: prop
-deepLookup (prop:props) obj =
-  obj .: prop >>= deepLookup props
+deepLookup [prop        ] obj = obj .: prop
+deepLookup (prop : props) obj = obj .: prop >>= deepLookup props
 
 instance FromJSON Meal where
   parseJSON =
@@ -146,66 +175,48 @@ data Err =
     }
   deriving (Show)
 
-leftBind mapper either =
-  case either of
-    Left val ->
-      mapper val
-    Right val ->
-      Right val
+leftBind mapper either = case either of
+  Left  val -> mapper val
+  Right val -> Right val
 
-rightBind mapper either =
-  case either of
-    Right val ->
-      mapper val
-    Left val ->
-      Left val
+rightBind mapper either = case either of
+  Right val -> mapper val
+  Left  val -> Left val
 
 parseResponse :: Value -> Parser [Meal]
 parseResponse =
   withObject "ag" (deepLookup ["data", "dishOccurrencesByTimeRange"])
 
 nameOf :: Language -> Meal -> Maybe LT.Text
-nameOf lang meal =
-  find ((==lang) . language) (names meal) >>= return . LT.pack . name
+nameOf lang meal = find ((== lang) . language) (names meal) <&> LT.pack . name
 
 transformMenu :: Language -> Either Err [Meal] -> Either NoMenu [Menu]
-transformMenu lang mealData =
-  case mealData of
-    Left err ->
-      Left $ SomethingWrong $ Just $ LT.pack $ message err
-    Right meals ->
-      if length menus == 0
-      then Left NoLunch
-      else Right menus
-      where
-        menus =
-          catMaybes
-          $ map (\m -> nameOf lang m >>= return.(Menu(LT.pack(variant m))))
-          $ meals
+transformMenu lang mealData = case mealData of
+  Left  err   -> Left $ SomethingWrong $ Just $ LT.pack $ message err
+  Right meals -> if null menus then Left NoLunch else Right menus
+   where
+    menus = mapMaybe (\m -> nameOf lang m <&> Menu (LT.pack (variant m))) meals
 
 
 fetchMenu :: String -> String -> IO (Either Err [Meal])
 fetchMenu restaurantUUID day = do
-  manager <- newManager tlsManagerSettings
+  manager        <- newManager tlsManagerSettings
   initialRequest <- parseRequest apiURL
-  let request =
-        initialRequest
-          { method = "POST"
-          , requestBody = RequestBodyLBS (encode $ requestData restaurantUUID day day)
-          , requestHeaders =
-            [ ("Content-Type", "application/json")
-            ]
-          }
+  let request = initialRequest
+        { method         = "POST"
+        , requestBody    = RequestBodyLBS
+                             (encode $ requestData restaurantUUID day day)
+        , requestHeaders = [("Content-Type", "application/json")]
+        }
 
   response <- httpLbs request manager
   let rawData = responseBody response
-  let mkErr = \msg ->
-        Err
-          { message = msg
-          , reqBody = rawData
-          , resturantId = restaurantUUID
-          , date = day
-          }
+  let mkErr msg = Err
+        { message     = msg
+        , reqBody     = rawData
+        , resturantId = restaurantUUID
+        , date        = day
+        }
 
   return
     $ leftBind (Left . mkErr)
