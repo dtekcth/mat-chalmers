@@ -85,7 +85,7 @@ executable mat-chalmers
                , base >=4.7
                , bytestring
                , file-embed
-               , lens
+               , microlens-platform
                , mtl
                , scotty
                , wai-extra
