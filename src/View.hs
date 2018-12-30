@@ -48,7 +48,7 @@ renderRest Restaurant {..} =
       case menu of
         Left NoLunch -> li_ "No lunch this day!"
         Left (SomethingWrong _) -> li_ ("Something went wrong, " <>
-          (a_ [href_ $ T.toStrict "https://github.com/adamse/mat-chalmers/issues/new"] "please file an issue."))
+          (a_ [href_ $ T.toStrict "https://github.com/dtekcth/mat-chalmers/issues/new"] "please file an issue."))
         Right menus -> mconcat (map renderMenu menus)
 
 renderMenu :: Menu -> Html ()
@@ -77,7 +77,7 @@ sitefooter =
   footer_ [class_ "col-xs-12 col-sm-12 col-md-12"]
           (do "Eat at your own risk :) // "
               "Problems? "
-              a_ [href_ "https://github.com/adamse/mat-chalmers/issues/new"] "File an issue!"
+              a_ [href_ "https://github.com/dtekcth/mat-chalmers/issues/new"] "File an issue!"
               " // "
               a_ [href_ "https://kortladdning3.chalmerskonferens.se/"] "Top-up your card")
 
