@@ -1,6 +1,6 @@
 # mat-chalmers
 
-Lunch menus on Chalmers in Gothenburg. Issues and pull requests welcome. 
+Lunch menus on Chalmers in Gothenburg. Issues and pull requests welcome.
 
 ## Hacking
 
@@ -9,6 +9,10 @@ git clone https://github.com/dtekcth/mat-chalmers.git
 cd mat-chalmers
 stack build
 ```
+
+Please use [brittany](http://hackage.haskell.org/package/brittany) and
+[hlint](https://hackage.haskell.org/package/hlint) to format your
+source code.
 
 ## Credits
 

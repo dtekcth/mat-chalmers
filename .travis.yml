@@ -17,7 +17,7 @@ language: generic
 # Caching so the next build will be fast too.
 cache:
   directories:
-  - $HOME/.stack
+    - $HOME/.stack
 
 # Ensure necessary system libraries are present
 addons:
@@ -26,16 +26,17 @@ addons:
       - libgmp-dev
 
 before_install:
-# Download and unpack the stack executable
-- mkdir -p ~/.local/bin
-- export PATH=$HOME/.local/bin:$PATH
-- travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+  # Download and unpack the stack executable
+  - mkdir -p ~/.local/bin
+  - export PATH=$HOME/.local/bin:$PATH
+  - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
 install:
-# Build dependencies
-- stack --no-terminal --install-ghc test --only-dependencies
+  # Build dependencies
+  - stack --no-terminal --install-ghc test --only-dependencies
 
 script:
-# Build the package, its tests, and its docs and run the tests
-- stack --no-terminal test --haddock --no-haddock-deps
-- curl -sL https://raw.github.com/ndmitchell/weeder/master/misc/travis.sh | sh -s .
+  # Build the package, its tests, and its docs and run the tests
+  - stack --no-terminal test --haddock --no-haddock-deps
+  - curl -sL https://raw.github.com/ndmitchell/weeder/master/misc/travis.sh | sh -s .
+  - curl -sSL https://raw.github.com/ndmitchell/hlint/master/misc/travis.sh | sh -s .
