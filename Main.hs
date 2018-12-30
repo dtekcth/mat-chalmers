@@ -4,11 +4,11 @@
 module Main (main) where
 
 import           Control.Concurrent
-import           Control.Lens
 import           Control.Monad
 import           Control.Monad.Trans (liftIO)
 import           Data.FileEmbed
 import           Data.IORef
+import           Lens.Micro.Platform
 import           Network.Wai.Middleware.RequestLogger
 import           Network.Wai.Middleware.StaticEmbedded
 import           System.Console.GetOpt
