@@ -69,6 +69,7 @@ library
                , text
                , bytestring
                , file-embed
+               , safe
                , thyme
 
 executable mat-chalmers

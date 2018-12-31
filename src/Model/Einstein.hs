@@ -4,6 +4,7 @@ module Model.Einstein where
 import           Data.Text.Lazy                           ( Text )
 import qualified Data.Text.Lazy                as T
 import           GHC.Exts
+import           Safe                                     ( atMay )
 import           Text.HTML.TagSoup
 
 import           Model.Types                       hiding ( menu
@@ -28,7 +29,7 @@ getEinstein weekday text =
 getMenus :: Int -> T.Text -> Maybe [Menu] -- Restaurant
 getMenus weekday tags = do
   let parts = partitions (~== "<div class='field-day'>") (parseTags tags)
-  day <- safeIdx parts weekday
+  day <- atMay parts weekday
   return $ menus day
 
 menus :: [Tag T.Text] -> [Menu]
