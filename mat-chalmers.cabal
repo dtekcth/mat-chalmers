@@ -45,11 +45,7 @@ library
 executable mat-chalmers
   main-is: Main.hs
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
-
-  -- Directories containing source files.
-  hs-source-dirs: .
-
-  -- Other library packages from which modules are imported.
+  hs-source-dirs: app
   build-depends: mat-chalmers
                , base >=4.7
                , bytestring
