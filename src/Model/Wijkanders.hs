@@ -3,6 +3,13 @@ module Model.Wijkanders
   )
 where
 
+import           Data.Char
+import           Data.Maybe                               ( fromMaybe
+                                                          , mapMaybe
+                                                          )
+import           Safe                                     ( atMay
+                                                          , headMay
+                                                          )
 import qualified Data.Text.Lazy                as T
 import           GHC.Exts
 import           Text.HTML.TagSoup
@@ -10,11 +17,6 @@ import           Text.HTML.TagSoup
 import           Model.Types                       hiding ( menu
                                                           , date
                                                           )
-import           Util
-import           Data.Maybe                               ( fromMaybe
-                                                          , mapMaybe
-                                                          )
-import           Data.Char
 
 getWijkanders :: Int -> Maybe T.Text -> Restaurant
 getWijkanders weekday text =
@@ -30,10 +32,10 @@ getWijkanders weekday text =
 
 getDay :: Int -> [Tag T.Text] -> Maybe [Tag T.Text]
 getDay weekday tags = do
-  post <- safeHead $ partitions (~== "<div class='post-content'>") tags
+  post <- headMay $ partitions (~== "<div class='post-content'>") tags
   let ps   = partitions (~== "<p>") post
   let days = drop 5 ps
-  safeIdx days weekday
+  atMay days weekday
 
 getMenus :: [Tag T.Text] -> Maybe [[Tag T.Text]]
 getMenus day = do
@@ -42,8 +44,8 @@ getMenus day = do
 
 mkMenu :: [Tag T.Text] -> Maybe Menu
 mkMenu m = do
-  what <- safeIdx m 1
-  food <- safeIdx m 3
+  what <- atMay m 1
+  food <- atMay m 3
   let lunch = T.toTitle . T.takeWhile isAlpha . text $ [what]
   if T.null lunch
     then Nothing
