@@ -29,12 +29,14 @@ library
   build-depends: aeson
                , base >=4.7
                , css-text
+               , exceptions == 0.10.0
                , heredoc == 0.2.0.0
                , http-conduit
                , http-client
                , http-client-tls
                , microlens-platform
                , lucid >= 2
+               , mtl == 2.2.2
                , old-locale
                , tagsoup
                , text

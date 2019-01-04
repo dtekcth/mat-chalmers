@@ -7,11 +7,33 @@ module Model
   )
 where
 
-import           Control.Concurrent.MVar
-import           Data.IORef
-import           Data.Thyme
-import           Data.Thyme.Calendar.WeekDate
-import           Lens.Micro.Platform
+import           Control.Concurrent.MVar                  ( MVar
+                                                          , takeMVar
+                                                          )
+import           Control.Monad.IO.Class                   ( liftIO )
+import           Control.Monad.Reader                     ( asks )
+import           Data.IORef                               ( IORef
+                                                          , newIORef
+                                                          , writeIORef
+                                                          )
+import           Data.Functor                             ( (<&>) )
+import           Data.Thyme                               ( _localDay
+                                                          , _localTimeOfDay
+                                                          , _todHour
+                                                          , _ymdDay
+                                                          , _zonedTimeToLocalTime
+                                                          , formatTime
+                                                          , getZonedTime
+                                                          , gregorian
+                                                          )
+import           Data.Thyme.Calendar.WeekDate             ( _mwDay
+                                                          , mondayWeek
+                                                          )
+import           Lens.Micro.Platform                      ( (^.)
+                                                          , (&)
+                                                          , (%~)
+                                                          , view
+                                                          )
 import           System.Locale                            ( defaultTimeLocale )
 
 import           Config
@@ -21,24 +43,26 @@ import           Model.KarenGraphQLApi
 import           Util
 
 -- | Refreshes menus.
-refresh
-  :: Config
-  -> IO (IORef View -- view model
-                   , MVar () -> IO ()) -- update view
-refresh c = do
-  date <- fmap (view _zonedTimeToLocalTime) getZonedTime
-  ref  <- newIORef (View [] "" date)
+-- The refresh function evaluates to `Client (View model, Update signal)`,
+-- where the View model has all the current data. Call update signal to get
+-- new data from the data sources.
+refresh :: Client (IORef View, MVar () -> Client ())
+refresh = do
+  date <- liftIO $ fmap (view _zonedTimeToLocalTime) getZonedTime
+  ref  <- liftIO $ newIORef (View [] "" date)
   return
     ( ref
     , \upd -> do
-      takeMVar upd
-      putStrLn "Upd"
-      update c >>= writeIORef ref
+      liftIO $ takeMVar upd
+      liftIO $ putStrLn "Upd"
+      v <- update
+      liftIO $ writeIORef ref v
     )
 
-update :: Config -> IO View
-update c = do
-  dateNow <- fmap (view _zonedTimeToLocalTime) getZonedTime
+update :: Client View
+update = do
+  c       <- asks ccCfg
+  dateNow <- liftIO $ fmap (view _zonedTimeToLocalTime) getZonedTime
   let (textday, date) =
         if (dateNow ^. (_localTimeOfDay . _todHour)) >= view cNextDayHour c
           then
@@ -47,7 +71,7 @@ update c = do
   let day     = date ^. _localDay
   let weekday = (date ^. (_localDay . mondayWeek . _mwDay)) - 1
   let theDate = formatTime defaultTimeLocale "%F" date
-  rest <- sequence
+  rest <- liftIO $ sequence
     [ fetchMenu "21f31565-5c2b-4b47-d2a1-08d558129279" theDate
       <&> ( Restaurant
               "K\229rrestaurangen"
