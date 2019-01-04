@@ -1,9 +1,28 @@
+{-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving #-}
+
 -- | Types and internal functions
 
 module Model.Types where
 
+import           Control.Monad.Catch                      ( MonadCatch
+                                                          , MonadThrow
+                                                          )
+import           Control.Monad.Reader                     ( MonadIO
+                                                          , MonadReader
+                                                          , ReaderT
+                                                          )
 import           Data.Text.Lazy                           ( Text )
-import           Data.Thyme
+import           Data.Thyme                               ( LocalTime )
+
+import           Config                                   ( Config )
+
+
+newtype ClientT m r a = ClientT { runClientT :: ReaderT r m a }
+  deriving (Functor, Applicative, Monad, MonadCatch, MonadReader r, MonadIO, MonadThrow)
+
+newtype ClientContext = ClientContext { ccCfg :: Config }
+
+type Client = ClientT IO ClientContext
 
 -- | What to pass to template.
 data View = View
