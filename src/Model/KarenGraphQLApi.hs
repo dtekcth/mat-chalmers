@@ -1,46 +1,36 @@
-{-# LANGUAGE LambdaCase, OverloadedStrings, QuasiQuotes #-}
+{-# LANGUAGE DeriveAnyClass, DeriveGeneric, LambdaCase, OverloadedStrings, QuasiQuotes #-}
 
 module Model.KarenGraphQLApi
   ( fetchMenu
-  , Date(Date)
-  , Err
-  , transformMenu
   , Language(..)
   )
 where
 
+import           Control.Error.Util                       ( note )
 import           Control.Monad.IO.Class                   ( liftIO )
 import           Control.Monad.Reader                     ( asks )
 import           Data.Aeson                               ( object
                                                           , (.=)
                                                           , encode
                                                           , FromJSON(parseJSON)
-                                                          , ToJSON(toJSON)
+                                                          , ToJSON
                                                           , (.:)
                                                           , withObject
                                                           , Object
-                                                          , withText
                                                           , eitherDecode
-                                                          , Value(String)
-                                                          , decode
+                                                          , Value
                                                           )
 import           Data.Aeson.Types                         ( Parser
                                                           , parseEither
                                                           )
-import           Data.Functor                             ( (<&>) )
-import           Data.List                                ( find
-                                                          , intercalate
-                                                          )
-import           Data.Maybe                               ( fromMaybe
-                                                          , mapMaybe
-                                                          )
-import           Data.Text                                ( Text
+import           Data.Bifunctor                           ( first )
+import           Data.List                                ( find )
+import           Data.Maybe                               ( mapMaybe )
+import           Data.Text.Lazy                           ( Text
                                                           , pack
                                                           )
-import qualified Data.Text.Lazy                as LT
-import qualified Data.ByteString.Lazy          as LBS
+import           GHC.Generics                             ( Generic )
 import           Network.HTTP.Client                      ( RequestBody(..)
-                                                          , httpLbs
                                                           , method
                                                           , parseRequest
                                                           , requestBody
@@ -55,6 +45,7 @@ import           Model.Types                              ( Client
                                                           , Menu(..)
                                                           )
 
+import           Util                                     ( safeBS )
 
 apiURL :: String
 apiURL = "https://heimdallprod.azurewebsites.net/graphql"
@@ -116,40 +107,32 @@ requestData unitID startDate endDate = object
   ]
 
 data Language
-  = Swe
-  | Eng
-  deriving (Show, Eq)
-
-instance FromJSON Language where
-  parseJSON =
-    withText "asdaf" $ \case
-      "Swedish" -> return Swe
-      "English" -> return Eng
+  = Swedish
+  | English
+  deriving (FromJSON, Generic, Show, Eq)
 
 data MealName =
   MealName
-    { name :: String
+    { name     :: Text
     , language :: Language
     }
   deriving (Show)
 
 instance FromJSON MealName where
   parseJSON =
-    withObject "asdf" $ \obj ->
+    withObject "MealName" $ \obj ->
       MealName
         <$> obj .: "name"
         <*> obj .: "categoryName"
 
-
 data Meal =
   Meal
-    { names :: [MealName]
-    , unit :: String
-    , variant :: String
+    { names   :: [MealName]
+    , unit    :: Text
+    , variant :: Text
     }
   deriving (Show)
 
---deepLookup :: [Text] -> Object -> Parser a
 deepLookup [prop        ] obj = obj .: prop
 deepLookup (prop : props) obj = obj .: prop >>= deepLookup props
 
@@ -161,73 +144,33 @@ instance FromJSON Meal where
         <*> deepLookup ["mealProvidingUnit", "mealProvidingUnitName"] obj
         <*> deepLookup ["dishType", "name"] obj
 
-type Year = Int
-type Month = Int
-type Day = Int
-data Date = Date Year Month Day
-
-instance Show Date where
-  show (Date y m d) = intercalate "-" [show y, assureTwo m, assureTwo d]
-    where
-      assureTwo n = if n < 10 then '0' : show n else show n
-
-instance ToJSON Date where
-  toJSON = String . pack . show
-
-
-data Err =
-  Err
-    { message :: String
-    , reqBody :: LBS.ByteString
-    , resturantId :: String
-    , date :: String
-    }
-  deriving (Show)
-
-leftBind mapper either = case either of
-  Left  val -> mapper val
-  Right val -> Right val
-
-rightBind mapper either = case either of
-  Right val -> mapper val
-  Left  val -> Left val
-
 parseResponse :: Value -> Parser [Meal]
 parseResponse =
   withObject "ag" (deepLookup ["data", "dishOccurrencesByTimeRange"])
 
-nameOf :: Language -> Meal -> Maybe LT.Text
-nameOf lang meal = find ((== lang) . language) (names meal) <&> LT.pack . name
+nameOf :: Language -> Meal -> Maybe Text
+nameOf lang = fmap name . find ((== lang) . language) . names
 
-transformMenu :: Language -> Either Err [Meal] -> Either NoMenu [Menu]
-transformMenu lang mealData = case mealData of
-  Left  err   -> Left $ SomethingWrong $ Just $ LT.pack $ message err
-  Right meals -> if null menus then Left NoLunch else Right menus
-   where
-    menus = mapMaybe (\m -> nameOf lang m <&> Menu (LT.pack (variant m))) meals
-
-fetchMenu :: String -> String -> Client (Either Err [Meal])
-fetchMenu restaurantUUID day = do
-  manager        <- asks ccManager
+fetchMenu :: Language -> String -> String -> Client (Either NoMenu [Menu])
+fetchMenu lang restaurantUUID day = do
   initialRequest <- parseRequest apiURL
-  let request = initialRequest
-        { method         = "POST"
-        , requestBody    = RequestBodyLBS
-                             (encode $ requestData restaurantUUID day day)
-        , requestHeaders = [("Content-Type", "application/json")]
-        }
+  response       <- safeBS
+    (initialRequest
+      { method         = "POST"
+      , requestBody    = RequestBodyLBS
+                           (encode $ requestData restaurantUUID day day)
+      , requestHeaders = [("Content-Type", "application/json")]
+      }
+    )
 
-  response <- liftIO $ httpLbs request manager
-  let rawData = responseBody response
-  let mkErr msg = Err
-        { message     = msg
-        , reqBody     = rawData
-        , resturantId = restaurantUUID
-        , date        = day
-        }
-
-  return
-    $ leftBind (Left . mkErr)
-    $ rightBind (parseEither parseResponse)
-    $ eitherDecode rawData
-
+  pure
+    $   \case
+          [] -> Left NoLunch
+          xs -> Right xs
+    .   mapMaybe (\m -> Menu (variant m) <$> nameOf lang m)
+    =<< first
+          (SomethingWrong . Just . pack)
+          (   parseEither parseResponse
+          =<< eitherDecode
+          =<< note "Getting data didn't work out as expected." response
+          )

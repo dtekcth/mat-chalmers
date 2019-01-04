@@ -72,24 +72,18 @@ update = do
   let weekday = (date ^. (_localDay . mondayWeek . _mwDay)) - 1
   let theDate = formatTime defaultTimeLocale "%F" date
   rest <- sequence
-    [ fetchMenu "21f31565-5c2b-4b47-d2a1-08d558129279" theDate
-      <&> ( Restaurant
-              "K\229rrestaurangen"
-              "http://carbonatescreen.azurewebsites.net/menu/week/karrestaurangen/21f31565-5c2b-4b47-d2a1-08d558129279"
-          . transformMenu Swe
-          )
-    , fetchMenu "3d519481-1667-4cad-d2a3-08d558129279" theDate
-      <&> ( Restaurant
-              "Express Johanneberg"
-              "http://carbonatescreen.azurewebsites.net/menu/week/johanneberg-express/3d519481-1667-4cad-d2a3-08d558129279"
-          . transformMenu Swe
-          )
-    , fetchMenu "3ac68e11-bcee-425e-d2a8-08d558129279" theDate
-      <&> ( Restaurant
-              "S.M.A.K."
-              "http://carbonatescreen.azurewebsites.net/menu/week/smak/3ac68e11-bcee-425e-d2a8-08d558129279"
-          . transformMenu Swe
-          )
+    [ fetchMenu Swedish "21f31565-5c2b-4b47-d2a1-08d558129279" theDate
+      <&> Restaurant
+            "K\229rrestaurangen"
+            "http://carbonatescreen.azurewebsites.net/menu/week/karrestaurangen/21f31565-5c2b-4b47-d2a1-08d558129279"
+    , fetchMenu Swedish "3d519481-1667-4cad-d2a3-08d558129279" theDate
+      <&> Restaurant
+            "Express Johanneberg"
+            "http://carbonatescreen.azurewebsites.net/menu/week/johanneberg-express/3d519481-1667-4cad-d2a3-08d558129279"
+    , fetchMenu Swedish "3ac68e11-bcee-425e-d2a8-08d558129279" theDate
+      <&> Restaurant
+            "S.M.A.K."
+            "http://carbonatescreen.azurewebsites.net/menu/week/smak/3ac68e11-bcee-425e-d2a8-08d558129279"
     , getKarenToday "Linsen" johannebergLunch <$> safeGetBS linsenToday
 --      There is no Einstein at the moment. We'll put it back when their web presence is back.
 --      , getEinstein weekday <$> safeGet einstein
