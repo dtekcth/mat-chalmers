@@ -1,17 +1,15 @@
 module Model.Karen where
 
 import           Data.Aeson                               ( decode )
-import           Data.Aeson.Types -- (parseMaybe)
+import           Data.Aeson.Types                         ( parseMaybe )
 import           Data.ByteString.Lazy                     ( ByteString )
 import           Data.Maybe                               ( fromMaybe )
 import           Data.Text.Lazy                           ( Text )
 import           Data.Text.Lazy.Encoding                  ( decodeUtf8 )
-import           Data.Thyme
+import           Data.Thyme                               ( Day )
 
-import           Model.Types                       hiding ( menu
-                                                          , name
-                                                          , url
-                                                          , day
+import           Model.Types                              ( NoMenu(..)
+                                                          , Restaurant(..)
                                                           )
 import           Model.KarenJSON
 
