@@ -53,6 +53,7 @@ executable mat-chalmers
                , base >=4.7
                , bytestring
                , file-embed
+               , http-client-tls == 0.3.5.3
                , microlens-platform
                , mtl
                , scotty

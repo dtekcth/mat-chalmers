@@ -1,22 +1,30 @@
 module Util where
 
 import           Control.Exception
+import           Control.Monad.Reader                     ( asks )
+import           Control.Monad.Trans                      ( liftIO )
 import           Data.ByteString.Lazy                     ( ByteString )
 import           Data.Text.Lazy                           ( Text )
 import           Data.Text.Lazy.Encoding                  ( decodeUtf8 )
 import           Network.HTTP.Conduit
 
+import           Model.Types                              ( Client(..)
+                                                          , ClientContext(..)
+                                                          )
+
 takeNext :: [a] -> [a]
 takeNext = take 1 . drop 1
 
-safeGet :: String -> IO (Maybe Text)
-safeGet = handle' . get
+safeGet :: String -> Client (Maybe Text)
+safeGet = (fmap . fmap) decodeUtf8 . safeGetBS
 
-safeGetBS :: String -> IO (Maybe ByteString)
-safeGetBS = handle' . getBS
+safeBS :: Request -> Client (Maybe ByteString)
+safeBS r = do
+  m <- asks ccManager
+  liftIO $ (fmap . fmap) responseBody (handle' (liftIO (httpLbs r m)))
 
-get :: String -> IO Text
-get = fmap decodeUtf8 . getBS
+safeGetBS :: String -> Client (Maybe ByteString)
+safeGetBS = (=<<) safeBS . parseRequest
 
 getBS :: String -> IO ByteString
 getBS = simpleHttp

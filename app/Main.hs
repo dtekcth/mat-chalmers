@@ -22,6 +22,7 @@ import           Lens.Micro.Platform                      ( (<&>)
                                                           , set
                                                           , view
                                                           )
+import           Network.HTTP.Client.TLS                  ( newTlsManager )
 import           Network.Wai.Middleware.RequestLogger     ( logStdout )
 import           Network.Wai.Middleware.StaticEmbedded    ( static )
 import           System.Console.GetOpt                    ( ArgDescr(..)
@@ -68,11 +69,13 @@ main =
               then usage
               else do
                 upd                      <- newMVar () -- putMVar when to update
-                (viewRef, refreshAction) <- runReaderT (runClientT refresh)
-                                                       (ClientContext config)
+                mgr                      <- newTlsManager
+                (viewRef, refreshAction) <- runReaderT
+                  (runClientT refresh)
+                  (ClientContext config mgr)
                 -- updater thread
                 forkIO . forever $ runReaderT (runClientT (refreshAction upd))
-                                              (ClientContext config)
+                                              (ClientContext config mgr)
                 -- timer thread
                 forkIO . forever $ tryPutMVar upd () >> threadDelay
                   (view cInterval config)
@@ -88,6 +91,6 @@ serve
 serve conf viewRef upd = scotty (view cPort conf) $ do
   middleware logStdout
   middleware (static $(embedDir "static"))
-  get "/"  site
+  get "/"  ((html . render) =<< liftIO (readIORef viewRef))
   get "/r" (liftIO (tryPutMVar upd ()) >> redirect "/") -- force update
-  where site = (html . render) =<< liftIO (readIORef viewRef)
+
