@@ -1,12 +1,17 @@
 module Util where
 
-import           Control.Exception
+import           Control.Exception                        ( handle )
 import           Control.Monad.Reader                     ( asks )
 import           Control.Monad.Trans                      ( liftIO )
 import           Data.ByteString.Lazy                     ( ByteString )
 import           Data.Text.Lazy                           ( Text )
 import           Data.Text.Lazy.Encoding                  ( decodeUtf8 )
-import           Network.HTTP.Conduit
+import           Network.HTTP.Client                      ( HttpException
+                                                          , Request
+                                                          , httpLbs
+                                                          , parseRequest
+                                                          , responseBody
+                                                          )
 
 import           Model.Types                              ( Client(..)
                                                           , ClientContext(..)
@@ -25,9 +30,6 @@ safeBS r = do
 
 safeGetBS :: String -> Client (Maybe ByteString)
 safeGetBS = (=<<) safeBS . parseRequest
-
-getBS :: String -> IO ByteString
-getBS = simpleHttp
 
 -- | Handler for HttpExceptions
 handle' :: IO a -> IO (Maybe a)
