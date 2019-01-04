@@ -13,6 +13,7 @@ import           Control.Monad.Reader                     ( MonadIO
                                                           )
 import           Data.Text.Lazy                           ( Text )
 import           Data.Thyme                               ( LocalTime )
+import           Network.HTTP.Client                      ( Manager )
 
 import           Config                                   ( Config )
 
@@ -20,7 +21,7 @@ import           Config                                   ( Config )
 newtype ClientT m r a = ClientT { runClientT :: ReaderT r m a }
   deriving (Functor, Applicative, Monad, MonadCatch, MonadReader r, MonadIO, MonadThrow)
 
-newtype ClientContext = ClientContext { ccCfg :: Config }
+data ClientContext = ClientContext { ccCfg :: Config, ccManager :: Manager }
 
 type Client = ClientT IO ClientContext
 

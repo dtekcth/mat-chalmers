@@ -71,7 +71,7 @@ update = do
   let day     = date ^. _localDay
   let weekday = (date ^. (_localDay . mondayWeek . _mwDay)) - 1
   let theDate = formatTime defaultTimeLocale "%F" date
-  rest <- liftIO $ sequence
+  rest <- sequence
     [ fetchMenu "21f31565-5c2b-4b47-d2a1-08d558129279" theDate
       <&> ( Restaurant
               "K\229rrestaurangen"

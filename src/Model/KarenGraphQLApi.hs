@@ -9,8 +9,8 @@ module Model.KarenGraphQLApi
   )
 where
 
-import           Network.HTTP.Client
-import           Network.HTTP.Client.TLS
+import           Control.Monad.IO.Class                   ( liftIO )
+import           Control.Monad.Reader                     ( asks )
 import           Data.Aeson                               ( object
                                                           , (.=)
                                                           , encode
@@ -28,24 +28,33 @@ import           Data.Aeson.Types                         ( Parser
                                                           , parseEither
                                                           )
 import           Data.Functor                             ( (<&>) )
-import           Data.Text                                ( Text
-                                                          , pack
-                                                          )
 import           Data.List                                ( find
                                                           , intercalate
                                                           )
 import           Data.Maybe                               ( fromMaybe
                                                           , mapMaybe
                                                           )
+import           Data.Text                                ( Text
+                                                          , pack
+                                                          )
 import qualified Data.Text.Lazy                as LT
-import qualified Data.ByteString.Lazy.Internal as LBS
-import           Model.Types                              ( NoMenu
-                                                            ( NoLunch
-                                                            , SomethingWrong
-                                                            )
-                                                          , Menu(Menu)
+import qualified Data.ByteString.Lazy          as LBS
+import           Network.HTTP.Client                      ( RequestBody(..)
+                                                          , httpLbs
+                                                          , method
+                                                          , parseRequest
+                                                          , requestBody
+                                                          , requestHeaders
+                                                          , responseBody
                                                           )
 import           Text.Heredoc                             ( str )
+
+import           Model.Types                              ( Client
+                                                          , ClientContext(..)
+                                                          , NoMenu(..)
+                                                          , Menu(..)
+                                                          )
+
 
 apiURL :: String
 apiURL = "https://heimdallprod.azurewebsites.net/graphql"
@@ -197,10 +206,9 @@ transformMenu lang mealData = case mealData of
    where
     menus = mapMaybe (\m -> nameOf lang m <&> Menu (LT.pack (variant m))) meals
 
-
-fetchMenu :: String -> String -> IO (Either Err [Meal])
+fetchMenu :: String -> String -> Client (Either Err [Meal])
 fetchMenu restaurantUUID day = do
-  manager        <- newManager tlsManagerSettings
+  manager        <- asks ccManager
   initialRequest <- parseRequest apiURL
   let request = initialRequest
         { method         = "POST"
@@ -209,7 +217,7 @@ fetchMenu restaurantUUID day = do
         , requestHeaders = [("Content-Type", "application/json")]
         }
 
-  response <- httpLbs request manager
+  response <- liftIO $ httpLbs request manager
   let rawData = responseBody response
   let mkErr msg = Err
         { message     = msg
