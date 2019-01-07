@@ -88,8 +88,6 @@ update = do
 --      There is no Einstein at the moment. We'll put it back when their web presence is back.
 --      , getEinstein weekday <$> safeGet einstein
     , getKaren day "L's Kitchen" lindholmenLunch <$> safeGetBS ls
---      Wijkanders are hard to parse. Put them back when you have a parser.
---      , getWijkanders (weekday + 1) <$> safeGet wijkanders
     ]
   return (View rest textday date)
  where
@@ -105,7 +103,6 @@ update = do
     = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=8"
   smak
     = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=42"
-  wijkanders       = "http://www.wijkanders.se/restaurangen/"
 
   -- Restaurant menu links
   johannebergLunch = "https://chalmerskonferens.se/lunchmenyer-johanneberg/"
