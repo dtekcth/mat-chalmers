@@ -6,25 +6,25 @@
 module Model.KarenJSON where
 
 import           Data.Aeson.Types
-import qualified Data.Text                     as TS
+import           Data.Text                                ( unpack )
 import           Data.Thyme
 import           System.Locale                            ( defaultTimeLocale )
 import           Data.Traversable                         ( traverse
                                                           , for
                                                           )
+import           Safe                                     ( headMay )
 
 import           Model.Types                       hiding ( name
                                                           , menu
                                                           , url
                                                           )
 
--- | Get the menu for a specific day. Nothing if there is no menu for
--- that day.
-parseMenuForDay :: Day -> Value -> Parser (Maybe [[Menu]])
-parseMenuForDay day = withObject "top" $ \obj -> do
-  menuArray <- obj .: "menus"
-  menus     <- traverse parseMenus menuArray
-  return $ lookup day menus
+-- | Get the menu for a specific day.
+-- Nothing if there is no menu for that day.
+parseMenuForDay :: Day -> Value -> Parser (Maybe Menu)
+parseMenuForDay day = withObject "top" $ \obj -> fmap
+  (((headMay . concat) =<<) . lookup day)
+  (traverse parseMenus =<< obj .: "menus")
 
 parseMenus :: Value -> Parser (Day, [[Menu]])
 parseMenus = withObject "days" $ \menu -> do
@@ -44,6 +44,6 @@ parseMenus' = withObject "day" $ \obj -> do
 
 instance FromJSON LocalTime where
   parseJSON = withText "local time" $ \str ->
-    case parseTime defaultTimeLocale "%FT%T" (TS.unpack str) of
+    case parseTime defaultTimeLocale "%FT%T" (unpack str) of
       Just time -> pure time
       _         -> fail "could not parse ISO 8601 datetime"

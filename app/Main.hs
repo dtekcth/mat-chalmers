@@ -12,11 +12,20 @@ import           Control.Concurrent                       ( MVar
                                                           , tryPutMVar
                                                           )
 import           Control.Monad                            ( forever )
+import           Control.Monad.Log                        ( defaultBatchingOptions
+                                                          , renderWithTimestamp
+                                                          , runLoggingT
+                                                          , withFDHandler
+                                                          )
 import           Control.Monad.Reader                     ( runReaderT )
 import           Control.Monad.Trans                      ( liftIO )
 import           Data.FileEmbed                           ( embedDir )
 import           Data.IORef                               ( IORef
                                                           , readIORef
+                                                          )
+import           Data.Time.Format                         ( defaultTimeLocale
+                                                          , formatTime
+                                                          , iso8601DateFormat
                                                           )
 import           Lens.Micro.Platform                      ( (<&>)
                                                           , set
@@ -32,6 +41,9 @@ import           System.Console.GetOpt                    ( ArgDescr(..)
                                                           , usageInfo
                                                           )
 import           System.Environment                       ( getArgs )
+import           System.IO                                ( IOMode(AppendMode)
+                                                          , openFile
+                                                          )
 import           Web.Scotty                               ( get
                                                           , html
                                                           , middleware
@@ -41,15 +53,14 @@ import           Web.Scotty                               ( get
 
 import           Config
 import           Model
-import           Model.Types                              ( ClientContext(..)
-                                                          , runClientT
-                                                          )
+import           Model.Types                              ( ClientContext(..) )
 import           View                                     ( render )
 
 opts :: [OptDescr (Config -> Config)]
 opts =
-  [ Option [] ["help"] (NoArg (set cHelp True))           "Show usage info"
-  , Option [] ["port"] (ReqArg (set cPort . read) "PORT") "Port to run on"
+  [ Option [] ["help"]    (NoArg (set cHelp True))           "Show usage info"
+  , Option [] ["port"]    (ReqArg (set cPort . read) "PORT") "Port to run on"
+  , Option [] ["logfile"] (ReqArg (set cLog) "LOGFILE")      "Path to logfile."
   , Option []
            ["interval"]
            (ReqArg (set cInterval . (1000000 *) . read) "INTERVAL (s)")
@@ -70,12 +81,26 @@ main =
               else do
                 upd                      <- newMVar () -- putMVar when to update
                 mgr                      <- newTlsManager
-                (viewRef, refreshAction) <- runReaderT
-                  (runClientT refresh)
-                  (ClientContext config mgr)
+                logHandle <- openFile (view cLog config) AppendMode
+                (viewRef, refreshAction) <- runLoggingT
+                  (runReaderT refresh (ClientContext config mgr))
+                  print
                 -- updater thread
-                forkIO . forever $ runReaderT (runClientT (refreshAction upd))
-                                              (ClientContext config mgr)
+                forkIO
+                  . forever
+                  $ withFDHandler defaultBatchingOptions logHandle 1.0 80
+                  $ \logToHandle ->
+                      runReaderT (refreshAction upd) (ClientContext config mgr)
+                        `runLoggingT` ( logToHandle
+                                      . renderWithTimestamp
+                                          (formatTime
+                                            defaultTimeLocale
+                                            (iso8601DateFormat
+                                              (Just "%H:%M:%S")
+                                            )
+                                          )
+                                          id
+                                      )
                 -- timer thread
                 forkIO . forever $ tryPutMVar upd () >> threadDelay
                   (view cInterval config)

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveAnyClass, DeriveGeneric, LambdaCase, OverloadedStrings, QuasiQuotes #-}
+{-# LANGUAGE DeriveAnyClass, DeriveGeneric, FlexibleContexts, LambdaCase, OverloadedStrings, QuasiQuotes #-}
 
 module Model.KarenGraphQLApi
   ( fetchMenu
@@ -6,9 +6,17 @@ module Model.KarenGraphQLApi
   )
 where
 
+import           Control.Arrow                            ( (&&&)
+                                                          , app
+                                                          )
 import           Control.Error.Util                       ( note )
-import           Control.Monad.IO.Class                   ( liftIO )
-import           Control.Monad.Reader                     ( asks )
+import           Control.Monad.Catch                      ( MonadThrow )
+import           Control.Monad.IO.Class                   ( MonadIO
+                                                          , liftIO
+                                                          )
+import           Control.Monad.Reader                     ( MonadReader
+                                                          , asks
+                                                          )
 import           Data.Aeson                               ( object
                                                           , (.=)
                                                           , encode
@@ -24,6 +32,8 @@ import           Data.Aeson.Types                         ( Parser
                                                           , parseEither
                                                           )
 import           Data.Bifunctor                           ( first )
+import           Data.ByteString.Lazy                     ( ByteString )
+import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.List                                ( find )
 import           Data.Maybe                               ( mapMaybe )
 import           Data.Text.Lazy                           ( Text
@@ -39,8 +49,7 @@ import           Network.HTTP.Client                      ( RequestBody(..)
                                                           )
 import           Text.Heredoc                             ( str )
 
-import           Model.Types                              ( Client
-                                                          , ClientContext(..)
+import           Model.Types                              ( ClientContext(..)
                                                           , NoMenu(..)
                                                           , Menu(..)
                                                           )
@@ -151,7 +160,17 @@ parseResponse =
 nameOf :: Language -> Meal -> Maybe Text
 nameOf lang = fmap name . find ((== lang) . language) . names
 
-fetchMenu :: Language -> String -> String -> Client (Either NoMenu [Menu])
+toNMParseError :: (Show a) => a -> Either String b -> Either NoMenu b
+toNMParseError bs = first (flip NMParseError $ BL8.pack $ show bs)
+
+-- | Fetches menus from Kåren's GraphQL API.
+-- Parameters: Language, RestaurantUUID, day
+fetchMenu
+  :: (Applicative m, MonadIO m, MonadReader ClientContext m, MonadThrow m)
+  => Language
+  -> String
+  -> String
+  -> m (Either NoMenu [Menu])
 fetchMenu lang restaurantUUID day = do
   initialRequest <- parseRequest apiURL
   response       <- safeBS
@@ -168,9 +187,7 @@ fetchMenu lang restaurantUUID day = do
           [] -> Left NoLunch
           xs -> Right xs
     .   mapMaybe (\m -> Menu (variant m) <$> nameOf lang m)
-    =<< first
-          (SomethingWrong . Just . pack)
-          (   parseEither parseResponse
-          =<< eitherDecode
-          =<< note "Getting data didn't work out as expected." response
-          )
+    =<< (   (app . (toNMParseError &&& parseEither parseResponse))
+        =<< (app . (toNMParseError &&& eitherDecode))
+        =<< response
+        )

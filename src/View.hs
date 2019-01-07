@@ -49,8 +49,8 @@ renderRest :: Restaurant -> Html ()
 renderRest Restaurant {..} = box_ $ do
   h2_ (toHtml name >> " " >> a_ [href_ (T.toStrict url)] "☛")
   ul_ [class_ "food-menu"] $ case menu of
-    Left NoLunch            -> li_ "No lunch this day!"
-    Left (SomethingWrong _) -> li_ "Something went wrong, " <> a_
+    Left NoLunch -> li_ "No lunch this day!"
+    Left _       -> li_ "Something went wrong, " <> a_
       [href_ $ T.toStrict "https://github.com/dtekcth/mat-chalmers/issues/new"]
       "please file an issue."
     Right menus -> mconcat (map renderMenu menus)
