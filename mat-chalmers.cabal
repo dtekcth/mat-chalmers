@@ -21,7 +21,6 @@ library
                  , Model.KarenGraphQLApi
                  , Model.KarenJSON
                  , Model.Karen
-                 , Model.Wijkanders
                  , View
                  , Config
                  , Util
@@ -37,11 +36,9 @@ library
                , lucid >= 2
                , mtl == 2.2.2
                , old-locale
-               , tagsoup
                , text
                , bytestring
                , file-embed
-               , safe
                , thyme
 
 executable mat-chalmers
