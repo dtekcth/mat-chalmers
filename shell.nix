@@ -4,8 +4,11 @@ let
 
   inherit (nixpkgs) pkgs;
 
-  f = { mkDerivation, stdenv, haskellPackages
-      , wai-extra, wai-middleware-static-embedded
+  f = { mkDerivation, aeson, base, bytestring, css-text, errors
+      , exceptions, file-embed, heredoc, http-client, http-client-tls
+      , logging-effect, lucid, microlens-platform, mtl, old-locale
+      , prettyprinter, safe, scotty, stdenv, text, thyme, time, wai-extra
+      , wai-middleware-static-embedded
       }:
       mkDerivation {
         pname = "mat-chalmers";
@@ -15,25 +18,24 @@ let
         isExecutable = true;
         buildTools = [ haskellPackages.cabal-install ];
         enableSeparateDataOutput = true;
-        libraryHaskellDepends = with haskellPackages; [
-          aeson base bytestring css-text file-embed http-conduit lucid
-          old-locale microlens-platform old-locale tagsoup text thyme
+        libraryHaskellDepends = [
+          aeson base bytestring css-text errors exceptions file-embed heredoc
+          http-client logging-effect lucid microlens-platform mtl old-locale
+          prettyprinter safe text thyme
         ];
-        executableHaskellDepends = with haskellPackages; [
-          base bytestring file-embed lens mtl scotty wai-extra
+        executableHaskellDepends = [
+          base bytestring file-embed http-client-tls logging-effect
+          microlens-platform mtl scotty time wai-extra
           wai-middleware-static-embedded
         ];
         license = stdenv.lib.licenses.mit;
       };
-
-
 
   haskellPackages = if compiler == "default"
                        then pkgs.haskellPackages
                        else pkgs.haskell.packages.${compiler};
 
   variant = if doBenchmark then pkgs.haskell.lib.doBenchmark else pkgs.lib.id;
-  wai-middleware-static-embedded = pkgs.callPackage ./wai-middleware-static-embedded;
 
   drv = variant (haskellPackages.callPackage f {});
 
