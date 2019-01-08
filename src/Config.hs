@@ -12,9 +12,10 @@ data Config = Config
   , _cNextDayHour :: !Int
   , _cInterval    :: !Int
   , _cPort        :: !Int
+  , _cLog         :: !String
   } deriving (Eq, Show)
 
 makeLenses ''Config
 
 defaultConfig :: Config
-defaultConfig = Config False 14 (1000000 * 60 * 30) 5007
+defaultConfig = Config False 14 (1000000 * 60 * 30) 5007 "mat.log"

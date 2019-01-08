@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
 module Model
   ( refresh
   , Restaurant(..)
@@ -10,13 +10,30 @@ where
 import           Control.Concurrent.MVar                  ( MVar
                                                           , takeMVar
                                                           )
-import           Control.Monad.IO.Class                   ( liftIO )
-import           Control.Monad.Reader                     ( asks )
+import           Control.Monad.Catch                      ( MonadThrow )
+import           Control.Monad.IO.Class                   ( MonadIO
+                                                          , liftIO
+                                                          )
+import           Control.Monad.Log                        ( MonadLog
+                                                          , WithTimestamp
+                                                          , logMessage
+                                                          , timestamp
+                                                          )
+import           Control.Monad.Reader                     ( MonadReader
+                                                          , asks
+                                                          )
 import           Data.IORef                               ( IORef
                                                           , newIORef
                                                           , writeIORef
                                                           )
-import           Data.Functor                             ( (<&>) )
+import           Data.Foldable                            ( for_ )
+import           Data.Functor                             ( (<&>)
+                                                          , ($>)
+                                                          )
+import           Data.Text.Lazy                           ( pack )
+import           Data.Text.Prettyprint.Doc                ( Doc
+                                                          , pretty
+                                                          )
 import           Data.Thyme                               ( _localDay
                                                           , _localTimeOfDay
                                                           , _todHour
@@ -43,10 +60,17 @@ import           Model.KarenGraphQLApi
 import           Util
 
 -- | Refreshes menus.
--- The refresh function evaluates to `Client (View model, Update signal)`,
+-- The refresh function evaluates to `Some monad m => m (View model, Update signal)`,
 -- where the View model has all the current data. Call update signal to get
 -- new data from the data sources.
-refresh :: Client (IORef View, MVar () -> Client ())
+refresh
+  :: ( Monad m
+     , MonadIO m
+     , MonadLog (WithTimestamp (Doc ann)) m
+     , MonadReader ClientContext m
+     , MonadThrow m
+     )
+  => m (IORef View, MVar () -> m ())
 refresh = do
   date <- liftIO $ fmap (view _zonedTimeToLocalTime) getZonedTime
   ref  <- liftIO $ newIORef (View [] "" date)
@@ -54,12 +78,18 @@ refresh = do
     ( ref
     , \upd -> do
       liftIO $ takeMVar upd
-      liftIO $ putStrLn "Upd"
+      logMessage =<< timestamp "Updating view..."
       v <- update
       liftIO $ writeIORef ref v
     )
 
-update :: Client View
+update
+  :: ( MonadIO m
+     , MonadLog (WithTimestamp (Doc ann)) m
+     , MonadReader ClientContext m
+     , MonadThrow m
+     )
+  => m View
 update = do
   c       <- asks ccCfg
   dateNow <- liftIO $ fmap (view _zonedTimeToLocalTime) getZonedTime
@@ -72,23 +102,37 @@ update = do
   let weekday = (date ^. (_localDay . mondayWeek . _mwDay)) - 1
   let theDate = formatTime defaultTimeLocale "%F" date
   rest <- sequence
-    [ fetchMenu Swedish "21f31565-5c2b-4b47-d2a1-08d558129279" theDate
-      <&> Restaurant
-            "K\229rrestaurangen"
-            "http://carbonatescreen.azurewebsites.net/menu/week/karrestaurangen/21f31565-5c2b-4b47-d2a1-08d558129279"
-    , fetchMenu Swedish "3d519481-1667-4cad-d2a3-08d558129279" theDate
-      <&> Restaurant
-            "Express Johanneberg"
-            "http://carbonatescreen.azurewebsites.net/menu/week/johanneberg-express/3d519481-1667-4cad-d2a3-08d558129279"
-    , fetchMenu Swedish "3ac68e11-bcee-425e-d2a8-08d558129279" theDate
-      <&> Restaurant
-            "S.M.A.K."
-            "http://carbonatescreen.azurewebsites.net/menu/week/smak/3ac68e11-bcee-425e-d2a8-08d558129279"
-    , getKarenToday "Linsen" johannebergLunch <$> safeGetBS linsenToday
+    [ fmap
+      (Restaurant
+        "K\229rrestaurangen"
+        "http://carbonatescreen.azurewebsites.net/menu/week/karrestaurangen/21f31565-5c2b-4b47-d2a1-08d558129279"
+      )
+      (fetchMenu Swedish "21f31565-5c2b-4b47-d2a1-08d558129279" theDate)
+    , fmap
+      (Restaurant
+        "Express Johanneberg"
+        "http://carbonatescreen.azurewebsites.net/menu/week/johanneberg-express/3d519481-1667-4cad-d2a3-08d558129279"
+      )
+      (fetchMenu Swedish "3d519481-1667-4cad-d2a3-08d558129279" theDate)
+    , fmap
+      (Restaurant
+        "S.M.A.K."
+        "http://carbonatescreen.azurewebsites.net/menu/week/smak/3ac68e11-bcee-425e-d2a8-08d558129279"
+      )
+      (fetchMenu Swedish "3ac68e11-bcee-425e-d2a8-08d558129279" theDate)
+    , fmap (Restaurant "Linsen" johannebergLunch . (>>= getKarenToday))
+           (safeGetBS linsenToday)
 --      There is no Einstein at the moment. We'll put it back when their web presence is back.
 --      , getEinstein weekday <$> safeGet einstein
-    , getKaren day "L's Kitchen" lindholmenLunch <$> safeGetBS ls
+    , fmap (Restaurant "L's Kitchen" lindholmenLunch . (>>= getKaren day))
+           (safeGetBS ls)
     ]
+
+  for_ rest $ \r -> case menu r of
+    Left e ->
+      logMessage =<< timestamp (pretty $ name r <> ": " <> pack (show e))
+    _ -> pure ()
+
   return (View rest textday date)
  where
     -- Restaurant api links
