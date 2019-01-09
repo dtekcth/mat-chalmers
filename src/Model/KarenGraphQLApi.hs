@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveAnyClass, DeriveGeneric, FlexibleContexts, LambdaCase, OverloadedStrings, QuasiQuotes #-}
+{-# LANGUAGE DeriveAnyClass, DeriveGeneric, FlexibleContexts, OverloadedStrings, QuasiQuotes #-}
 
 module Model.KarenGraphQLApi
   ( fetchAndCreateRestaurant
@@ -57,7 +57,9 @@ import           Model.Types                              ( ClientContext(..)
                                                             )
                                                           )
 
-import           Util                                     ( safeBS )
+import           Util                                     ( menusToEitherNoLunch
+                                                          , safeBS
+                                                          )
 
 apiURL :: String
 apiURL = "https://heimdallprod.azurewebsites.net/graphql"
@@ -186,9 +188,7 @@ fetchMenu lang restaurantUUID day = do
     )
 
   pure
-    $   \case
-          [] -> Left NoLunch
-          xs -> Right xs
+    $   menusToEitherNoLunch
     .   mapMaybe (\m -> Menu (variant m) <$> nameOf lang m)
     =<< (   (app . (toNMParseError &&& parseEither parseResponse))
         =<< (app . (toNMParseError &&& eitherDecode))

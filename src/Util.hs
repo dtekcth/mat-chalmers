@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts , LambdaCase #-}
 
 module Util where
 
@@ -58,3 +58,9 @@ safeGetBS = (=<<) safeBS . parseRequest
 -- | Handler for HttpExceptions
 handle' :: IO a -> IO (Either HttpException a)
 handle' = try
+
+-- | Turn a list of Menu into an `Either NoMenu [Menu]`
+menusToEitherNoLunch :: [Menu] -> Either NoMenu [Menu]
+menusToEitherNoLunch = \case
+  [] -> Left NoLunch
+  xs -> Right xs

@@ -6,18 +6,18 @@
 module Model.KarenJSON where
 
 import           Data.Aeson.Types
+import           Data.Maybe                               ( maybeToList )
 import           Data.Text                                ( unpack )
 import           Data.Thyme
-import           System.Locale                            ( defaultTimeLocale )
 import           Data.Traversable                         ( traverse
                                                           , for
                                                           )
 import           Safe                                     ( headMay )
+import           System.Locale                            ( defaultTimeLocale )
 
-import           Model.Types                       hiding ( name
-                                                          , menu
-                                                          , url
-                                                          )
+
+import           Model.Types                              ( Menu(..) )
+
 
 -- | Get the menu for a specific day.
 -- Nothing if there is no menu for that day.
@@ -27,11 +27,10 @@ parseMenuForDay day = withObject "top" $ \obj -> fmap
   (traverse parseMenus =<< obj .: "menus")
 
 parseMenus :: Value -> Parser (Day, [[Menu]])
-parseMenus = withObject "days" $ \menu -> do
-  day    <- fmap localDay $ menu .: "menuDate"
-  recips <- menu .: "recipeCategories"
-  menu'  <- traverse parseMenus' recips
-  return (day, menu')
+parseMenus = withObject "days" $ \menu ->
+  (,)
+    <$> (localDay <$> menu .: "menuDate")
+    <*> (traverse parseMenus' . maybeToList =<< menu .:? "recipeCategories")
 
 parseMenus' :: Value -> Parser [Menu]
 parseMenus' = withObject "day" $ \obj -> do

@@ -15,7 +15,11 @@ import           Model.Types                              ( Menu
                                                           , NoMenu(..)
                                                           , Restaurant(..)
                                                           )
-import           Model.KarenJSON
+import           Model.KarenJSON                          ( parseMenuForDay
+                                                          , parseMenus
+                                                          )
+import           Util                                     ( menusToEitherNoLunch
+                                                          )
 
 -- | Parse a restaurant that Kåren has.
 getKaren :: Day -> ByteString -> Either NoMenu [Menu]
@@ -25,8 +29,6 @@ getKaren weekday rawBS = maybe (Left NoLunch) (pure . pure) =<< first
 
 -- | Parse today's menu for a restaurant that Kåren has.
 getKarenToday :: ByteString -> Either NoMenu [Menu]
-getKarenToday rawBS =
-  first (flip NMParseError rawBS)
-    $   fmap (concat . snd)
-    $   parseEither parseMenus
-    =<< eitherDecode rawBS
+getKarenToday rawBS = menusToEitherNoLunch =<< first
+  (flip NMParseError rawBS)
+  (concat . snd <$> (parseEither parseMenus =<< eitherDecode rawBS))
