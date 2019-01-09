@@ -1,5 +1,7 @@
 # mat-chalmers
 
+[![Build Status](https://travis-ci.org/dtekcth/mat-chalmers.svg?branch=master)](https://travis-ci.org/dtekcth/mat-chalmers)
+
 Lunch menus on Chalmers in Gothenburg. Issues and pull requests welcome.
 
 ## Hacking
