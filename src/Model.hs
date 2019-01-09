@@ -100,26 +100,16 @@ update = do
           else ("Today", dateNow)
   let day     = date ^. _localDay
   let weekday = (date ^. (_localDay . mondayWeek . _mwDay)) - 1
-  let theDate = formatTime defaultTimeLocale "%F" date
+  let karenR =
+        fetchAndCreateRestaurant (formatTime defaultTimeLocale "%F" date)
   rest <- sequence
-    [ fmap
-      (Restaurant
-        "K\229rrestaurangen"
-        "http://carbonatescreen.azurewebsites.net/menu/week/karrestaurangen/21f31565-5c2b-4b47-d2a1-08d558129279"
-      )
-      (fetchMenu Swedish "21f31565-5c2b-4b47-d2a1-08d558129279" theDate)
-    , fmap
-      (Restaurant
-        "Express Johanneberg"
-        "http://carbonatescreen.azurewebsites.net/menu/week/johanneberg-express/3d519481-1667-4cad-d2a3-08d558129279"
-      )
-      (fetchMenu Swedish "3d519481-1667-4cad-d2a3-08d558129279" theDate)
-    , fmap
-      (Restaurant
-        "S.M.A.K."
-        "http://carbonatescreen.azurewebsites.net/menu/week/smak/3ac68e11-bcee-425e-d2a8-08d558129279"
-      )
-      (fetchMenu Swedish "3ac68e11-bcee-425e-d2a8-08d558129279" theDate)
+    [ karenR "K\229rrestaurangen"
+             "karrestaurangen"
+             "21f31565-5c2b-4b47-d2a1-08d558129279"
+    , karenR "Express Johanneberg"
+             "johanneberg-express"
+             "3d519481-1667-4cad-d2a3-08d558129279"
+    , karenR "S.M.A.K." "smak" "3ac68e11-bcee-425e-d2a8-08d558129279"
     , fmap (Restaurant "Linsen" johannebergLunch . (>>= getKarenToday))
            (safeGetBS linsenToday)
 --      There is no Einstein at the moment. We'll put it back when their web presence is back.
