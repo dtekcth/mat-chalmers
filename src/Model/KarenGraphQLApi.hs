@@ -1,8 +1,7 @@
 {-# LANGUAGE DeriveAnyClass, DeriveGeneric, FlexibleContexts, LambdaCase, OverloadedStrings, QuasiQuotes #-}
 
 module Model.KarenGraphQLApi
-  ( fetchMenu
-  , Language(..)
+  ( fetchAndCreateRestaurant
   )
 where
 
@@ -38,6 +37,7 @@ import           Data.List                                ( find )
 import           Data.Maybe                               ( mapMaybe )
 import           Data.Text.Lazy                           ( Text
                                                           , pack
+                                                          , unpack
                                                           )
 import           GHC.Generics                             ( Generic )
 import           Network.HTTP.Client                      ( RequestBody(..)
@@ -52,6 +52,9 @@ import           Text.Heredoc                             ( str )
 import           Model.Types                              ( ClientContext(..)
                                                           , NoMenu(..)
                                                           , Menu(..)
+                                                          , Restaurant
+                                                            ( Restaurant
+                                                            )
                                                           )
 
 import           Util                                     ( safeBS )
@@ -191,3 +194,22 @@ fetchMenu lang restaurantUUID day = do
         =<< (app . (toNMParseError &&& eitherDecode))
         =<< response
         )
+
+-- | Parameters: the date to fetch, title, tag, uuid
+fetchAndCreateRestaurant
+  :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
+  => String
+  -> Text
+  -> Text
+  -> Text
+  -> m Restaurant
+fetchAndCreateRestaurant theDate title tag uuid =
+  Restaurant
+      title
+      (  "http://carbonatescreen.azurewebsites.net/menu/week/"
+      <> tag
+      <> "/"
+      <> uuid
+      )
+    <$> fetchMenu Swedish (unpack uuid) theDate
+
