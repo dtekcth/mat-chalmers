@@ -6,11 +6,11 @@ module Main
 where
 
 import           Control.Concurrent                       ( MVar
-                                                          , forkIO
                                                           , newMVar
                                                           , threadDelay
                                                           , tryPutMVar
                                                           )
+import qualified Control.Concurrent.Async                 as Async
 import           Control.Monad                            ( forever )
 import           Control.Monad.Log                        ( defaultBatchingOptions
                                                           , renderWithTimestamp
@@ -85,27 +85,27 @@ main =
                 (viewRef, refreshAction) <- runLoggingT
                   (runReaderT refresh (ClientContext config mgr))
                   print
-                -- updater thread
-                forkIO
-                  . forever
-                  $ withFDHandler defaultBatchingOptions logHandle 1.0 80
-                  $ \logToHandle ->
-                      runReaderT (refreshAction upd) (ClientContext config mgr)
-                        `runLoggingT` ( logToHandle
-                                      . renderWithTimestamp
-                                          (formatTime
-                                            defaultTimeLocale
-                                            (iso8601DateFormat
-                                              (Just "%H:%M:%S")
+                Async.concurrently_ 
+                  (Async.concurrently_ 
+                    -- timer
+                    (forever $ tryPutMVar upd () >> threadDelay (view cInterval config))
+                    -- webserver
+                    (serve config viewRef upd))
+                  -- updater
+                  (forever
+                    $ withFDHandler defaultBatchingOptions logHandle 1.0 80
+                    $ \logToHandle ->
+                        runReaderT (refreshAction upd) (ClientContext config mgr)
+                          `runLoggingT` ( logToHandle
+                                        . renderWithTimestamp
+                                            (formatTime
+                                              defaultTimeLocale
+                                              (iso8601DateFormat
+                                                (Just "%H:%M:%S")
+                                              )
                                             )
-                                          )
-                                          id
-                                      )
-                -- timer thread
-                forkIO . forever $ tryPutMVar upd () >> threadDelay
-                  (view cInterval config)
-                -- Web server thread
-                serve config viewRef upd
+                                            id
+                                        ))
   where usage = putStrLn $ usageInfo "mat-chalmers [OPTION...]" opts
 
 serve
