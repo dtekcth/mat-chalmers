@@ -51,7 +51,7 @@ executable mat-chalmers
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   hs-source-dirs: app
   build-depends: mat-chalmers
-               , base >=4.7
+               , base >= 4.7
                , bytestring
                , file-embed
                , http-client-tls == 0.3.5.3
@@ -62,4 +62,5 @@ executable mat-chalmers
                , time == 1.8.0.2
                , wai-extra
                , wai-middleware-static-embedded == 0.1.0.0
+               , async >= 2.1.1
   default-language: Haskell2010
