@@ -39,5 +39,6 @@ data NoMenu
   deriving (Show)
 
 -- | Menu of a restaurant.
+-- Title, Body text
 data Menu = Menu Text Text
   deriving (Eq, Show)

@@ -57,6 +57,7 @@ import           Config
 import           Model.Types
 import           Model.Karen
 import           Model.KarenGraphQLApi
+import           Model.Wijkanders
 import           Util
 
 -- | Refreshes menus.
@@ -116,6 +117,9 @@ update = do
 --      , getEinstein weekday <$> safeGet einstein
     , fmap (Restaurant "L's Kitchen" lindholmenLunch . (>>= getKaren day))
            (safeGetBS ls)
+    , fmap
+      (Restaurant "Wijkanders" (pack wijkanders) . (>>= getWijkanders day))
+      (safeGetBS wijkanders)
     ]
 
   for_ rest $ \r -> case menu r of
@@ -137,7 +141,6 @@ update = do
     = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=8"
   smak
     = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=42"
-
-  -- Restaurant menu links
+  wijkanders       = "http://www.wijkanders.se/restaurangen/"
   johannebergLunch = "https://chalmerskonferens.se/lunchmenyer-johanneberg/"
   lindholmenLunch  = "https://chalmerskonferens.se/lunchmenyer-lindholmen/"
