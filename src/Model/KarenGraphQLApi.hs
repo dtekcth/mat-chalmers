@@ -5,17 +5,9 @@ module Model.KarenGraphQLApi
   )
 where
 
-import           Control.Arrow                            ( (&&&)
-                                                          , app
-                                                          )
-import           Control.Error.Util                       ( note )
 import           Control.Monad.Catch                      ( MonadThrow )
-import           Control.Monad.IO.Class                   ( MonadIO
-                                                          , liftIO
-                                                          )
-import           Control.Monad.Reader                     ( MonadReader
-                                                          , asks
-                                                          )
+import           Control.Monad.IO.Class                   ( MonadIO )
+import           Control.Monad.Reader                     ( MonadReader )
 import           Data.Aeson                               ( object
                                                           , (.=)
                                                           , encode
@@ -23,7 +15,6 @@ import           Data.Aeson                               ( object
                                                           , ToJSON
                                                           , (.:)
                                                           , withObject
-                                                          , Object
                                                           , eitherDecode
                                                           , Value
                                                           )
@@ -31,12 +22,10 @@ import           Data.Aeson.Types                         ( Parser
                                                           , parseEither
                                                           )
 import           Data.Bifunctor                           ( first )
-import           Data.ByteString.Lazy                     ( ByteString )
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.List                                ( find )
 import           Data.Maybe                               ( mapMaybe )
 import           Data.Text.Lazy                           ( Text
-                                                          , pack
                                                           , unpack
                                                           )
 import           GHC.Generics                             ( Generic )
@@ -45,27 +34,20 @@ import           Network.HTTP.Client                      ( RequestBody(..)
                                                           , parseRequest
                                                           , requestBody
                                                           , requestHeaders
-                                                          , responseBody
                                                           )
 import           Text.Heredoc                             ( str )
 
 import           Model.Types                              ( ClientContext(..)
                                                           , NoMenu(..)
                                                           , Menu(..)
-                                                          , Restaurant
-                                                            ( Restaurant
-                                                            )
+                                                          , Restaurant(Restaurant)
                                                           )
-
 import           Util                                     ( menusToEitherNoLunch
                                                           , safeBS
                                                           )
 
 apiURL :: String
 apiURL = "https://heimdallprod.azurewebsites.net/graphql"
-
-graphQLName :: String
-graphQLName = "DishOccurrencesByTimeRangeQuery"
 
 -- brittany-disable-next-binding
 graphQLQuery :: String
@@ -108,17 +90,6 @@ graphQLQuery
         |    }
         |  }
         |}|]
-
-requestData :: (ToJSON a, ToJSON b) => a -> b -> b -> Value
-requestData unitID startDate endDate = object
-  [ "query" .= graphQLQuery
-  , "operationName" .= graphQLName
-  , "variables" .= object
-    [ "mealProvidingUnitID" .= unitID
-    , "startDate" .= startDate
-    , "endDate" .= endDate
-    ]
-  ]
 
 data Language
   = Swedish
@@ -165,9 +136,6 @@ parseResponse =
 nameOf :: Language -> Meal -> Maybe Text
 nameOf lang = fmap name . find ((== lang) . language) . names
 
-toNMParseError :: (Show a) => a -> Either String b -> Either NoMenu b
-toNMParseError bs = first (flip NMParseError $ BL8.pack $ show bs)
-
 -- | Fetches menus from Kåren's GraphQL API.
 -- Parameters: Language, RestaurantUUID, day
 fetchMenu
@@ -186,14 +154,28 @@ fetchMenu lang restaurantUUID day = do
       , requestHeaders = [("Content-Type", "application/json")]
       }
     )
-
   pure
-    $   menusToEitherNoLunch
+    $   response
+    >>= failWithNoMenu eitherDecode
+    >>= failWithNoMenu (parseEither parseResponse)
+    >>= menusToEitherNoLunch
     .   mapMaybe (\m -> Menu (variant m) <$> nameOf lang m)
-    =<< (   (app . (toNMParseError &&& parseEither parseResponse))
-        =<< (app . (toNMParseError &&& eitherDecode))
-        =<< response
-        )
+ where
+  failWithNoMenu :: Show a => (a -> Either String b) -> a -> Either NoMenu b
+  failWithNoMenu action x =
+    first (\msg -> NMParseError msg . BL8.pack . show $ x) (action x)
+
+  requestData :: (ToJSON a, ToJSON b) => a -> b -> b -> Value
+  requestData unitID startDate endDate = object
+    [ "query" .= graphQLQuery
+    , "operationName" .= ("DishOccurrencesByTimeRangeQuery" :: String)
+    , "variables" .= object
+      [ "mealProvidingUnitID" .= unitID
+      , "startDate" .= startDate
+      , "endDate" .= endDate
+      ]
+    ]
+
 
 -- | Parameters: the date to fetch, title, tag, uuid
 fetchAndCreateRestaurant
