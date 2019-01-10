@@ -5,14 +5,9 @@ module Model.KarenGraphQLApi
   )
 where
 
-import           Control.Error.Util                       ( note )
 import           Control.Monad.Catch                      ( MonadThrow )
-import           Control.Monad.IO.Class                   ( MonadIO
-                                                          , liftIO
-                                                          )
-import           Control.Monad.Reader                     ( MonadReader
-                                                          , asks
-                                                          )
+import           Control.Monad.IO.Class                   ( MonadIO )
+import           Control.Monad.Reader                     ( MonadReader )
 import           Data.Aeson                               ( object
                                                           , (.=)
                                                           , encode
@@ -20,7 +15,6 @@ import           Data.Aeson                               ( object
                                                           , ToJSON
                                                           , (.:)
                                                           , withObject
-                                                          , Object
                                                           , eitherDecode
                                                           , Value
                                                           )
@@ -28,12 +22,10 @@ import           Data.Aeson.Types                         ( Parser
                                                           , parseEither
                                                           )
 import           Data.Bifunctor                           ( first )
-import           Data.ByteString.Lazy                     ( ByteString )
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.List                                ( find )
 import           Data.Maybe                               ( mapMaybe )
 import           Data.Text.Lazy                           ( Text
-                                                          , pack
                                                           , unpack
                                                           )
 import           GHC.Generics                             ( Generic )
@@ -42,18 +34,14 @@ import           Network.HTTP.Client                      ( RequestBody(..)
                                                           , parseRequest
                                                           , requestBody
                                                           , requestHeaders
-                                                          , responseBody
                                                           )
 import           Text.Heredoc                             ( str )
 
 import           Model.Types                              ( ClientContext(..)
                                                           , NoMenu(..)
                                                           , Menu(..)
-                                                          , Restaurant
-                                                            ( Restaurant
-                                                            )
+                                                          , Restaurant(Restaurant)
                                                           )
-
 import           Util                                     ( menusToEitherNoLunch
                                                           , safeBS
                                                           )
