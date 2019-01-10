@@ -61,9 +61,6 @@ import           Util                                     ( menusToEitherNoLunch
 apiURL :: String
 apiURL = "https://heimdallprod.azurewebsites.net/graphql"
 
-graphQLName :: String
-graphQLName = "DishOccurrencesByTimeRangeQuery"
-
 -- brittany-disable-next-binding
 graphQLQuery :: String
 graphQLQuery
@@ -105,17 +102,6 @@ graphQLQuery
         |    }
         |  }
         |}|]
-
-requestData :: (ToJSON a, ToJSON b) => a -> b -> b -> Value
-requestData unitID startDate endDate = object
-  [ "query" .= graphQLQuery
-  , "operationName" .= graphQLName
-  , "variables" .= object
-    [ "mealProvidingUnitID" .= unitID
-    , "startDate" .= startDate
-    , "endDate" .= endDate
-    ]
-  ]
 
 data Language
   = Swedish
@@ -190,6 +176,17 @@ fetchMenu lang restaurantUUID day = do
   failWithNoMenu :: Show a => (a -> Either String b) -> a -> Either NoMenu b
   failWithNoMenu action x =
     first (\msg -> NMParseError msg . BL8.pack . show $ x) (action x)
+
+  requestData :: (ToJSON a, ToJSON b) => a -> b -> b -> Value
+  requestData unitID startDate endDate = object
+    [ "query" .= graphQLQuery
+    , "operationName" .= ("DishOccurrencesByTimeRangeQuery" :: String)
+    , "variables" .= object
+      [ "mealProvidingUnitID" .= unitID
+      , "startDate" .= startDate
+      , "endDate" .= endDate
+      ]
+    ]
 
 
 -- | Parameters: the date to fetch, title, tag, uuid
