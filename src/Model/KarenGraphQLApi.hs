@@ -119,21 +119,16 @@ data Meal =
     }
   deriving (Show)
 
-deepLookup :: (FromJSON a) => [T.Text] -> Object -> Parser a
-deepLookup []             _   = fail "I didn't find what I searched for."
-deepLookup [prop        ] obj = obj .: prop
-deepLookup (prop : props) obj = obj .: prop >>= deepLookup props
-
 instance FromJSON Meal where
   parseJSON =
     withObject "Meal Descriptor Object" $ \obj ->
       Meal
         <$> obj .: "displayNames"
-        <*> deepLookup ["dishType", "name"] obj
+        <*> (obj .: "dishType" >>= (.: "name"))
 
 parseResponse :: Value -> Parser [Meal]
-parseResponse =
-  withObject "ag" (deepLookup ["data", "dishOccurrencesByTimeRange"])
+parseResponse = withObject "Parse meals"
+  $ \obj -> obj .: "data" >>= (.: "dishOccurrencesByTimeRange")
 
 nameOf :: Language -> Meal -> Maybe Text
 nameOf lang = fmap name . find ((== lang) . language) . names
