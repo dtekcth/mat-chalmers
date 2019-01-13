@@ -167,7 +167,7 @@ fetch restaurantUUID day = do
 -- | Fetches menus from Kåren's GraphQL API.
 -- Parameters: Language, RestaurantUUID, day
 fetchMenu
-  :: (Applicative m, MonadIO m, MonadReader ClientContext m, MonadThrow m)
+  :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
   => Language
   -> String
   -> String
