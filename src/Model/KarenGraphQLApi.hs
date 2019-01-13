@@ -1,7 +1,10 @@
 {-# LANGUAGE DeriveAnyClass, DeriveGeneric, FlexibleContexts, OverloadedStrings, QuasiQuotes #-}
 
 module Model.KarenGraphQLApi
-  ( fetchAndCreateRestaurant
+  ( Language(..)
+  , fetch
+  , fetchMenu
+  , fetchAndCreateRestaurant
   )
 where
 
@@ -40,7 +43,9 @@ import           Text.Heredoc                             ( str )
 import           Model.Types                              ( ClientContext(..)
                                                           , NoMenu(..)
                                                           , Menu(..)
-                                                          , Restaurant(Restaurant)
+                                                          , Restaurant
+                                                            ( Restaurant
+                                                            )
                                                           )
 import           Util                                     ( menusToEitherNoLunch
                                                           , safeBS
@@ -136,17 +141,14 @@ parseResponse =
 nameOf :: Language -> Meal -> Maybe Text
 nameOf lang = fmap name . find ((== lang) . language) . names
 
--- | Fetches menus from Kåren's GraphQL API.
--- Parameters: Language, RestaurantUUID, day
-fetchMenu
-  :: (Applicative m, MonadIO m, MonadReader ClientContext m, MonadThrow m)
-  => Language
+fetch
+  :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
+  => String
   -> String
-  -> String
-  -> m (Either NoMenu [Menu])
-fetchMenu lang restaurantUUID day = do
+  -> m (Either NoMenu BL8.ByteString)
+fetch restaurantUUID day = do
   initialRequest <- parseRequest apiURL
-  response       <- safeBS
+  safeBS
     (initialRequest
       { method         = "POST"
       , requestBody    = RequestBodyLBS
@@ -154,17 +156,7 @@ fetchMenu lang restaurantUUID day = do
       , requestHeaders = [("Content-Type", "application/json")]
       }
     )
-  pure
-    $   response
-    >>= failWithNoMenu eitherDecode
-    >>= failWithNoMenu (parseEither parseResponse)
-    >>= menusToEitherNoLunch
-    .   mapMaybe (\m -> Menu (variant m) <$> nameOf lang m)
  where
-  failWithNoMenu :: Show a => (a -> Either String b) -> a -> Either NoMenu b
-  failWithNoMenu action x =
-    first (\msg -> NMParseError msg . BL8.pack . show $ x) (action x)
-
   requestData :: (ToJSON a, ToJSON b) => a -> b -> b -> Value
   requestData unitID startDate endDate = object
     [ "query" .= graphQLQuery
@@ -176,6 +168,26 @@ fetchMenu lang restaurantUUID day = do
       ]
     ]
 
+-- | Fetches menus from Kåren's GraphQL API.
+-- Parameters: Language, RestaurantUUID, day
+fetchMenu
+  :: (Applicative m, MonadIO m, MonadReader ClientContext m, MonadThrow m)
+  => Language
+  -> String
+  -> String
+  -> m (Either NoMenu [Menu])
+fetchMenu lang restaurantUUID day = do
+  response <- fetch restaurantUUID day
+  pure
+    $   response
+    >>= failWithNoMenu eitherDecode
+    >>= failWithNoMenu (parseEither parseResponse)
+    >>= menusToEitherNoLunch
+    .   mapMaybe (\m -> Menu (variant m) <$> nameOf lang m)
+ where
+  failWithNoMenu :: Show a => (a -> Either String b) -> a -> Either NoMenu b
+  failWithNoMenu action x =
+    first (\msg -> NMParseError msg . BL8.pack . show $ x) (action x)
 
 -- | Parameters: the date to fetch, title, tag, uuid
 fetchAndCreateRestaurant
