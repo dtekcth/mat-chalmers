@@ -1,8 +1,7 @@
-{-# LANGUAGE DeriveAnyClass, DeriveGeneric, FlexibleContexts, OverloadedStrings, QuasiQuotes #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, QuasiQuotes #-}
 
 module Model.KarenGraphQLApi
-  ( Language(..)
-  , fetch
+  ( fetch
   , fetchMenu
   , fetchAndCreateRestaurant
   )
@@ -96,10 +95,7 @@ graphQLQuery
         |  }
         |}|]
 
-data Language
-  = Swedish
-  | English
-  deriving (FromJSON, Generic, Show, Eq)
+type Language = String
 
 data MealName =
   MealName
@@ -205,5 +201,4 @@ fetchAndCreateRestaurant theDate title tag uuid =
       <> "/"
       <> uuid
       )
-    <$> fetchMenu Swedish (unpack uuid) theDate
-
+    <$> fetchMenu "Swedish" (unpack uuid) theDate
