@@ -115,7 +115,6 @@ instance FromJSON MealName where
 data Meal =
   Meal
     { names   :: [MealName]
-    , unit    :: Text
     , variant :: Text
     }
   deriving (Show)
@@ -130,7 +129,6 @@ instance FromJSON Meal where
     withObject "Meal Descriptor Object" $ \obj ->
       Meal
         <$> obj .: "displayNames"
-        <*> deepLookup ["mealProvidingUnit", "mealProvidingUnitName"] obj
         <*> deepLookup ["dishType", "name"] obj
 
 parseResponse :: Value -> Parser [Meal]
