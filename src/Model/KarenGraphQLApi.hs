@@ -71,28 +71,10 @@ graphQLQuery
         |    name
         |  }
         |  dish {
-        |    ...MenuDish
-        |  }
-        |  mealProvidingUnit {
-        |    mealProvidingUnitName
-        |    id
+        |    name
         |  }
         |}
-        |
-        |fragment MenuDish on Dish {
-        |  name
-        |  price
-        |  recipes {
-        |    portions
-        |    name
-        |    allergens {
-        |      id
-        |      name
-        |      imageUrl
-        |      sortOrder
-        |    }
-        |  }
-        |}|]
+        ||]
 
 type Language = String
 
