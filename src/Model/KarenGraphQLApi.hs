@@ -17,6 +17,7 @@ import           Data.Aeson                               ( Object
                                                           , FromJSON(parseJSON)
                                                           , ToJSON
                                                           , (.:)
+                                                          , withArray
                                                           , withObject
                                                           , eitherDecode
                                                           , Value
@@ -26,12 +27,13 @@ import           Data.Aeson.Types                         ( Parser
                                                           )
 import           Data.Bifunctor                           ( first )
 import qualified Data.ByteString.Lazy.Char8    as BL8
-import           Data.List                                ( find )
+import           Data.List                                ( lookup )
 import           Data.Maybe                               ( mapMaybe )
 import qualified Data.Text                     as T
 import           Data.Text.Lazy                           ( Text
                                                           , unpack
                                                           )
+import           GHC.Exts                                 ( toList )
 import           Network.HTTP.Client                      ( RequestBody(..)
                                                           , method
                                                           , parseRequest
@@ -83,23 +85,9 @@ graphQLQuery
 
 type Language = String
 
-data MealName =
-  MealName
-    { name     :: Text
-    , language :: Language
-    }
-  deriving (Show)
-
-instance FromJSON MealName where
-  parseJSON =
-    withObject "MealName" $ \obj ->
-      MealName
-        <$> obj .: "name"
-        <*> obj .: "categoryName"
-
 data Meal =
   Meal
-    { names   :: [MealName]
+    { names   :: [(Language, Text)]
     , variant :: Text
     }
   deriving (Show)
@@ -108,7 +96,10 @@ instance FromJSON Meal where
   parseJSON =
     withObject "Meal Descriptor Object" $ \obj ->
       Meal
-        <$> obj .: "displayNames"
+        <$> ((obj .: "displayNames")
+          >>= withArray "An array of meal names" (
+            fmap toList . mapM (withObject "The name of the meal in many languages"
+              $ \o' -> (,) <$> (o' .: "categoryName") <*> (o' .: "name"))))
         <*> (obj .: "dishType" >>= (.: "name"))
 
 parseResponse :: Value -> Parser [Meal]
@@ -157,9 +148,7 @@ fetchMenu lang restaurantUUID day = do
     >>= failWithNoMenu eitherDecode
     >>= failWithNoMenu (parseEither parseResponse)
     >>= menusToEitherNoLunch
-    .   mapMaybe
-          (\m -> Menu (variant m) . name <$> find ((== lang) . language) (names m)
-          )
+    .   mapMaybe (\m -> Menu (variant m) <$> lookup lang (names m))
  where
   failWithNoMenu :: Show a => (a -> Either String b) -> a -> Either NoMenu b
   failWithNoMenu action x =
