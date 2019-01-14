@@ -7,15 +7,16 @@ module Model.KarenGraphQLApi
   )
 where
 
+import           Control.Monad                            ( (>=>) )
 import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.IO.Class                   ( MonadIO )
 import           Control.Monad.Reader                     ( MonadReader )
 import           Data.Aeson                               ( object
                                                           , (.=)
                                                           , encode
-                                                          , FromJSON(parseJSON)
                                                           , ToJSON
                                                           , (.:)
+                                                          , withArray
                                                           , withObject
                                                           , eitherDecode
                                                           , Value
@@ -25,8 +26,7 @@ import           Data.Aeson.Types                         ( Parser
                                                           )
 import           Data.Bifunctor                           ( first )
 import qualified Data.ByteString.Lazy.Char8    as BL8
-import           Data.List                                ( find )
-import           Data.Maybe                               ( mapMaybe )
+import           Data.Foldable                            ( find )
 import           Data.Text.Lazy                           ( Text
                                                           , unpack
                                                           )
@@ -78,37 +78,22 @@ graphQLQuery
 
 type Language = String
 
-data MealName =
-  MealName
-    { name     :: Text
-    , language :: Language
-    }
-  deriving (Show)
-
-instance FromJSON MealName where
-  parseJSON =
-    withObject "MealName" $ \obj ->
-      MealName
-        <$> obj .: "name"
-        <*> obj .: "categoryName"
-
-data Meal =
-  Meal
-    { names   :: [MealName]
-    , variant :: Text
-    }
-  deriving (Show)
-
-instance FromJSON Meal where
-  parseJSON =
-    withObject "Meal Descriptor Object" $ \obj ->
-      Meal
-        <$> obj .: "displayNames"
-        <*> (obj .: "dishType" >>= (.: "name"))
-
-parseResponse :: Value -> Parser [Meal]
-parseResponse = withObject "Parse meals"
-  $ \obj -> obj .: "data" >>= (.: "dishOccurrencesByTimeRange")
+parseMenu :: Language -> Value -> Parser Menu
+parseMenu lang = withObject "Menu Object" $ \obj ->
+  Menu
+    <$> (obj .: "dishType" >>= (.: "name"))
+    <*> ((obj .: "displayNames") >>= withArray
+          "An array of meal names"
+          (   mapM
+              ( withObject "The name of the meal in many languages"
+              $ \o' -> (,) <$> (o' .: "categoryName") <*> (o' .: "name")
+              )
+          >=> ( maybe (fail $ "Couldn't find the language: " <> show lang)
+                      (pure . snd)
+              . find ((== lang) . fst)
+              )
+          )
+        )
 
 fetch
   :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
@@ -150,11 +135,15 @@ fetchMenu lang restaurantUUID day = do
   pure
     $   response
     >>= failWithNoMenu eitherDecode
-    >>= failWithNoMenu (parseEither parseResponse)
-    >>= menusToEitherNoLunch
-    .   mapMaybe
-          (\m -> Menu (variant m) . name <$> find ((== lang) . language) (names m)
+    >>= failWithNoMenu
+          (parseEither
+            (   withObject "Parse meals"
+            $   (.: "data")
+            >=> (.: "dishOccurrencesByTimeRange")
+            >=> mapM (parseMenu lang)
+            )
           )
+    >>= menusToEitherNoLunch
  where
   failWithNoMenu :: Show a => (a -> Either String b) -> a -> Either NoMenu b
   failWithNoMenu action x =
