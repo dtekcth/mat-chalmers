@@ -115,9 +115,6 @@ parseResponse :: Value -> Parser [Meal]
 parseResponse = withObject "Parse meals"
   $ \obj -> obj .: "data" >>= (.: "dishOccurrencesByTimeRange")
 
-nameOf :: Language -> Meal -> Maybe Text
-nameOf lang = fmap name . find ((== lang) . language) . names
-
 fetch
   :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
   => String
@@ -160,7 +157,9 @@ fetchMenu lang restaurantUUID day = do
     >>= failWithNoMenu eitherDecode
     >>= failWithNoMenu (parseEither parseResponse)
     >>= menusToEitherNoLunch
-    .   mapMaybe (\m -> Menu (variant m) <$> nameOf lang m)
+    .   mapMaybe
+          (\m -> Menu (variant m) . name <$> find ((== lang) . language) (names m)
+          )
  where
   failWithNoMenu :: Show a => (a -> Either String b) -> a -> Either NoMenu b
   failWithNoMenu action x =
