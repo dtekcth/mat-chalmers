@@ -2,7 +2,7 @@
 
 module Model.KarenGraphQLApi
   ( fetch
-  , fetchMenu
+  , parse
   , fetchAndCreateRestaurant
   )
 where
@@ -80,83 +80,77 @@ graphQLQuery
 
 type Language = String
 
-parseMenu :: Language -> Value -> Parser Menu
-parseMenu lang = withObject "Menu Object" $ \obj ->
-  Menu
-    <$> (obj .: "dishType" >>= (.: "name"))
-    <*> ((obj .: "displayNames") >>= withArray
-          "An array of meal names"
-          (   mapM
-              ( withObject "The name of the meal in many languages"
-              $ \o' -> (,) <$> (o' .: "categoryName") <*> (o' .: "name")
-              )
-          >=> ( maybe (fail $ "Couldn't find the language: " <> show lang)
-                      (pure . snd)
-              . find ((== lang) . fst)
-              )
-          )
-        )
-
+-- | Fetch a menu from Kårens GraphQL API.
 fetch
   :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
-  => String
-  -> Day
-  -> m (Either NoMenu BL8.ByteString)
+  => String                           -- ^ RestaurantUUID
+  -> Day                              -- ^ Day
+  -> m (Either NoMenu BL8.ByteString) -- ^ Either a bytestring payload or a NoMenu error
 fetch restaurantUUID day = do
   initialRequest <- parseRequest apiURL
   safeBS
-    (initialRequest
-      { method         = "POST"
-      , requestBody    = RequestBodyLBS (encode $ requestData restaurantUUID)
-      , requestHeaders = [("Content-Type", "application/json")]
-      }
+    (initialRequest { method         = "POST"
+                    , requestBody    = RequestBodyLBS $ encode requestData
+                    , requestHeaders = [("Content-Type", "application/json")]
+                    }
     )
  where
-  requestData unitID = object
+  requestData = object
     [ "query" .= graphQLQuery
     , "operationName" .= ("DishOccurrencesByTimeRangeQuery" :: String)
     , "variables" .= object
-      [ "mealProvidingUnitID" .= unitID
+      [ "mealProvidingUnitID" .= restaurantUUID
       , "startDate" .= showGregorian day
       , "endDate" .= showGregorian day
       ]
     ]
 
--- | Fetches menus from Kåren's GraphQL API.
--- Parameters: Language, RestaurantUUID, day
-fetchMenu
-  :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
-  => Language
-  -> String
-  -> Day
-  -> m (Either NoMenu [Menu])
-fetchMenu lang restaurantUUID day = do
-  response <- fetch restaurantUUID day
-  pure
-    $   response
-    >>= failWithNoMenu eitherDecode
-    >>= failWithNoMenu
+-- | Parses menus from Kåren's GraphQL API.
+parse
+  :: Language             -- ^ Language
+  -> BL8.ByteString       -- ^ Bytestring payload from fetch
+  -> Either NoMenu [Menu] -- ^ Either list of parsed Menu's or NoMenu error
+parse lang =
+  failWithNoMenu eitherDecode
+    >=> failWithNoMenu
           (parseEither
             (   withObject "Parse meals"
             $   (.: "data")
             >=> (.: "dishOccurrencesByTimeRange")
-            >=> mapM (parseMenu lang)
+            >=> mapM menuParser
             )
           )
-    >>= menusToEitherNoLunch
+    >=> menusToEitherNoLunch
  where
   failWithNoMenu :: Show a => (a -> Either String b) -> a -> Either NoMenu b
   failWithNoMenu action x =
     first (\msg -> NMParseError msg . BL8.pack . show $ x) (action x)
 
--- | Parameters: the date to fetch, title, tag, uuid
+  menuParser :: Value -> Parser Menu
+  menuParser = withObject "Menu Object" $ \obj ->
+    Menu
+      <$> (obj .: "dishType" >>= (.: "name"))
+      <*> ((obj .: "displayNames") >>= withArray
+            "An array of meal names"
+            (   mapM
+                ( withObject "The name of the meal in many languages"
+                $ \o' -> (,) <$> (o' .: "categoryName") <*> (o' .: "name")
+                )
+            >=> ( maybe (fail $ "Couldn't find the language: " <> show lang)
+                        (pure . snd)
+                . find ((== lang) . fst)
+                )
+            )
+          )
+
+-- | Fetch a restaurant from Kåren's GraphQL API
 fetchAndCreateRestaurant
   :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
-  => Day
-  -> Text
-  -> Text
-  -> Text
-  -> m Restaurant
+  => Day          -- ^ Day
+  -> Text         -- ^ Title
+  -> Text         -- ^ Tag
+  -> Text         -- ^ RestaurantUUID
+  -> m Restaurant -- ^ Fetched Restaurant
 fetchAndCreateRestaurant day title tag uuid =
   Restaurant
       title
@@ -165,4 +159,4 @@ fetchAndCreateRestaurant day title tag uuid =
       <> "/"
       <> uuid
       )
-    <$> fetchMenu "Swedish" (unpack uuid) day
+    <$> fmap (parse "Swedish" =<<) (fetch (unpack uuid) day)
