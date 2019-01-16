@@ -102,9 +102,6 @@ instance FromJSON Meal where
               $ \o' -> (,) <$> (o' .: "categoryName") <*> (o' .: "name"))))
         <*> (obj .: "dishType" >>= (.: "name"))
 
-parseResponse :: Value -> Parser [Meal]
-parseResponse = withObject "Parse meals"
-  $ \obj -> obj .: "data" >>= (.: "dishOccurrencesByTimeRange")
 
 fetch
   :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
@@ -146,7 +143,12 @@ fetchMenu lang restaurantUUID day = do
   pure
     $   response
     >>= failWithNoMenu eitherDecode
-    >>= failWithNoMenu (parseEither parseResponse)
+    >>= failWithNoMenu
+          (parseEither
+            ( withObject "Parse meals"
+            $ \obj -> obj .: "data" >>= (.: "dishOccurrencesByTimeRange")
+            )
+          )
     >>= menusToEitherNoLunch
     .   mapMaybe (\m -> Menu (variant m) <$> lookup lang (names m))
  where
