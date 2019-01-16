@@ -33,6 +33,7 @@ library
                , exceptions == 0.10.0
                , heredoc == 0.2.0.0
                , http-client
+               , http-client-tls == 0.3.5.3
                , logging-effect >= 1.3.2
                , microlens-platform
                , lucid >= 2

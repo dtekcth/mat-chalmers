@@ -6,6 +6,7 @@ import           Control.Exception                        ( try )
 import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.Reader                     ( MonadReader
                                                           , asks
+                                                          , runReaderT
                                                           )
 import           Control.Monad.Trans                      ( MonadIO
                                                           , liftIO
@@ -20,11 +21,13 @@ import           Network.HTTP.Client                      ( HttpException
                                                           , parseRequest
                                                           , responseBody
                                                           )
+import           Network.HTTP.Client.TLS                  ( newTlsManager )
 import           Text.HTML.TagSoup                        ( Tag
                                                           , isTagText
                                                           )
 import           Text.HTML.TagSoup.Match                  ( tagText )
 
+import           Config                                   ( defaultConfig )
 import           Model.Types                              ( ClientContext(..)
                                                           , Menu
                                                           , NoMenu(..)
@@ -61,3 +64,13 @@ menusToEitherNoLunch = \case
 removeWhitespaceTags :: [Tag ByteString] -> [Tag ByteString]
 removeWhitespaceTags =
   filter (\t -> not (isTagText t) || tagText (not . BL.all W8.isSpace) t)
+
+-- | Run the whole stack once. Very useful for debugging.
+--
+-- Example:
+-- > runStack $ fetch "30127789f555ed96b444db630f104ebd2dcc79c4" "2019-01-26"
+-- Right "{\"data\":{\"dishOccurrencesByTimeRange\":null}}\n"
+runStack :: (Monad m, MonadIO m) => ReaderT ClientContext m a -> m a
+runStack action = do
+  mgr <- newTlsManager
+  runReaderT action (ClientContext defaultConfig mgr)
