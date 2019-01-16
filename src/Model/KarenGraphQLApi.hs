@@ -2,7 +2,7 @@
 
 module Model.KarenGraphQLApi
   ( fetch
-  , fetchMenu
+  , parse
   , fetchAndCreateRestaurant
   )
 where
@@ -86,23 +86,8 @@ graphQLQuery
 
 type Language = String
 
-parseMenu :: Language -> Value -> Parser Menu
-parseMenu lang = withObject "Menu Object" $ \obj ->
-  Menu
-    <$> (obj .: "dishType" >>= (.: "name"))
-    <*> ((obj .: "displayNames") >>= withArray
-          "An array of meal names"
-          (   mapM
-              ( withObject "The name of the meal in many languages"
-              $ \o' -> (,) <$> (o' .: "categoryName") <*> (o' .: "name")
-              )
-          >=> ( maybe (fail $ "Couldn't find the language: " <> show lang)
-                      (pure . snd)
-              . find ((== lang) . fst)
-              )
-          )
-        )
-
+-- | Fetch a menu from Kårens GraphQL API.
+-- Parameters: RestaurantUUID, day.
 fetch
   :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
   => String
@@ -130,32 +115,41 @@ fetch restaurantUUID day = do
       ]
     ]
 
--- | Fetches menus from Kåren's GraphQL API.
--- Parameters: Language, RestaurantUUID, day
-fetchMenu
-  :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
-  => Language
-  -> String
-  -> String
-  -> m (Either NoMenu [Menu])
-fetchMenu lang restaurantUUID day = do
-  response <- fetch restaurantUUID day
-  pure
-    $   response
-    >>= failWithNoMenu eitherDecode
-    >>= failWithNoMenu
+-- | Parses menus from Kåren's GraphQL API.
+-- Parameters: Language, raw data
+parse :: Language -> BL8.ByteString -> Either NoMenu [Menu]
+parse lang =
+  failWithNoMenu eitherDecode
+    >=> failWithNoMenu
           (parseEither
             (   withObject "Parse meals"
             $   (.: "data")
             >=> (.: "dishOccurrencesByTimeRange")
-            >=> mapM (parseMenu lang)
+            >=> mapM (createMenuParser lang)
             )
           )
-    >>= menusToEitherNoLunch
+    >=> menusToEitherNoLunch
  where
   failWithNoMenu :: Show a => (a -> Either String b) -> a -> Either NoMenu b
   failWithNoMenu action x =
     first (\msg -> NMParseError msg . BL8.pack . show $ x) (action x)
+
+  createMenuParser :: Language -> Value -> Parser Menu
+  createMenuParser lang = withObject "Menu Object" $ \obj ->
+    Menu
+      <$> (obj .: "dishType" >>= (.: "name"))
+      <*> ((obj .: "displayNames") >>= withArray
+            "An array of meal names"
+            (   mapM
+                ( withObject "The name of the meal in many languages"
+                $ \o' -> (,) <$> (o' .: "categoryName") <*> (o' .: "name")
+                )
+            >=> ( maybe (fail $ "Couldn't find the language: " <> show lang)
+                        (pure . snd)
+                . find ((== lang) . fst)
+                )
+            )
+          )
 
 -- | Parameters: the date to fetch, title, tag, uuid
 fetchAndCreateRestaurant
@@ -173,4 +167,4 @@ fetchAndCreateRestaurant theDate title tag uuid =
       <> "/"
       <> uuid
       )
-    <$> fetchMenu "Swedish" (unpack uuid) theDate
+    <$> fmap (parse "Swedish" =<<) (fetch (unpack uuid) theDate)
