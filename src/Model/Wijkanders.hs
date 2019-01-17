@@ -15,7 +15,6 @@ import           Data.Attoparsec.ByteString.Lazy          ( Parser
                                                           , string
                                                           )
 import qualified Data.ByteString               as B
-import qualified Data.ByteString.Char8         as B8
 import           Data.ByteString.Lazy                     ( ByteString )
 import qualified Data.ByteString.Lazy          as BL
 import           Data.Functor                             ( (<&>) )
@@ -35,10 +34,7 @@ import           Lens.Micro.Platform                      ( (%~)
                                                           , (&)
                                                           , view
                                                           )
-import           Safe                                     ( atMay
-                                                          , headMay
-                                                          , tailMay
-                                                          )
+import           Safe                                     ( atMay )
 import qualified Data.Text.Lazy                as T
 import           Data.Text.Lazy.Encoding                  ( decodeUtf8 )
 import           Text.HTML.TagSoup                        ( (~==)
@@ -67,8 +63,8 @@ hasDate :: Day -> ByteString -> Bool
 hasDate d =
   let d' = view gregorian d
   in  isJust . maybeResult . parse
-        (  skipMany (skip (not . W8.isDigit))
-        *> string (B8.pack (show (ymdDay d') <> "/" <> show (ymdMonth d')))
+        (skipMany (skip (not . W8.isDigit)) *> string
+          (fromString (show (ymdDay d') <> "/" <> show (ymdMonth d')))
         )
 
 -- | getWijkanders will either give you a list of menus or NoLunch.
