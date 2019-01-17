@@ -11,12 +11,9 @@ import           Control.Monad                            ( (>=>) )
 import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.IO.Class                   ( MonadIO )
 import           Control.Monad.Reader                     ( MonadReader )
-import           Data.Aeson                               ( Object
-                                                          , object
+import           Data.Aeson                               ( object
                                                           , (.=)
                                                           , encode
-                                                          , FromJSON(parseJSON)
-                                                          , ToJSON
                                                           , (.:)
                                                           , withArray
                                                           , withObject
@@ -29,12 +26,14 @@ import           Data.Aeson.Types                         ( Parser
 import           Data.Bifunctor                           ( first )
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Foldable                            ( find )
-import           Data.Maybe                               ( mapMaybe )
-import qualified Data.Text                     as T
 import           Data.Text.Lazy                           ( Text
                                                           , unpack
                                                           )
-import           GHC.Exts                                 ( toList )
+import           Data.Thyme                               ( Day )
+import           Data.Thyme.Calendar.WeekDate             ( _mwDay
+                                                          , mondayWeek
+                                                          )
+import           Lens.Micro.Platform                      ( (.~) )
 import           Network.HTTP.Client                      ( RequestBody(..)
                                                           , method
                                                           , parseRequest
@@ -76,42 +75,41 @@ graphQLQuery
         |    name
         |  }
         |  dish {
-        |    ...MenuDish
+        |    name
         |  }
         |}
-        |
-        |fragment MenuDish on Dish {
-        |  name
-        |}|]
+        ||]
 
 type Language = String
 
 -- | Fetch a menu from Kårens GraphQL API.
--- Parameters: RestaurantUUID, day.
+-- Parameters: RestaurantUUID, Day.
 fetch
   :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
   => String
-  -> String
+  -> Day
   -> m (Either NoMenu BL8.ByteString)
-fetch restaurantUUID day = do
+fetch restaurantUUID d = do
   initialRequest <- parseRequest apiURL
   safeBS
     (initialRequest
       { method         = "POST"
-      , requestBody    = RequestBodyLBS
-                           (encode $ requestData restaurantUUID day day)
+      , requestBody    = RequestBodyLBS (encode $ requestData restaurantUUID)
       , requestHeaders = [("Content-Type", "application/json")]
       }
     )
  where
-  requestData :: (ToJSON a, ToJSON b) => a -> b -> b -> Value
-  requestData unitID startDate endDate = object
+  setDay :: Int -> Day -> Day
+  setDay = (mondayWeek . _mwDay .~)
+
+  requestData :: String -> Value
+  requestData unitID = object
     [ "query" .= graphQLQuery
     , "operationName" .= ("DishOccurrencesByTimeRangeQuery" :: String)
     , "variables" .= object
       [ "mealProvidingUnitID" .= unitID
-      , "startDate" .= startDate
-      , "endDate" .= endDate
+      , "startDate" .= show (1 `setDay` d)
+      , "endDate" .= show (5 `setDay` d)
       ]
     ]
 
@@ -135,7 +133,7 @@ parse lang =
     first (\msg -> NMParseError msg . BL8.pack . show $ x) (action x)
 
   createMenuParser :: Language -> Value -> Parser Menu
-  createMenuParser lang = withObject "Menu Object" $ \obj ->
+  createMenuParser lang' = withObject "Menu Object" $ \obj ->
     Menu
       <$> (obj .: "dishType" >>= (.: "name"))
       <*> ((obj .: "displayNames") >>= withArray
@@ -144,22 +142,22 @@ parse lang =
                 ( withObject "The name of the meal in many languages"
                 $ \o' -> (,) <$> (o' .: "categoryName") <*> (o' .: "name")
                 )
-            >=> ( maybe (fail $ "Couldn't find the language: " <> show lang)
+            >=> ( maybe (fail $ "Couldn't find the language: " <> show lang')
                         (pure . snd)
-                . find ((== lang) . fst)
+                . find ((== lang') . fst)
                 )
             )
           )
 
--- | Parameters: the date to fetch, title, tag, uuid
+-- | Parameters: Day, title, tag, uuid
 fetchAndCreateRestaurant
   :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
-  => String
+  => Day
   -> Text
   -> Text
   -> Text
   -> m Restaurant
-fetchAndCreateRestaurant theDate title tag uuid =
+fetchAndCreateRestaurant day title tag uuid =
   Restaurant
       title
       (  "http://carbonatescreen.azurewebsites.net/menu/week/"
@@ -167,4 +165,4 @@ fetchAndCreateRestaurant theDate title tag uuid =
       <> "/"
       <> uuid
       )
-    <$> fmap (parse "Swedish" =<<) (fetch (unpack uuid) theDate)
+    <$> fmap (parse "Swedish" =<<) (fetch (unpack uuid) day)
