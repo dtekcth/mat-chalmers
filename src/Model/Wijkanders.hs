@@ -30,6 +30,7 @@ import           Data.Thyme                               ( Day
                                                           , ymdDay
                                                           )
 import qualified Data.Word8                    as W8
+import           GHC.Exts                                 ( fromString )
 import           Lens.Micro.Platform                      ( (%~)
                                                           , (&)
                                                           , view
@@ -47,7 +48,9 @@ import           Text.HTML.TagSoup                        ( (~==)
                                                           , parseTags
                                                           , partitions
                                                           )
-import           Text.HTML.TagSoup.Match                  ( tagText )
+import           Text.HTML.TagSoup.Match                  ( tagClose
+                                                          , tagText
+                                                          )
 
 import           Model.Types                              ( Menu(..)
                                                           , NoMenu(..)
@@ -75,9 +78,9 @@ hasDate d =
 getWijkanders :: Day -> ByteString -> Either NoMenu [Menu]
 getWijkanders d =
   parseTags
-        -- Take tags from a start date to an end date
+        -- Take tags from a start date to the end of that paragraph.
     >>> dropWhile (not . tagText (hasDate d))
-    >>> takeWhile (not . tagText (hasDate (d & (gregorian . _ymdDay) %~ (+ 1))))
+    >>> takeWhile (not . tagClose (== fromString "p"))
     -- The heading is of no use to us.
     >>> drop 1
     >>> removeWhitespaceTags
