@@ -22,6 +22,9 @@ import           Data.Maybe                               ( fromMaybe
                                                           , isJust
                                                           , mapMaybe
                                                           )
+import           Data.Text.Encoding.Error                 ( ignore )
+import qualified Data.Text.Lazy                as T
+import           Data.Text.Lazy.Encoding                  ( decodeUtf8With )
 import           Data.Thyme                               ( Day
                                                           , _ymdDay
                                                           , gregorian
@@ -35,8 +38,6 @@ import           Lens.Micro.Platform                      ( (%~)
                                                           , view
                                                           )
 import           Safe                                     ( atMay )
-import qualified Data.Text.Lazy                as T
-import           Data.Text.Lazy.Encoding                  ( decodeUtf8 )
 import           Text.HTML.TagSoup                        ( (~==)
                                                           , Tag
                                                           , isTagText
@@ -84,7 +85,7 @@ getWijkanders d =
     >>> mapMaybe ((maybeTagText =<<) . (`atMay` 1))
     >>> map
           (   BL.break (== W8._colon)
-          >>> (decodeUtf8 *** (decodeUtf8 . BL.drop 1))
+          >>> (decodeUtf8With ignore *** (decodeUtf8With ignore . BL.drop 1))
           >>> uncurry Menu
           )
     >>> menusToEitherNoLunch
