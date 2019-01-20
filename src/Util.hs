@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts , LambdaCase #-}
+{-# LANGUAGE FlexibleContexts, LambdaCase #-}
 
 module Util where
 
@@ -18,7 +18,6 @@ import           Data.ByteString.Lazy                     ( ByteString )
 import           Data.Text.Lazy                           ( Text
                                                           , pack
                                                           )
-import           Data.Text.Lazy.Encoding                  ( decodeUtf8 )
 import           Network.HTTP.Client                      ( HttpException
                                                           , Request
                                                           , httpLbs
@@ -34,12 +33,6 @@ import           Model.Types                              ( ClientContext(..)
 
 takeNext :: [a] -> [a]
 takeNext = take 1 . drop 1
-
-safeGet
-  :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
-  => String
-  -> m (Either NoMenu Text)
-safeGet = (fmap . fmap) decodeUtf8 . safeGetBS
 
 safeBS
   :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
