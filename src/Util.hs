@@ -15,15 +15,21 @@ import           Control.Monad.Trans                      ( MonadIO
                                                           )
 import           Data.Bifunctor                           ( bimap )
 import           Data.ByteString.Lazy                     ( ByteString )
+import qualified Data.ByteString.Lazy          as BL
 import           Data.Text.Lazy                           ( Text
                                                           , pack
                                                           )
+import qualified Data.Word8                    as W8
 import           Network.HTTP.Client                      ( HttpException
                                                           , Request
                                                           , httpLbs
                                                           , parseRequest
                                                           , responseBody
                                                           )
+import           Text.HTML.TagSoup                        ( Tag
+                                                          , isTagText
+                                                          )
+import           Text.HTML.TagSoup.Match                  ( tagText )
 
 import           Model.Types                              ( ClientContext(..)
                                                           , Menu
@@ -57,3 +63,8 @@ menusToEitherNoLunch :: [Menu] -> Either NoMenu [Menu]
 menusToEitherNoLunch = \case
   [] -> Left NoLunch
   xs -> Right xs
+
+-- | Remove text tags that only contain whitespace.
+removeWhitespaceTags :: [Tag ByteString] -> [Tag ByteString]
+removeWhitespaceTags =
+  filter (\t -> not (isTagText t) || tagText (not . BL.all W8.isSpace) t)

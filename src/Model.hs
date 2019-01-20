@@ -54,6 +54,7 @@ import           Lens.Micro.Platform                      ( (^.)
 import           System.Locale                            ( defaultTimeLocale )
 
 import           Config
+import           Model.Einstein                           ( getEinstein )
 import           Model.Types
 import           Model.Karen
 import           Model.KarenGraphQLApi
@@ -113,8 +114,8 @@ update = do
     , karenR "S.M.A.K." "smak" "3ac68e11-bcee-425e-d2a8-08d558129279"
     , fmap (Restaurant "Linsen" johannebergLunch . (>>= getKarenToday))
            (safeGetBS linsenToday)
---      There is no Einstein at the moment. We'll put it back when their web presence is back.
---      , getEinstein weekday <$> safeGet einstein
+    , fmap (Restaurant "Einstein" (pack einstein) . (>>= getEinstein weekday))
+           (safeGetBS einstein)
     , fmap (Restaurant "L's Kitchen" lindholmenLunch . (>>= getKaren day))
            (safeGetBS ls)
     , fmap
@@ -130,7 +131,6 @@ update = do
   return (View rest textday date)
  where
     -- Restaurant api links
---    einstein = "http://butlercatering.se/einstein"
   karen
     = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=5"
   linsenToday
@@ -141,6 +141,7 @@ update = do
     = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=8"
   smak
     = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=42"
+  einstein         = "http://restaurang-einstein.se/"
   wijkanders       = "http://www.wijkanders.se/restaurangen/"
   johannebergLunch = "https://chalmerskonferens.se/lunchmenyer-johanneberg/"
   lindholmenLunch  = "https://chalmerskonferens.se/lunchmenyer-lindholmen/"

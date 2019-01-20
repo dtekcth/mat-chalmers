@@ -53,12 +53,8 @@ import           Model.Types                              ( Menu(..)
                                                           , NoMenu(..)
                                                           )
 import           Util                                     ( menusToEitherNoLunch
+                                                          , removeWhitespaceTags
                                                           )
-
--- | Remove text tags that only contain whitespace.
-removeWhitespaceTags :: [Tag ByteString] -> [Tag ByteString]
-removeWhitespaceTags =
-  filter (\t -> not (isTagText t) || tagText (not . BL.all W8.isSpace) t)
 
 hasDate :: Day -> ByteString -> Bool
 hasDate d =
