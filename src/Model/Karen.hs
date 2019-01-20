@@ -4,16 +4,10 @@ import           Data.Aeson                               ( eitherDecode )
 import           Data.Aeson.Types                         ( parseEither )
 import           Data.ByteString.Lazy                     ( ByteString )
 import           Data.Bifunctor                           ( first )
-import           Data.Maybe                               ( fromMaybe )
-import           Data.Text.Lazy                           ( Text
-                                                          , pack
-                                                          )
-import           Data.Text.Lazy.Encoding                  ( decodeUtf8 )
 import           Data.Thyme                               ( Day )
 
 import           Model.Types                              ( Menu
                                                           , NoMenu(..)
-                                                          , Restaurant(..)
                                                           )
 import           Model.KarenJSON                          ( parseMenuForDay
                                                           , parseMenus
