@@ -15,7 +15,6 @@ import           Data.Attoparsec.ByteString.Lazy          ( Parser
                                                           , string
                                                           )
 import qualified Data.ByteString               as B
-import qualified Data.ByteString.Char8         as B8
 import           Data.ByteString.Lazy                     ( ByteString )
 import qualified Data.ByteString.Lazy          as BL
 import           Data.Functor                             ( (<&>) )
@@ -30,14 +29,12 @@ import           Data.Thyme                               ( Day
                                                           , ymdDay
                                                           )
 import qualified Data.Word8                    as W8
+import           GHC.Exts                                 ( fromString )
 import           Lens.Micro.Platform                      ( (%~)
                                                           , (&)
                                                           , view
                                                           )
-import           Safe                                     ( atMay
-                                                          , headMay
-                                                          , tailMay
-                                                          )
+import           Safe                                     ( atMay )
 import qualified Data.Text.Lazy                as T
 import           Data.Text.Lazy.Encoding                  ( decodeUtf8 )
 import           Text.HTML.TagSoup                        ( (~==)
@@ -47,7 +44,9 @@ import           Text.HTML.TagSoup                        ( (~==)
                                                           , parseTags
                                                           , partitions
                                                           )
-import           Text.HTML.TagSoup.Match                  ( tagText )
+import           Text.HTML.TagSoup.Match                  ( tagClose
+                                                          , tagText
+                                                          )
 
 import           Model.Types                              ( Menu(..)
                                                           , NoMenu(..)
@@ -64,8 +63,8 @@ hasDate :: Day -> ByteString -> Bool
 hasDate d =
   let d' = view gregorian d
   in  isJust . maybeResult . parse
-        (  skipMany (skip (not . W8.isDigit))
-        *> string (B8.pack (show (ymdDay d') <> "/" <> show (ymdMonth d')))
+        (skipMany (skip (not . W8.isDigit)) *> string
+          (fromString (show (ymdDay d') <> "/" <> show (ymdMonth d')))
         )
 
 -- | getWijkanders will either give you a list of menus or NoLunch.
@@ -75,9 +74,9 @@ hasDate d =
 getWijkanders :: Day -> ByteString -> Either NoMenu [Menu]
 getWijkanders d =
   parseTags
-        -- Take tags from a start date to an end date
+        -- Take tags from a start date to the end of that paragraph.
     >>> dropWhile (not . tagText (hasDate d))
-    >>> takeWhile (not . tagText (hasDate (d & (gregorian . _ymdDay) %~ (+ 1))))
+    >>> takeWhile (not . tagClose (== fromString "p"))
     -- The heading is of no use to us.
     >>> drop 1
     >>> removeWhitespaceTags
