@@ -27,9 +27,6 @@ import           Data.IORef                               ( IORef
                                                           , writeIORef
                                                           )
 import           Data.Foldable                            ( for_ )
-import           Data.Functor                             ( (<&>)
-                                                          , ($>)
-                                                          )
 import           Data.Text.Lazy                           ( pack )
 import           Data.Text.Prettyprint.Doc                ( Doc
                                                           , pretty
@@ -131,16 +128,10 @@ update = do
   return (View rest textday date)
  where
     -- Restaurant api links
-  karen
-    = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=5"
   linsenToday
     = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataday?restaurantid=33"
-  xpress
-    = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=7"
   ls
     = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=8"
-  smak
-    = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=42"
   einstein         = "http://restaurang-einstein.se/"
   wijkanders       = "http://www.wijkanders.se/restaurangen/"
   johannebergLunch = "https://chalmerskonferens.se/lunchmenyer-johanneberg/"

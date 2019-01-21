@@ -6,41 +6,29 @@ where
 import           Control.Arrow                            ( (***)
                                                           , (>>>)
                                                           )
-import           Control.Error.Util                       ( note )
-import           Data.Attoparsec.ByteString.Lazy          ( Parser
-                                                          , maybeResult
+import           Data.Attoparsec.ByteString.Lazy          ( maybeResult
                                                           , parse
                                                           , skip
                                                           , skipMany
                                                           , string
                                                           )
-import qualified Data.ByteString               as B
 import           Data.ByteString.Lazy                     ( ByteString )
 import qualified Data.ByteString.Lazy          as BL
-import           Data.Functor                             ( (<&>) )
-import           Data.Maybe                               ( fromMaybe
-                                                          , isJust
+import           Data.Maybe                               ( isJust
                                                           , mapMaybe
                                                           )
 import           Data.Text.Encoding.Error                 ( ignore )
-import qualified Data.Text.Lazy                as T
 import           Data.Text.Lazy.Encoding                  ( decodeUtf8With )
 import           Data.Thyme                               ( Day
-                                                          , _ymdDay
                                                           , gregorian
                                                           , ymdMonth
                                                           , ymdDay
                                                           )
 import qualified Data.Word8                    as W8
 import           GHC.Exts                                 ( fromString )
-import           Lens.Micro.Platform                      ( (%~)
-                                                          , (&)
-                                                          , view
-                                                          )
+import           Lens.Micro.Platform                      ( view )
 import           Safe                                     ( atMay )
 import           Text.HTML.TagSoup                        ( (~==)
-                                                          , Tag
-                                                          , isTagText
                                                           , maybeTagText
                                                           , parseTags
                                                           , partitions

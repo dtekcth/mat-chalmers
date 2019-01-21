@@ -30,7 +30,6 @@ import           Data.Maybe                               ( mapMaybe )
 import           Data.Text.Lazy                           ( Text
                                                           , unpack
                                                           )
-import           GHC.Generics                             ( Generic )
 import           Network.HTTP.Client                      ( RequestBody(..)
                                                           , method
                                                           , parseRequest

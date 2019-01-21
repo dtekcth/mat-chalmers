@@ -3,11 +3,8 @@
 module Util where
 
 import           Control.Exception                        ( try )
-import           Control.Monad.Catch                      ( MonadCatch
-                                                          , MonadThrow
-                                                          )
+import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.Reader                     ( MonadReader
-                                                          , ReaderT
                                                           , asks
                                                           )
 import           Control.Monad.Trans                      ( MonadIO
@@ -16,9 +13,6 @@ import           Control.Monad.Trans                      ( MonadIO
 import           Data.Bifunctor                           ( bimap )
 import           Data.ByteString.Lazy                     ( ByteString )
 import qualified Data.ByteString.Lazy          as BL
-import           Data.Text.Lazy                           ( Text
-                                                          , pack
-                                                          )
 import qualified Data.Word8                    as W8
 import           Network.HTTP.Client                      ( HttpException
                                                           , Request
@@ -34,7 +28,6 @@ import           Text.HTML.TagSoup.Match                  ( tagText )
 import           Model.Types                              ( ClientContext(..)
                                                           , Menu
                                                           , NoMenu(..)
-                                                          , Restaurant(..)
                                                           )
 
 takeNext :: [a] -> [a]

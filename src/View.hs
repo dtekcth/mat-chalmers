@@ -9,7 +9,6 @@ where
 import           Data.FileEmbed
 import qualified Data.Text.Lazy                as T
 import qualified Data.Text.Lazy.Builder        as T
-import           Data.Monoid
 import           Data.Thyme
 import           Lens.Micro.Platform                      ( (&)
                                                           , (%~)
