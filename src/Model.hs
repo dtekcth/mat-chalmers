@@ -7,6 +7,7 @@ module Model
   )
 where
 
+import           Control.Arrow                            ( (>>>) )
 import           Control.Concurrent.MVar                  ( MVar
                                                           , takeMVar
                                                           )
@@ -22,6 +23,7 @@ import           Control.Monad.Log                        ( MonadLog
 import           Control.Monad.Reader                     ( MonadReader
                                                           , asks
                                                           )
+import           Data.Functor                             ( (<&>) )
 import           Data.IORef                               ( IORef
                                                           , newIORef
                                                           , writeIORef
@@ -70,17 +72,17 @@ refresh
      , MonadThrow m
      )
   => m (IORef View, MVar () -> m ())
-refresh = do
-  date <- liftIO $ fmap (view _zonedTimeToLocalTime) getZonedTime
-  ref  <- liftIO $ newIORef (View [] "" date)
-  return
-    ( ref
-    , \upd -> do
-      liftIO $ takeMVar upd
-      logMessage =<< timestamp "Updating view..."
-      v <- update
-      liftIO $ writeIORef ref v
-    )
+refresh
+  = liftIO
+      (getZonedTime >>= (view _zonedTimeToLocalTime >>> newIORef . View [] ""))
+    <&> \ref ->
+          ( ref
+          , \upd -> do
+            liftIO $ takeMVar upd
+            logMessage =<< timestamp "Updating view..."
+            v <- update
+            liftIO $ writeIORef ref v
+          )
 
 update
   :: ( MonadIO m
@@ -92,15 +94,14 @@ update
 update = do
   c       <- asks ccCfg
   dateNow <- liftIO $ fmap (view _zonedTimeToLocalTime) getZonedTime
-  let (textday, date) =
+  let (textday, d) =
         if (dateNow ^. (_localTimeOfDay . _todHour)) >= view cNextDayHour c
           then
             ("Tomorrow", dateNow & (_localDay . gregorian . _ymdDay) %~ (+ 1))
           else ("Today", dateNow)
-  let day     = date ^. _localDay
-  let weekday = (date ^. (_localDay . mondayWeek . _mwDay)) - 1
-  let karenR =
-        fetchAndCreateRestaurant (formatTime defaultTimeLocale "%F" date)
+  let day'    = d ^. _localDay
+  let weekday = (d ^. (_localDay . mondayWeek . _mwDay)) - 1
+  let karenR = fetchAndCreateRestaurant (formatTime defaultTimeLocale "%F" d)
   rest <- sequence
     [ karenR "K\229rrestaurangen"
              "karrestaurangen"
@@ -113,10 +114,10 @@ update = do
            (safeGetBS linsenToday)
     , fmap (Restaurant "Einstein" (pack einstein) . (>>= getEinstein weekday))
            (safeGetBS einstein)
-    , fmap (Restaurant "L's Kitchen" lindholmenLunch . (>>= getKaren day))
+    , fmap (Restaurant "L's Kitchen" lindholmenLunch . (>>= getKaren day'))
            (safeGetBS ls)
     , fmap
-      (Restaurant "Wijkanders" (pack wijkanders) . (>>= getWijkanders day))
+      (Restaurant "Wijkanders" (pack wijkanders) . (>>= getWijkanders day'))
       (safeGetBS wijkanders)
     ]
 
@@ -125,7 +126,7 @@ update = do
       logMessage =<< timestamp (pretty $ name r <> ": " <> pack (show e))
     _ -> pure ()
 
-  return (View rest textday date)
+  return (View rest textday d)
  where
     -- Restaurant api links
   linsenToday

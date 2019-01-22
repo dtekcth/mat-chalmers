@@ -10,7 +10,8 @@ where
 import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.IO.Class                   ( MonadIO )
 import           Control.Monad.Reader                     ( MonadReader )
-import           Data.Aeson                               ( object
+import           Data.Aeson                               ( Object
+                                                          , object
                                                           , (.=)
                                                           , encode
                                                           , FromJSON(parseJSON)
@@ -27,6 +28,7 @@ import           Data.Bifunctor                           ( first )
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.List                                ( find )
 import           Data.Maybe                               ( mapMaybe )
+import qualified Data.Text                     as T
 import           Data.Text.Lazy                           ( Text
                                                           , unpack
                                                           )
@@ -118,6 +120,8 @@ data Meal =
     }
   deriving (Show)
 
+deepLookup :: (FromJSON a) => [T.Text] -> Object -> Parser a
+deepLookup []             _   = fail "I didn't find what I searched for."
 deepLookup [prop        ] obj = obj .: prop
 deepLookup (prop : props) obj = obj .: prop >>= deepLookup props
 
