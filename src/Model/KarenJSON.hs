@@ -1,10 +1,11 @@
-{-# LANGUAGE OverloadedStrings, FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, OverloadedStrings #-}
 
 -- | Module for parsing JSON data from the Student Union Restaurant
 -- api @ http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen
 
 module Model.KarenJSON where
 
+import           Control.Arrow                            ( (>>>) )
 import           Data.Aeson.Types
 import           Data.Maybe                               ( maybeToList )
 import           Data.Text                                ( unpack )
@@ -29,7 +30,13 @@ parseMenuForDay day = withObject "top" $ \obj -> fmap
 parseMenus :: Value -> Parser (Day, [[Menu]])
 parseMenus = withObject "days" $ \menu ->
   (,)
-    <$> (localDay <$> menu .: "menuDate")
+    <$> (menu .: "menuDate" >>= withText
+          "Local time"
+          (unpack >>> parseTime defaultTimeLocale "%FT%T" >>> maybe
+            (fail "Could not parse ISO 8601 datetime!")
+            (pure . localDay)
+          )
+        )
     <*> (traverse parseMenus' . maybeToList =<< menu .:? "recipeCategories")
 
 parseMenus' :: Value -> Parser [Menu]
@@ -40,9 +47,3 @@ parseMenus' = withObject "day" $ \obj -> do
     [Object sv, Object _] <- rec' .: "displayNames"
     what'                 <- sv .: "displayName"
     return $ Menu name what'
-
-instance FromJSON LocalTime where
-  parseJSON = withText "local time" $ \str ->
-    case parseTime defaultTimeLocale "%FT%T" (unpack str) of
-      Just time -> pure time
-      _         -> fail "could not parse ISO 8601 datetime"

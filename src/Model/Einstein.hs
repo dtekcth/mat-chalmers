@@ -20,35 +20,40 @@ import           Text.HTML.TagSoup.Match                  ( anyAttr
                                                           )
 
 import           Model.Types                              ( Menu(..)
-                                                          , NoMenu
+                                                          , NoMenu(..)
                                                           )
 import           Util                                     ( menusToEitherNoLunch
                                                           , removeWhitespaceTags
                                                           )
 
-days :: DayOfWeek -> ByteString
+days :: DayOfWeek -> Either NoMenu ByteString
 days = \case
-  0 -> fromString "M\195\165ndag"
-  1 -> fromString "Tisdag"
-  2 -> fromString "Onsdag"
-  3 -> fromString "Torsdag"
-  4 -> fromString "Fredag"
-  5 -> fromString "L\195\182rdag"
-  6 -> fromString "S\195\182ndag"
+  0 -> pure $ fromString "M\195\165ndag"
+  1 -> pure $ fromString "Tisdag"
+  2 -> pure $ fromString "Onsdag"
+  3 -> pure $ fromString "Torsdag"
+  4 -> pure $ fromString "Fredag"
+  5 -> pure $ fromString "L\195\182rdag"
+  6 -> pure $ fromString "S\195\182ndag"
+  s -> Left $ NMParseError
+    "The week only has seven days numbered 0-6."
+    (fromString $ "This is the day we got: " <> show s)
 
 -- | Get Einstein menu
 getEinstein :: DayOfWeek -> ByteString -> Either NoMenu [Menu]
-getEinstein d =
-  parseTags
-    >>> removeWhitespaceTags
-    >>> dropWhile (not . tagText (== days d))
-    >>> takeWhile (~/= "<section>")
-    >>> takeWhile
-          (not . tagOpen
-            (const True)
-            (anyAttr ((fromString "class", fromString "serif_regular") ==))
-          )
-    >>> mapMaybe maybeTagText
-    >>> drop 1
-    >>> map (Menu (fromString "") . decodeUtf8With ignore)
-    >>> menusToEitherNoLunch
+getEinstein d s = days d >>= go s
+ where
+  go d' =
+    parseTags
+      >>> removeWhitespaceTags
+      >>> dropWhile (not . tagText (== d'))
+      >>> takeWhile (~/= "<section>")
+      >>> takeWhile
+            (not . tagOpen
+              (const True)
+              (anyAttr ((fromString "class", fromString "serif_regular") ==))
+            )
+      >>> mapMaybe maybeTagText
+      >>> drop 1
+      >>> map (Menu (fromString "") . decodeUtf8With ignore)
+      >>> menusToEitherNoLunch
