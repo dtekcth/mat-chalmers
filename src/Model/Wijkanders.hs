@@ -14,6 +14,7 @@ import           Data.Attoparsec.ByteString.Lazy          ( maybeResult
                                                           )
 import           Data.ByteString.Lazy                     ( ByteString )
 import qualified Data.ByteString.Lazy          as BL
+import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Maybe                               ( isJust
                                                           , mapMaybe
                                                           )
@@ -24,18 +25,21 @@ import           Data.Thyme                               ( Day
                                                           , ymdMonth
                                                           , ymdDay
                                                           )
+import           Data.Thyme                               ( _ymdDay )
 import qualified Data.Word8                    as W8
 import           GHC.Exts                                 ( fromString )
-import           Lens.Micro.Platform                      ( view )
+import           Lens.Micro.Platform                      ( (%~)
+                                                          , (&)
+                                                          , view
+                                                          )
 import           Safe                                     ( atMay )
 import           Text.HTML.TagSoup                        ( (~==)
+                                                          , (~/=)
                                                           , maybeTagText
                                                           , parseTags
                                                           , partitions
                                                           )
-import           Text.HTML.TagSoup.Match                  ( tagClose
-                                                          , tagText
-                                                          )
+import           Text.HTML.TagSoup.Match                  ( tagText )
 
 import           Model.Types                              ( Menu(..)
                                                           , NoMenu(..)
@@ -59,11 +63,19 @@ hasDate d =
 getWijkanders :: Day -> ByteString -> Either NoMenu [Menu]
 getWijkanders d =
   parseTags
-        -- Take tags from a start date to the end of that paragraph.
+        -- Take tags from a start date to the next date or to the phrase
+        -- "Med reservation", I really hope this hack works longer than the 30th
+        -- of april. Brittlebrittlebrittle.
     >>> dropWhile (not . tagText (hasDate d))
-    >>> takeWhile (not . tagClose (== fromString "p"))
+    >>> takeWhile
+          (not . tagText
+            (\s ->
+              BL.isPrefixOf (BL8.pack "Med reservation") s || hasDate tomorrow s
+            )
+          )
     -- The heading is of no use to us.
     >>> drop 1
+    >>> dropWhile (~/= "<strong>")
     >>> removeWhitespaceTags
     >>> partitions (~== "<strong>")
     >>> mapMaybe ((maybeTagText =<<) . (`atMay` 1))
@@ -73,3 +85,4 @@ getWijkanders d =
           >>> uncurry Menu
           )
     >>> menusToEitherNoLunch
+  where tomorrow = d & (gregorian . _ymdDay) %~ (+ 1)
