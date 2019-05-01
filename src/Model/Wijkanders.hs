@@ -24,8 +24,8 @@ import           Data.Thyme                               ( Day
                                                           , gregorian
                                                           , ymdMonth
                                                           , ymdDay
+                                                          , _ymdDay
                                                           )
-import           Data.Thyme                               ( _ymdDay )
 import qualified Data.Word8                    as W8
 import           GHC.Exts                                 ( fromString )
 import           Lens.Micro.Platform                      ( (%~)
