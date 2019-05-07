@@ -38,7 +38,6 @@ import           Data.Thyme                               ( _localDay
                                                           , _todHour
                                                           , _ymdDay
                                                           , _zonedTimeToLocalTime
-                                                          , formatTime
                                                           , getZonedTime
                                                           , gregorian
                                                           )
@@ -50,7 +49,6 @@ import           Lens.Micro.Platform                      ( (^.)
                                                           , (%~)
                                                           , view
                                                           )
-import           System.Locale                            ( defaultTimeLocale )
 
 import           Config
 import           Model.Einstein                           ( getEinstein )
@@ -101,7 +99,7 @@ update = do
           else ("Today", dateNow)
   let day'    = d ^. _localDay
   let weekday = (d ^. (_localDay . mondayWeek . _mwDay)) - 1
-  let karenR = fetchAndCreateRestaurant (formatTime defaultTimeLocale "%F" d)
+  let karenR  = fetchAndCreateRestaurant day'
   rest <- sequence
     [ karenR "K\229rrestaurangen"
              "karrestaurangen"
