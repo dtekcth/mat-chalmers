@@ -14,7 +14,6 @@ import           Control.Monad.Reader                     ( MonadReader )
 import           Data.Aeson                               ( object
                                                           , (.=)
                                                           , encode
-                                                          , ToJSON
                                                           , (.:)
                                                           , withArray
                                                           , withObject
@@ -29,6 +28,9 @@ import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Foldable                            ( find )
 import           Data.Text.Lazy                           ( Text
                                                           , unpack
+                                                          )
+import           Data.Thyme.Calendar                      ( Day
+                                                          , showGregorian
                                                           )
 import           Network.HTTP.Client                      ( RequestBody(..)
                                                           , method
@@ -98,27 +100,25 @@ parseMenu lang = withObject "Menu Object" $ \obj ->
 fetch
   :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
   => String
-  -> String
+  -> Day
   -> m (Either NoMenu BL8.ByteString)
 fetch restaurantUUID day = do
   initialRequest <- parseRequest apiURL
   safeBS
     (initialRequest
       { method         = "POST"
-      , requestBody    = RequestBodyLBS
-                           (encode $ requestData restaurantUUID day day)
+      , requestBody    = RequestBodyLBS (encode $ requestData restaurantUUID)
       , requestHeaders = [("Content-Type", "application/json")]
       }
     )
  where
-  requestData :: (ToJSON a, ToJSON b) => a -> b -> b -> Value
-  requestData unitID startDate endDate = object
+  requestData unitID = object
     [ "query" .= graphQLQuery
     , "operationName" .= ("DishOccurrencesByTimeRangeQuery" :: String)
     , "variables" .= object
       [ "mealProvidingUnitID" .= unitID
-      , "startDate" .= startDate
-      , "endDate" .= endDate
+      , "startDate" .= showGregorian day
+      , "endDate" .= showGregorian day
       ]
     ]
 
@@ -128,7 +128,7 @@ fetchMenu
   :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
   => Language
   -> String
-  -> String
+  -> Day
   -> m (Either NoMenu [Menu])
 fetchMenu lang restaurantUUID day = do
   response <- fetch restaurantUUID day
@@ -152,12 +152,12 @@ fetchMenu lang restaurantUUID day = do
 -- | Parameters: the date to fetch, title, tag, uuid
 fetchAndCreateRestaurant
   :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
-  => String
+  => Day
   -> Text
   -> Text
   -> Text
   -> m Restaurant
-fetchAndCreateRestaurant theDate title tag uuid =
+fetchAndCreateRestaurant day title tag uuid =
   Restaurant
       title
       (  "http://carbonatescreen.azurewebsites.net/menu/week/"
@@ -165,4 +165,4 @@ fetchAndCreateRestaurant theDate title tag uuid =
       <> "/"
       <> uuid
       )
-    <$> fetchMenu "Swedish" (unpack uuid) theDate
+    <$> fetchMenu "Swedish" (unpack uuid) day
