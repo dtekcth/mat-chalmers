@@ -112,8 +112,7 @@ update = do
            (safeGetBS linsenToday)
     , fmap (Restaurant "Einstein" (pack einstein) . (>>= getEinstein weekday))
            (safeGetBS einstein)
-    , fmap (Restaurant "L's Kitchen" lindholmenLunch . (>>= getKaren day'))
-           (safeGetBS ls)
+    , karenR "L's Kitchen" "ls-kitchen" "c74da2cf-aa1a-4d3a-9ba6-08d5569587a1"
     , fmap
       (Restaurant "Wijkanders" (pack wijkanders) . (>>= getWijkanders day'))
       (safeGetBS wijkanders)
@@ -129,9 +128,6 @@ update = do
     -- Restaurant api links
   linsenToday
     = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataday?restaurantid=33"
-  ls
-    = "http://carboncloudrestaurantapi.azurewebsites.net/api/menuscreen/getdataweek?restaurantid=8"
   einstein         = "http://restaurang-einstein.se/"
   wijkanders       = "http://www.wijkanders.se/restaurangen/"
   johannebergLunch = "https://chalmerskonferens.se/lunchmenyer-johanneberg/"
-  lindholmenLunch  = "https://chalmerskonferens.se/lunchmenyer-lindholmen/"
