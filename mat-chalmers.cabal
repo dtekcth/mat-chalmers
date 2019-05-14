@@ -19,8 +19,6 @@ library
                  , Model.Einstein
                  , Model.Types
                  , Model.KarenGraphQLApi
-                 , Model.KarenJSON
-                 , Model.Karen
                  , Model.Wijkanders
                  , View
                  , Config
