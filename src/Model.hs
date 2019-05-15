@@ -53,7 +53,7 @@ import           Lens.Micro.Platform                      ( (^.)
 import           Config
 import           Model.Einstein                           ( getEinstein )
 import           Model.Types
-import           Model.KarenGraphQLApi
+import           Model.Karen
 import           Model.Wijkanders
 import           Util
 

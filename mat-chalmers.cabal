@@ -18,7 +18,7 @@ library
   exposed-modules: Model
                  , Model.Einstein
                  , Model.Types
-                 , Model.KarenGraphQLApi
+                 , Model.Karen
                  , Model.Wijkanders
                  , View
                  , Config

@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings, QuasiQuotes #-}
 
-module Model.KarenGraphQLApi
+module Model.Karen
   ( fetch
   , parse
   , fetchAndCreateRestaurant
