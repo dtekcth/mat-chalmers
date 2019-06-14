@@ -1,6 +1,5 @@
-resolver: lts-13.0
+resolver: lts-13.25
 packages:
   - "."
 extra-deps:
-  - thyme-0.3.5.5
   - wai-middleware-static-embedded-0.1.0.0@sha256:036b7823a5e69452d1fe1e270ef3d4988063caa5bb00b6dfc356e1c21b7433e3
