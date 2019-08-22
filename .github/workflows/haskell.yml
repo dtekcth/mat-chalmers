@@ -1,0 +1,21 @@
+name: Haskell CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Stack
+      run: |
+        mkdir -p ~/.local/bin
+        curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+    - name: Install Stack GHC
+      run: ~/.local/bin/stack setup
+    - name: Install dependencies
+      run: ~/.local/bin/stack build --only-dependencies
+    - name: Test
+      run: ~/.local/bin/stack test
