@@ -15,7 +15,15 @@ import           Control.Monad.Trans                      ( MonadIO
 import           Data.Bifunctor                           ( bimap )
 import           Data.ByteString.Lazy                     ( ByteString )
 import qualified Data.ByteString.Lazy          as BL
+import           Data.String                              ( IsString )
+import           Data.Thyme                               ( Day
+                                                          , _localDay
+                                                          , _zonedTimeToLocalTime
+                                                          , getZonedTime
+                                                          )
 import qualified Data.Word8                    as W8
+import           Lens.Micro.Platform                      ( (^.) )
+
 import           Network.HTTP.Client                      ( HttpException
                                                           , Request
                                                           , httpLbs
@@ -75,3 +83,12 @@ runStack :: (Monad m, MonadIO m) => ReaderT ClientContext m a -> m a
 runStack action = do
   mgr <- newTlsManager
   runReaderT action (ClientContext defaultConfig mgr)
+
+-- | Fetch today's menu for a particular restaurant that uses Kåren's API.
+-- Another very useful function for debugging in the REPL.
+fetchToday
+  :: IsString s => (s -> Day -> ReaderT ClientContext IO b) -> s -> IO b
+fetchToday f s = do
+  t <- fmap (^. (_zonedTimeToLocalTime . _localDay)) getZonedTime
+  runStack $ f s t
+
