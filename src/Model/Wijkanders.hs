@@ -1,9 +1,11 @@
 module Model.Wijkanders
   ( getWijkanders
+  , hasDate
   )
 where
 
 import           Control.Arrow                            ( (***)
+                                                          , (&&&)
                                                           , (>>>)
                                                           )
 import           Data.Attoparsec.ByteString.Lazy          ( maybeResult
@@ -11,27 +13,26 @@ import           Data.Attoparsec.ByteString.Lazy          ( maybeResult
                                                           , skip
                                                           , skipMany
                                                           , string
+                                                          , takeWhile1
                                                           )
 import           Data.ByteString.Lazy                     ( ByteString )
+import qualified Data.ByteString.Char8         as B8
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.ByteString.Lazy.Char8    as BL8
-import           Data.Maybe                               ( isJust
-                                                          , mapMaybe
-                                                          )
+import           Data.Maybe                               ( mapMaybe )
 import           Data.Text.Encoding.Error                 ( ignore )
 import           Data.Text.Lazy.Encoding                  ( decodeUtf8With )
 import           Data.Thyme                               ( Day
+                                                          , Days
+                                                          , Months
+                                                          , YearMonthDay(..)
                                                           , gregorian
+                                                          , gregorianValid
                                                           , ymdMonth
                                                           , ymdDay
-                                                          , _ymdDay
                                                           )
 import qualified Data.Word8                    as W8
-import           GHC.Exts                                 ( fromString )
-import           Lens.Micro.Platform                      ( (%~)
-                                                          , (&)
-                                                          , view
-                                                          )
+import           Lens.Micro.Platform                      ( view )
 import           Safe                                     ( atMay )
 import           Text.HTML.TagSoup                        ( (~==)
                                                           , (~/=)
@@ -48,13 +49,15 @@ import           Util                                     ( menusToEitherNoLunch
                                                           , removeWhitespaceTags
                                                           )
 
-hasDate :: Day -> ByteString -> Bool
-hasDate d =
-  let d' = view gregorian d
-  in  isJust . maybeResult . parse
-        (skipMany (skip (not . W8.isDigit)) *> string
-          (fromString (show (ymdDay d') <> "/" <> show (ymdMonth d')))
-        )
+-- | Looks for strings looking like dates, dd/mm where d and m are digits.
+-- ..and gives them in another order to play nice with the
+-- YearMonthDay constructor.
+hasDate :: ByteString -> Maybe (Months, Days)
+hasDate = maybeResult . parse ((\d m -> (m, d)) <$> parseDay <*> parseMonth)
+ where
+  parseDay      = skipMany (skip (not . W8.isDigit)) *> integerParser
+  parseMonth    = string (B8.pack "/") *> integerParser
+  integerParser = fmap (read . B8.unpack) (takeWhile1 W8.isDigit)
 
 -- | getWijkanders will either give you a list of menus or NoLunch.
 -- At the moment there is no way to catch parsing errors.
@@ -63,16 +66,25 @@ hasDate d =
 getWijkanders :: Day -> ByteString -> Either NoMenu [Menu]
 getWijkanders d =
   parseTags
-        -- Take tags from a start date to the next date or to the phrase
-        -- "Med reservation", I really hope this hack works longer than the 30th
-        -- of april. Brittlebrittlebrittle.
-    >>> dropWhile (not . tagText (hasDate d))
+    -- Take tags from a start date to the next parsable date or to the
+    -- phrase "Med reservation".
+    >>> dropWhile
+          (not . tagText
+            (((pure . (ymdMonth &&& ymdDay) . view gregorian) d ==) . hasDate)
+          )
     >>> takeWhile
           (not . tagText
-            (\s ->
-              BL.isPrefixOf (BL8.pack "Med reservation") s || hasDate tomorrow s
+            (\s -> BL.isPrefixOf (BL8.pack "Med reservation") s || maybe
+              False
+              (> d)
+              (   hasDate s
+              >>= ( gregorianValid
+                  . uncurry (YearMonthDay $ ymdYear $ view gregorian d)
+                  )
+              )
             )
           )
+
     -- The heading is of no use to us.
     >>> drop 1
     >>> dropWhile (~/= "<strong>")
@@ -81,8 +93,11 @@ getWijkanders d =
     >>> mapMaybe ((maybeTagText =<<) . (`atMay` 1))
     >>> map
           (   BL.break (== W8._colon)
-          >>> (decodeUtf8With ignore *** (decodeUtf8With ignore . BL.drop 1))
+          >>> (   decodeUtf8With ignore
+              *** (decodeUtf8With ignore . BL.dropWhile W8.isSpace . BL.drop
+                    1
+                  )
+              )
           >>> uncurry Menu
           )
     >>> menusToEitherNoLunch
-  where tomorrow = d & (gregorian . _ymdDay) %~ (+ 1)
