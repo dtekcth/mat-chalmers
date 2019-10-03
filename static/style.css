@@ -1,51 +1,110 @@
+* {
+    box-sizing: border-box;
+}
+html {
+    font-size: 10px;
+}
 body {
   font-family: 'Anonymous Pro';
+  font-size: 14px;
+  line-height: 1.42857143;
   background: #fdf7e2;
+  color: #333;
+  margin: 0;
 }
-
 .main {
   height:100vh;
 }
-
-h2, h3 {
+h1, h2, h3 {
+  line-height: 1.1;
+  font-weight: 500;
   margin: 0;
+  margin-bottom: 10px;
 }
-
 h1 {
   padding-left: 15px;
+  font-size: 36px;
+  margin-top: 20px;
 }
-
 h2 {
   font-size: 140%;
   font-weight: bold;
-  margin-bottom: 10px;
 }
-
 h3 {
   margin-right: 10px;
+  margin-bottom: 0;
   display: inline-block;
   font-size: 100%;
   font-weight: bold;
   color: #BD3613;
 }
-
+p {
+  font-size: 10vh;
+}
+a {
+  text-decoration: none;
+}
 ul {
   padding: 0;
   list-style-type: none;
+  margin-top: 0;
+  margin-bottom: 10px;
 }
-
 li {
   width: 100%;
   font-weight: 400;
   padding-bottom: 5px;
 }
-
 .food {
-    position: relative;
-    margin-top: 20px;
+  position: relative;
+  margin-top: 20px;
 }
-
+.row {
+    display: flex;
+    flex-wrap: wrap;
+}
 footer {
     font-size: 0.9em;
     margin-top: 20px;
+}
+/* Emulate Bootstrap Grid layout */
+.container-fluid {
+    padding-left: 15px;
+    padding-right: 15px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.row {
+    margin-left: -15px;
+    margin-right: -15px;
+}
+.col-xs-12,
+.col-sm-12,
+.col-md-12,
+.col-sm-6,
+.col-md-3 {
+    padding-left: 15px;
+    padding-right: 15px;
+    position: relative;
+}
+.col-xs-12 {
+    width: 100%;
+}
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) {
+    .col-sm-12 {
+        width: 100%;
+    }
+    .col-sm-6 {
+        width: 50%;
+    }
+}
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+    .col-md-3 {
+        width: 25%;
+    }
+    .col-md-12 {
+        width: 100%;
+    }
 }

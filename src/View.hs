@@ -72,10 +72,6 @@ sitehead = head_
     link_ [rel_ "icon", type_ "image/png", href_ "icon.png"]
     link_
       [ rel_ "stylesheet"
-      , href_ "//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css"
-      ]
-    link_
-      [ rel_ "stylesheet"
       , href_ "//fonts.googleapis.com/css?family=Anonymous+Pro:400,700"
       ]
     style_ [] css
