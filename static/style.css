@@ -90,8 +90,7 @@ footer {
 .col-xs-12 {
     width: 100%;
 }
-/* Small devices (landscape phones, 576px and up) */
-@media (min-width: 576px) {
+@media (min-width: 768px) {
     .col-sm-12 {
         width: 100%;
     }
@@ -99,8 +98,7 @@ footer {
         width: 50%;
     }
 }
-/* Medium devices (tablets, 768px and up) */
-@media (min-width: 768px) {
+@media (min-width: 992px) {
     .col-md-3 {
         width: 25%;
     }
