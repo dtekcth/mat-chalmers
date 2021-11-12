@@ -30,9 +30,6 @@ import           Data.IORef                               ( IORef
                                                           )
 import           Data.Foldable                            ( for_ )
 import           Data.Text.Lazy                           ( pack )
-import           Data.Text.Prettyprint.Doc                ( Doc
-                                                          , pretty
-                                                          )
 import           Data.Thyme                               ( _localDay
                                                           , _localTimeOfDay
                                                           , _todHour
@@ -48,6 +45,9 @@ import           Lens.Micro.Platform                      ( (^.)
                                                           , (&)
                                                           , (%~)
                                                           , view
+                                                          )
+import           Prettyprinter                            ( Doc
+                                                          , pretty
                                                           )
 
 import           Config
