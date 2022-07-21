@@ -107,12 +107,12 @@ update = do
              "johanneberg-express"
              "3d519481-1667-4cad-d2a3-08d558129279"
     , karenR "S.M.A.K." "smak" "3ac68e11-bcee-425e-d2a8-08d558129279"
-    , fmap (Restaurant "Einstein" (pack einstein) . (>>= getEinstein weekday))
-           (safeGetBS einstein)
+    , fmap (Restaurant "Einstein" (pack einsteinAPIURL) . (>>= getEinstein weekday))
+           (safeGetBS einsteinAPIURL)
     , karenR "L's Kitchen" "ls-kitchen" "c74da2cf-aa1a-4d3a-9ba6-08d5569587a1"
     , fmap
-      (Restaurant "Wijkanders" (pack wijkanders) . (>>= getWijkanders day'))
-      (safeGetBS wijkanders)
+      (Restaurant "Wijkanders" (pack wijkandersAPIURL) . (>>= getWijkanders day'))
+      (safeGetBS wijkandersAPIURL)
     ]
 
   for_ rest $ \r -> case menu r of
@@ -122,6 +122,5 @@ update = do
 
   return (View rest textday d)
  where
-    -- Restaurant api links
-  einstein   = "http://restaurang-einstein.se/"
-  wijkanders = "http://www.wijkanders.se/restaurangen/"
+  einsteinAPIURL   = "http://restaurang-einstein.se/"
+  wijkandersAPIURL = "http://www.wijkanders.se/restaurangen/"
