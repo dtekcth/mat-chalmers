@@ -5,20 +5,14 @@ on: [push]
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: haskell:8.10
 
     steps:
     - uses: actions/checkout@v1
-    - name: Install Stack
-      run: |
-        mkdir -p ~/.local/bin
-        curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
-    - name: Install Stack GHC
-      run: ~/.local/bin/stack setup
     - name: Install dependencies
-      run: ~/.local/bin/stack build --only-dependencies
+      run: stack build --only-dependencies
     - name: Test
-      run: ~/.local/bin/stack test
+      run: stack test
     - name: Copy binary to .github
       run: find .stack-work -name mat-chalmers -type f -exec mv '{}' .github/mat-chalmers-linux-x86_64 ';'
     - uses: actions/upload-artifact@master
