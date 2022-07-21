@@ -41,9 +41,6 @@ import           Data.Thyme                               ( _localDay
                                                           , getZonedTime
                                                           , gregorian
                                                           )
-import           Data.Thyme.Calendar.WeekDate             ( _mwDay
-                                                          , mondayWeek
-                                                          )
 import           Lens.Micro.Platform                      ( (^.)
                                                           , (&)
                                                           , (%~)
@@ -51,7 +48,6 @@ import           Lens.Micro.Platform                      ( (^.)
                                                           )
 
 import           Config
-import           Model.Einstein                           ( getEinstein )
 import           Model.Types
 import           Model.Karen
 import           Model.Wijkanders
@@ -97,7 +93,6 @@ update = do
             ("Tomorrow", dateNow & (_localDay . gregorian . _ymdDay) %~ (+ 1))
           else ("Today", dateNow)
   let day'    = d ^. _localDay
-  let weekday = (d ^. (_localDay . mondayWeek . _mwDay)) - 1
   let karenR  = fetchAndCreateRestaurant day'
   rest <- sequence
     [ karenR "K\229rrestaurangen"
@@ -107,8 +102,6 @@ update = do
              "johanneberg-express"
              "3d519481-1667-4cad-d2a3-08d558129279"
     , karenR "S.M.A.K." "smak" "3ac68e11-bcee-425e-d2a8-08d558129279"
-    , fmap (Restaurant "Einstein" (pack einsteinAPIURL) . (>>= getEinstein weekday))
-           (safeGetBS einsteinAPIURL)
     , karenR "L's Kitchen" "ls-kitchen" "c74da2cf-aa1a-4d3a-9ba6-08d5569587a1"
     , fmap
       (Restaurant "Wijkanders" (pack wijkandersAPIURL) . (>>= getWijkanders day'))
@@ -122,5 +115,4 @@ update = do
 
   return (View rest textday d)
  where
-  einsteinAPIURL   = "http://restaurang-einstein.se/"
   wijkandersAPIURL = "http://www.wijkanders.se/restaurangen/"
