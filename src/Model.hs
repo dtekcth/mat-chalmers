@@ -30,7 +30,7 @@ import           Data.IORef                               ( IORef
                                                           )
 import           Data.Foldable                            ( for_ )
 import           Data.Text.Lazy                           ( pack )
-import           Data.Text.Prettyprint.Doc                ( Doc
+import           Prettyprinter                            ( Doc
                                                           , pretty
                                                           )
 import           Data.Thyme                               ( _localDay
