@@ -5,7 +5,7 @@ on: [push]
 jobs:
   build:
 
-    runs-on: haskell:8.10
+    runs-on: haskell-latest
 
     steps:
     - uses: actions/checkout@v1
