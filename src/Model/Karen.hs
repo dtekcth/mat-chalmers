@@ -52,7 +52,7 @@ import           Util                                     ( menusToEitherNoLunch
                                                           )
 
 apiURL :: String
-apiURL = "https://heimdallprod.azurewebsites.net/graphql"
+apiURL = "https://plateimpact-heimdall.azurewebsites.net/graphql"
 
 -- brittany-disable-next-binding
 graphQLQuery :: String
