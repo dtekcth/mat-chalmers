@@ -47,6 +47,10 @@ h3 {
   font-weight: bold;
   color: #bd3613;
 }
+.invisible-space {
+  width: 0px;
+  font-size: 0px;
+}
 p {
   font-size: 10vh;
 }

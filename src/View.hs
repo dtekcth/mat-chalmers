@@ -58,6 +58,7 @@ renderMenu :: Menu -> Html ()
 renderMenu (Menu lunch spec) = li_
   (do
     h3_ (toHtml lunch)
+    span_ [class_ "invisible-space"] " "
     toHtml spec
   )
 
