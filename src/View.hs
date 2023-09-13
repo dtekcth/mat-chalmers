@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, TemplateHaskell, RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings, QuasiQuotes, RecordWildCards #-}
 
 module View
   ( View(..)
@@ -6,7 +6,6 @@ module View
   )
 where
 
-import           Data.FileEmbed
 import qualified Data.Text.Lazy                as T
 import qualified Data.Text.Lazy.Builder        as T
 import           Data.Thyme
@@ -18,6 +17,7 @@ import           Lucid
 import           System.Locale                            ( defaultTimeLocale )
 import qualified Text.CSS.Parse                as CSS
 import qualified Text.CSS.Render               as CSS
+import           Text.Heredoc                             ( str )
 
 import           Model
 import           Model.Types                              ( NoMenu(..) )
@@ -90,9 +90,127 @@ sitefooter = footer_
     a_ [href_ "https://kortladdning3.chalmerskonferens.se/"] "Top-up your card"
   )
 
--- brittany-disable-next-binding
 css :: T.Text
 css =
   (either error (T.toLazyText . CSS.renderNestedBlocks) . CSS.parseNestedBlocks)
-    $(embedStringFile "static/style.css")
-
+    inlineCSS
+ where
+  inlineCSS = [str| * {
+              |   box-sizing: border-box;
+              | }
+              |
+              | html {
+              |   font-size: 10px;
+              | }
+              |
+              | body {
+              |   font-family: "Anonymous Pro";
+              |   font-size: 14px;
+              |   line-height: 1.42857143;
+              |   background: #fdf7e2;
+              |   color: #333;
+              |   margin: 0;
+              | }
+              |
+              | h1,
+              | h2,
+              | h3 {
+              |   line-height: 1.1;
+              |   font-weight: 500;
+              |   margin: 0;
+              |   margin-bottom: 10px;
+              | }
+              |
+              | h1 {
+              |   padding-left: 15px;
+              |   font-size: 36px;
+              |   margin-top: 20px;
+              | }
+              |
+              | h2 {
+              |   font-size: 140%;
+              |   font-weight: bold;
+              | }
+              |
+              | h3 {
+              |   margin-right: 10px;
+              |   margin-bottom: 0;
+              |   display: inline-block;
+              |   font-size: 100%;
+              |   font-weight: bold;
+              |   color: #bd3613;
+              | }
+              |
+              | p {
+              |   font-size: 10vh;
+              | }
+              |
+              | a {
+              |   color: #428bca;
+              |   text-decoration: none;
+              | }
+              |
+              | ul {
+              |   padding: 0;
+              |   list-style-type: none;
+              |   margin-top: 0;
+              |   margin-bottom: 10px;
+              | }
+              | li {
+              |   width: 100%;
+              |   font-weight: 400;
+              |   padding-bottom: 5px;
+              | }
+              |
+              | .food {
+              |   position: relative;
+              |   margin-top: 20px;
+              | }
+              |
+              | footer {
+              |   font-size: 0.9em;
+              |   margin-top: 20px;
+              | }
+              |
+              | /* Emulate Bootstrap Grid layout */
+              | .container-fluid {
+              |   padding-left: 15px;
+              |   padding-right: 15px;
+              |   margin-left: auto;
+              |   margin-right: auto;
+              | }
+              | .row {
+              |   margin-left: -15px;
+              |   margin-right: -15px;
+              |   display: flex;
+              |   flex-wrap: wrap;
+              | }
+              | .col-xs-12,
+              | .col-sm-12,
+              | .col-md-12,
+              | .col-sm-6,
+              | .col-md-3 {
+              |   padding-left: 15px;
+              |   padding-right: 15px;
+              |   position: relative;
+              | }
+              | .col-xs-12 {
+              |   width: 100%;
+              | }
+              | @media (min-width: 768px) {
+              |   .col-sm-12 {
+              |     width: 100%;
+              |   }
+              |   .col-sm-6 {
+              |     width: 50%;
+              |   }
+              | }
+              | @media (min-width: 992px) {
+              |   .col-md-3 {
+              |     width: 25%;
+              |   }
+              |   .col-md-12 {
+              |     width: 100%;
+              |   }
+              | }
+              |]
