@@ -5,10 +5,9 @@ let
   inherit (nixpkgs) pkgs;
 
   f = { mkDerivation, aeson, base, bytestring, css-text, errors
-      , exceptions, file-embed, heredoc, http-client, http-client-tls
+      , exceptions, heredoc, http-client, http-client-tls
       , logging-effect, lucid, microlens-platform, mtl, old-locale
       , prettyprinter, safe, scotty, stdenv, text, thyme, time, wai-extra
-      , wai-middleware-static-embedded
       }:
       mkDerivation {
         pname = "mat-chalmers";
@@ -19,14 +18,13 @@ let
         buildTools = [ haskellPackages.cabal-install ];
         enableSeparateDataOutput = true;
         libraryHaskellDepends = [
-          aeson base bytestring css-text errors exceptions file-embed heredoc
+          aeson base bytestring css-text errors exceptions heredoc
           http-client logging-effect lucid microlens-platform mtl old-locale
           prettyprinter safe text thyme
         ];
         executableHaskellDepends = [
-          base bytestring file-embed http-client-tls logging-effect
+          base bytestring http-client-tls logging-effect
           microlens-platform mtl scotty time wai-extra
-          wai-middleware-static-embedded
         ];
         license = stdenv.lib.licenses.mit;
       };

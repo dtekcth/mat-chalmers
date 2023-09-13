@@ -2,8 +2,7 @@
 
 module Main
   ( main
-  )
-where
+  ) where
 
 import           Control.Concurrent                       ( MVar
                                                           , newMVar
@@ -19,7 +18,6 @@ import           Control.Monad.Log                        ( defaultBatchingOptio
                                                           )
 import           Control.Monad.Reader                     ( runReaderT )
 import           Control.Monad.Trans                      ( liftIO )
-import           Data.FileEmbed                           ( embedDir )
 import           Data.IORef                               ( IORef
                                                           , readIORef
                                                           )
@@ -33,7 +31,6 @@ import           Lens.Micro.Platform                      ( (<&>)
                                                           )
 import           Network.HTTP.Client.TLS                  ( newTlsManager )
 import           Network.Wai.Middleware.RequestLogger     ( logStdout )
-import           Network.Wai.Middleware.StaticEmbedded    ( static )
 import           System.Console.GetOpt                    ( ArgDescr(..)
                                                           , ArgOrder(..)
                                                           , OptDescr(..)
@@ -115,7 +112,5 @@ serve
   -> IO ()
 serve conf viewRef upd = scotty (view cPort conf) $ do
   middleware logStdout
-  middleware (static $(embedDir "static"))
   get "/"  ((html . render) =<< liftIO (readIORef viewRef))
   get "/r" (liftIO (tryPutMVar upd ()) >> redirect "/") -- force update
-
