@@ -29,16 +29,20 @@ main = hspec $ do
   describe "The Karen Express" $ it
     "parses a blob of JSON without error"
     ( testFun
-        [ Menu (T.pack "Express")
-               (T.pack "Kycklinggryta, persilja, senap & kokt potatis")
-        , Menu (T.pack "Express - Vegan")
-               (T.pack "Vegetariska biffar, persiljekr\228m & potatismos")
+        [ Menu
+            (T.pack "Street food")
+            (T.pack "Chicken africana, banan, mango raja, ris")
+        , Menu
+            (T.pack "Greens")
+            (T.pack "Indisklinsgryta, zucchini, aubergin, ingef\228ra, koriander, ris")
+        , Menu
+            (T.pack "Nordic")
+            (T.pack "F\228rskost bakad sej, vitvinss\229s, broccoli, potatis")
         ]
-
     $ parse
         "Swedish"
         (BL8.pack
-          "{\"data\":{\"dishOccurrencesByTimeRange\":[{\"displayNames\":[{\"name\":\"Kycklinggryta, persilja, senap & kokt potatis\",\"categoryName\":\"Swedish\"},{\"name\":\"Chicken stew, parsley, mustard & boiled potatoes\",\"categoryName\":\"English\"}],\"startDate\":\"9/9/2019 12:00:00 AM\",\"dishType\":{\"name\":\"Express\"},\"dish\":{\"name\":\"Kycklinggryta, aubergin, zucchini, tomat & rostad potatis\"}},{\"displayNames\":[{\"name\":\"Vegetariska biffar, persiljekr\195\164m & potatismos\",\"categoryName\":\"Swedish\"},{\"name\":\"Vegetarian patties, parsley cream & mashed potatoes\",\"categoryName\":\"English\"}],\"startDate\":\"9/9/2019 12:00:00 AM\",\"dishType\":{\"name\":\"Express - Vegan\"},\"dish\":{\"name\":\"Vegetariska biffar, majonn\195\164s & potatispur\195\169\"}}]}}\n"
+          "{\"data\":{\"dishOccurrencesByTimeRange\":[{\"displayNames\":[{\"name\":\"Chicken africana, banan, mango raja, ris\",\"categoryName\":\"Swedish\"},{\"name\":\"Chicken africana, banana, mango raja, rice\",\"categoryName\":\"English\"}],\"startDate\":\"09/25/2023 00:00:00\",\"dishType\":{\"name\":\"Street food\"},\"dish\":{\"name\":\"Kyckling, het paprikas\195\165s & ris\"}},{\"displayNames\":[{\"name\":\"Indian linseed stew, zucchini, aubergine, ginger, coriander\",\"categoryName\":\"English\"},{\"name\":\"Indisklinsgryta, zucchini, aubergin, ingef\195\164ra, koriander, ris\",\"categoryName\":\"Swedish\"}],\"startDate\":\"09/25/2023 00:00:00\",\"dishType\":{\"name\":\"Greens\"},\"dish\":{\"name\":\"Vegan, pasta, linsbolognese\"}},{\"displayNames\":[{\"name\":\"F\195\164rskost bakad sej, vitvinss\195\165s, broccoli, potatis\",\"categoryName\":\"Swedish\"},{\"name\":\"Cream cheese baked saithe, whitewine sauce, broccoli, potatoes\",\"categoryName\":\"English\"}],\"startDate\":\"09/25/2023 00:00:00\",\"dishType\":{\"name\":\"Nordic\"},\"dish\":{\"name\":\"Bakad fisk, vitvinss\195\165s, potatispur\195\169\"}}]}}\n"
         )
     )
 
