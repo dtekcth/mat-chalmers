@@ -5,7 +5,7 @@ module Main
   ) where
 
 import           Control.Concurrent                       ( MVar
-                                                          , newMVar
+                                                          , newEmptyMVar
                                                           , threadDelay
                                                           , tryPutMVar
                                                           )
@@ -72,11 +72,9 @@ main = (reifyConfig . getOpt Permute opts <$> getArgs) >>= \case
   (_                       , _ : _, _    ) -> usage
   (Config { _cHelp = True }, _    , _    ) -> usage
   (config                  , _    , _    ) -> do
-    upd                      <- newMVar () -- putMVar when to update
-    mgr                      <- newTlsManager
-    (viewRef, refreshAction) <- runLoggingT
-      (runReaderT refresh (ClientContext config mgr))
-      print
+    upd     <- newEmptyMVar -- putMVar when to update
+    mgr     <- newTlsManager
+    viewRef <- createViewReference
 
     -- In the list there are three items running concurrently:
     -- 1. Timer that sends a signal to the updater when it's time to update
@@ -86,23 +84,21 @@ main = (reifyConfig . getOpt Permute opts <$> getArgs) >>= \case
       Async.Concurrently
       [ timer upd config
       , webserver config viewRef upd
-      , updater mgr upd refreshAction config
+      , updater mgr upd viewRef config
       ]
  where
   timer upd cfg =
     forever $ tryPutMVar upd () >> threadDelay (view cInterval cfg)
 
-  updater mgr upd refreshAction cfg =
+  updater mgr upd viewRef cfg =
     forever
       $ withFDHandler defaultBatchingOptions stdout 1.0 80
       $ \logCallback -> runLoggingT
-          (runReaderT (refreshAction upd) (ClientContext cfg mgr))
+          (runReaderT (refresh viewRef upd) (ClientContext cfg mgr))
           ( logCallback
           . renderWithTimestamp
-              (formatTime defaultTimeLocale
-                          (iso8601DateFormat (Just "%H:%M:%S"))
-              )
-              id
+            (formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%S")))
+            id
           )
 
 webserver
