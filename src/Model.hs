@@ -1,13 +1,13 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
 module Model
-  ( refresh
-  , Restaurant(..)
+  ( Restaurant(..)
   , Menu(..)
   , View(..)
+  , createViewReference
+  , refresh
   )
 where
 
-import           Control.Arrow                            ( (>>>) )
 import           Control.Concurrent.MVar                  ( MVar
                                                           , takeMVar
                                                           )
@@ -23,7 +23,6 @@ import           Control.Monad.Log                        ( MonadLog
 import           Control.Monad.Reader                     ( MonadReader
                                                           , asks
                                                           )
-import           Data.Functor                             ( (<&>) )
 import           Data.IORef                               ( IORef
                                                           , newIORef
                                                           , writeIORef
@@ -64,18 +63,17 @@ refresh
      , MonadReader ClientContext m
      , MonadThrow m
      )
-  => m (IORef View, MVar () -> m ())
-refresh
-  = liftIO
-      (getZonedTime >>= (view _zonedTimeToLocalTime >>> newIORef . View [] ""))
-    <&> \ref ->
-          ( ref
-          , \upd -> do
-            liftIO $ takeMVar upd
-            logMessage =<< timestamp "Updating view..."
-            v <- update
-            liftIO $ writeIORef ref v
-          )
+  => IORef View -> MVar () -> m ()
+refresh ref upd = do
+  liftIO $ takeMVar upd
+  logMessage =<< timestamp "Updating view..."
+  v <- update
+  liftIO $ writeIORef ref v
+
+createViewReference :: (MonadIO m) => m (IORef View)
+createViewReference = liftIO $ do
+  now <- getZonedTime
+  newIORef (View [] "" (now ^. _zonedTimeToLocalTime))
 
 update
   :: ( MonadIO m
