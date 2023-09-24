@@ -38,14 +38,14 @@ library
                , css-text >= 0.1.3.0 && < 0.2
                , exceptions >= 0.10.5 && < 0.11.0
                , heredoc == 0.2.0.0
-               , http-client >= 0.7.14 && < 0.8
-               , http-client-tls >= 0.3.6.1 && <= 0.4
                , logging-effect >= 1.4.0 && <= 2.0
                , microlens-platform >= 0.4.3.3 && < 0.5
                , lucid >= 2 && < 3
                , mtl == 2.2.2
                , old-locale == 1.0.0.7
                , prettyprinter == 1.7.1
+               , req >= 3.13 && < 4.0
+               , retry == 0.8.1.2
                , safe == 0.3.19
                , tagsoup == 0.14.8
                , text >= 2.0 && <= 3.0
@@ -60,11 +60,13 @@ executable mat-chalmers
   build-depends: mat-chalmers
                , base
                , bytestring
+               , exceptions
                , file-embed
-               , http-client-tls
                , microlens-platform
                , logging-effect
                , mtl
+               , req
+               , prettyprinter
                , scotty >= 0.12.1 && < 0.13
                , time >= 1.12 && < 1.13
                , wai-extra >= 3.1.13.0 && < 4.0
