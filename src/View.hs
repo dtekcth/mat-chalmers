@@ -70,10 +70,6 @@ sitehead = head_
     meta_ [charset_ "utf-8"]
     meta_ [name_ "viewport", content_ "width=device-width, initial-scale=1"]
     link_ [rel_ "icon", type_ "image/png", href_ "icon.png"]
-    link_
-      [ rel_ "stylesheet"
-      , href_ "//fonts.googleapis.com/css?family=Anonymous+Pro:400,700"
-      ]
     style_ [] css
     title_ "Lunch at Chalmers"
   )
@@ -95,4 +91,3 @@ css :: T.Text
 css =
   (either error (T.toLazyText . CSS.renderNestedBlocks) . CSS.parseNestedBlocks)
     $(embedStringFile "static/style.css")
-
