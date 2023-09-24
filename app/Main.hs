@@ -41,9 +41,7 @@ import           System.Console.GetOpt                    ( ArgDescr(..)
                                                           , usageInfo
                                                           )
 import           System.Environment                       ( getArgs )
-import           System.IO                                ( IOMode(AppendMode)
-                                                          , openFile
-                                                          )
+import           System.IO                                ( stdout )
 import           Web.Scotty                               ( get
                                                           , html
                                                           , middleware
@@ -60,7 +58,6 @@ opts :: [OptDescr (Config -> Config)]
 opts =
   [ Option [] ["help"]    (NoArg (set cHelp True))           "Show usage info"
   , Option [] ["port"]    (ReqArg (set cPort . read) "PORT") "Port to run on"
-  , Option [] ["logfile"] (ReqArg (set cLog) "LOGFILE")      "Path to logfile."
   , Option []
            ["interval"]
            (ReqArg (set cInterval . (1000000 *) . read) "INTERVAL (s)")
@@ -81,22 +78,22 @@ main =
               else do
                 upd                      <- newMVar () -- putMVar when to update
                 mgr                      <- newTlsManager
-                logHandle <- openFile (view cLog config) AppendMode
                 (viewRef, refreshAction) <- runLoggingT
                   (runReaderT refresh (ClientContext config mgr))
                   print
-                Async.concurrently_ 
-                  (Async.concurrently_ 
+
+                Async.concurrently_
+                  (Async.concurrently_
                     -- timer
                     (forever $ tryPutMVar upd () >> threadDelay (view cInterval config))
                     -- webserver
                     (serve config viewRef upd))
                   -- updater
                   (forever
-                    $ withFDHandler defaultBatchingOptions logHandle 1.0 80
-                    $ \logToHandle ->
+                    $ withFDHandler defaultBatchingOptions stdout 1.0 80
+                    $ \logCallback ->
                         runReaderT (refreshAction upd) (ClientContext config mgr)
-                          `runLoggingT` ( logToHandle
+                          `runLoggingT` ( logCallback
                                         . renderWithTimestamp
                                             (formatTime
                                               defaultTimeLocale
