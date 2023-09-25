@@ -13,4 +13,7 @@ cabal.sandbox.config
 .*.swp
 *.log
 *.dump-hi
+.direnv/
+.envrc
 dist-newstyle/
+result/
