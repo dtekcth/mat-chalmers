@@ -64,7 +64,7 @@ executable mat-chalmers
                , logging-effect
                , mtl
                , scotty
-               , time == 1.9.3
+               , time >= 1.5 && < 1.13
                , wai-extra
                , wai-middleware-static-embedded == 0.1.0.0
                , async >= 2.2.4 && <= 3.0
