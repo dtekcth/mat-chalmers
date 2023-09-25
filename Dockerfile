@@ -1,13 +1,13 @@
-FROM haskell:8.10
+FROM haskell:9.4.5
 RUN mkdir -p /app/user
 WORKDIR /app/user
-COPY stack.yaml *.cabal ./
+COPY *.cabal ./
 
-RUN export PATH=$(stack path --local-bin):$PATH
-RUN stack build --dependencies-only
+RUN cabal v2-update
+RUN cabal v2-build --dependencies-only
 
 COPY . /app/user
-RUN stack install
+RUN cabal v2-install
 
 ENV LANG C.UTF-8
 CMD /root/.local/bin/mat-chalmers
