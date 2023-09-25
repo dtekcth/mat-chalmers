@@ -9,13 +9,13 @@ where
 import           Data.FileEmbed
 import qualified Data.Text.Lazy                as T
 import qualified Data.Text.Lazy.Builder        as T
-import           Data.Thyme
+import           Data.Thyme                               ( defaultTimeLocale
+                                                          , formatTime )
 import           Lens.Micro.Platform                      ( (&)
                                                           , (%~)
                                                           , both
                                                           )
 import           Lucid
-import           System.Locale                            ( defaultTimeLocale )
 import qualified Text.CSS.Parse                as CSS
 import qualified Text.CSS.Render               as CSS
 
