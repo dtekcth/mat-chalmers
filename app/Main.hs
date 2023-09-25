@@ -25,7 +25,6 @@ import           Data.IORef                               ( IORef
                                                           )
 import           Data.Time.Format                         ( defaultTimeLocale
                                                           , formatTime
-                                                          , iso8601DateFormat
                                                           )
 import           Lens.Micro.Platform                      ( set
                                                           , view
@@ -97,7 +96,7 @@ main = (reifyConfig . getOpt Permute opts <$> getArgs) >>= \case
           (runReaderT (refresh viewRef upd) (ClientContext cfg mgr))
           ( logCallback
           . renderWithTimestamp
-            (formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%S")))
+            (formatTime defaultTimeLocale "T%H:%M:%S")
             id
           )
 

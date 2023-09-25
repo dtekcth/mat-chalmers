@@ -13,3 +13,4 @@ cabal.sandbox.config
 .*.swp
 *.log
 *.dump-hi
+dist-newstyle/
