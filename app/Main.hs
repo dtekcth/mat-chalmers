@@ -31,6 +31,7 @@ import           Lens.Micro.Platform                      ( (<&>)
                                                           , view
                                                           )
 import           Network.HTTP.Client.TLS                  ( newTlsManager )
+import           Network.Wai.Handler.Warp                 ( run )
 import           Network.Wai.Middleware.RequestLogger     ( logStdout )
 import           Network.Wai.Middleware.StaticEmbedded    ( static )
 import           System.Console.GetOpt                    ( ArgDescr(..)
@@ -41,12 +42,8 @@ import           System.Console.GetOpt                    ( ArgDescr(..)
                                                           )
 import           System.Environment                       ( getArgs )
 import           System.IO                                ( stdout )
-import           Web.Scotty                               ( get
-                                                          , html
-                                                          , middleware
-                                                          , redirect
-                                                          , scotty
-                                                          )
+import           Data.Text.Lazy.Encoding                  ( encodeUtf8 )
+import           Web.Twain
 
 import           Config
 import           Model
@@ -86,7 +83,7 @@ main =
                     -- timer
                     (forever $ tryPutMVar upd () >> threadDelay (view cInterval config))
                     -- webserver
-                    (serve config viewRef upd))
+                    (webserver config viewRef upd))
                   -- updater
                   (forever
                     $ withFDHandler defaultBatchingOptions stdout 1.0 80
@@ -102,14 +99,29 @@ main =
                                         ))
   where usage = putStrLn $ usageInfo "mat-chalmers [OPTION...]" opts
 
-serve
+webserver
   :: Config
   -> IORef View -- ^ View model
   -> MVar () -- ^ Update signal
   -> IO ()
-serve conf viewRef upd = scotty (view cPort conf) $ do
-  middleware logStdout
-  middleware (static $(embedDir "static"))
-  get "/"  ((html . render) =<< liftIO (readIORef viewRef))
-  get "/r" (liftIO (tryPutMVar upd ()) >> redirect "/") -- force update
+webserver Config{_cPort=webserverPort} viewRef upd =
+  run webserverPort $ foldr ($) (notFound missing)
+    [ middleware . get "/"  index
+    , middleware . get "/r" forceUpdate
+    ]
+ where
+   index :: ResponderM a
+   index = do
+     theCurrentView <- liftIO (readIORef viewRef)
+     (send . html . encodeUtf8 . render) theCurrentView
+
+   forceUpdate :: ResponderM a
+   forceUpdate = do
+     _ <- liftIO $ tryPutMVar upd ()
+     send   $ redirect302 "/"
+
+   missing :: ResponderM a
+   missing = send $ html "Not found..."
+
+   middleware = logStdout . static $(embedDir "static")
 
