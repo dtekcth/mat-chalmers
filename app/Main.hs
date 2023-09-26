@@ -25,7 +25,6 @@ import           Data.IORef                               ( IORef
                                                           )
 import           Data.Time.Format                         ( defaultTimeLocale
                                                           , formatTime
-                                                          , iso8601DateFormat
                                                           )
 import           Lens.Micro.Platform                      ( (<&>)
                                                           , set
@@ -97,9 +96,7 @@ main =
                                         . renderWithTimestamp
                                             (formatTime
                                               defaultTimeLocale
-                                              (iso8601DateFormat
-                                                (Just "%H:%M:%S")
-                                              )
+                                              "T%H:%M:%S"
                                             )
                                             id
                                         ))
