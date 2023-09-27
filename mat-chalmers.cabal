@@ -42,7 +42,7 @@ library
                , http-client-tls >= 0.3.6.1 && <= 0.4
                , logging-effect >= 1.4.0 && <= 2.0
                , microlens-platform >= 0.4.3.3 && < 0.5
-               , lucid >= 2
+               , lucid >= 2 && < 3
                , mtl == 2.2.2
                , old-locale == 1.0.0.7
                , prettyprinter == 1.7.1
