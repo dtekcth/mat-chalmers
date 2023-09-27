@@ -10,5 +10,5 @@ COPY . /app/user
 RUN cabal v2-install
 
 ENV LANG C.UTF-8
-CMD /root/.local/bin/mat-chalmers
+CMD /root/.cabal/bin/mat-chalmers
 EXPOSE 5007
