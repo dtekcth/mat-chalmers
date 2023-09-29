@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 
 -- | Types and internal functions
 
@@ -7,16 +6,6 @@ module Model.Types where
 import           Data.ByteString.Lazy                     ( ByteString )
 import           Data.Text.Lazy                           ( Text )
 import           Data.Thyme                               ( LocalTime )
-import           Network.HTTP.Client                      ( HttpException
-                                                          , Manager
-                                                          )
-
-import           Config                                   ( Config )
-
-data ClientContext = ClientContext
-  { ccCfg     :: Config
-  , ccManager :: Manager
-  }
 
 -- | What to pass to template.
 data View = View
@@ -34,7 +23,6 @@ data Restaurant = Restaurant
 
 data NoMenu
   = NoLunch
-  | NMHttp HttpException
   | NMParseError String ByteString -- ^ The parse error. The string we tried to parse.
   deriving (Show)
 

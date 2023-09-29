@@ -10,14 +10,11 @@ where
 import           Control.Monad                            ( (>=>) )
 import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.IO.Class                   ( MonadIO )
-import           Control.Monad.Reader                     ( MonadReader )
 import           Data.Aeson                               ( object
                                                           , (.=)
-                                                          , encode
                                                           , (.:)
                                                           , withArray
                                                           , withObject
-                                                          , eitherDecode
                                                           , Value
                                                           )
 import           Data.Aeson.Types                         ( Parser
@@ -26,33 +23,24 @@ import           Data.Aeson.Types                         ( Parser
 import           Data.Bifunctor                           ( first )
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Foldable                            ( find )
+import           Data.Functor                             ( (<&>) )
 import           Data.Text.Lazy                           ( Text
                                                           , unpack
                                                           )
 import           Data.Thyme.Calendar                      ( Day
                                                           , showGregorian
                                                           )
-import           Network.HTTP.Client                      ( RequestBody(..)
-                                                          , method
-                                                          , parseRequest
-                                                          , requestBody
-                                                          , requestHeaders
-                                                          )
+import           Network.HTTP.Req
 import           Text.Heredoc                             ( str )
 
-import           Model.Types                              ( ClientContext(..)
-                                                          , NoMenu(..)
+import           Model.Types                              ( NoMenu(..)
                                                           , Menu(..)
                                                           , Restaurant
                                                             ( Restaurant
                                                             )
                                                           )
-import           Util                                     ( menusToEitherNoLunch
-                                                          , safeBS
-                                                          )
+import           Util                                     ( menusToEitherNoLunch )
 
-apiURL :: String
-apiURL = "https://plateimpact-heimdall.azurewebsites.net/graphql"
 
 -- brittany-disable-next-binding
 graphQLQuery :: String
@@ -82,18 +70,19 @@ type Language = String
 
 -- | Fetch a menu from Kårens GraphQL API.
 fetch
-  :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
-  => String                           -- ^ RestaurantUUID
-  -> Day                              -- ^ Day
-  -> m (Either NoMenu BL8.ByteString) -- ^ Either a bytestring payload or a NoMenu error
-fetch restaurantUUID day = do
-  initialRequest <- parseRequest apiURL
-  safeBS
-    (initialRequest { method         = "POST"
-                    , requestBody    = RequestBodyLBS $ encode requestData
-                    , requestHeaders = [("Content-Type", "application/json")]
-                    }
-    )
+  :: (MonadHttp m, MonadIO m, MonadThrow m)
+  => String   -- ^ RestaurantUUID
+  -> Day      -- ^ Day
+  -> m Value  -- ^ A JSON response or horrible crash
+fetch restaurantUUID day =
+  req
+    POST
+    (https "plateimpact-heimdall.azurewebsites.net" /: "graphql")
+    (ReqBodyJson requestData)
+    jsonResponse
+    mempty
+  <&> responseBody
+
  where
   requestData = object
     [ "query" .= graphQLQuery
@@ -108,18 +97,17 @@ fetch restaurantUUID day = do
 -- | Parses menus from Kåren's GraphQL API.
 parse
   :: Language             -- ^ Language
-  -> BL8.ByteString       -- ^ Bytestring payload from fetch
-  -> Either NoMenu [Menu] -- ^ Either list of parsed Menu's or NoMenu error
+  -> Value                -- ^ JSON result from `fetch`
+  -> Either NoMenu [Menu] -- ^ Either list of parsed `Menu`s or `NoMenu` error
 parse lang =
-  failWithNoMenu eitherDecode
-    >=> failWithNoMenu
-          (parseEither
-            (   withObject "Parse meals"
-            $   (.: "data")
-            >=> (.: "dishOccurrencesByTimeRange")
-            >=> mapM menuParser
-            )
-          )
+    failWithNoMenu
+      (parseEither
+        (   withObject "Parse meals"
+        $   (.: "data")
+        >=> (.: "dishOccurrencesByTimeRange")
+        >=> mapM menuParser
+        )
+      )
     >=> menusToEitherNoLunch
  where
   failWithNoMenu :: Show a => (a -> Either String b) -> a -> Either NoMenu b
@@ -145,7 +133,7 @@ parse lang =
 
 -- | Fetch a restaurant from Kåren's GraphQL API
 fetchAndCreateRestaurant
-  :: (MonadIO m, MonadReader ClientContext m, MonadThrow m)
+  :: (MonadHttp m, MonadIO m, MonadThrow m)
   => Day          -- ^ Day
   -> Text         -- ^ Title
   -> Text         -- ^ Tag
@@ -159,4 +147,4 @@ fetchAndCreateRestaurant day title tag uuid =
       <> "/"
       <> uuid
       )
-    <$> fmap (parse "Swedish" =<<) (fetch (unpack uuid) day)
+    <$> fmap (parse "Swedish") (fetch (unpack uuid) day)
