@@ -9,12 +9,28 @@ Lunch menus on Chalmers in Gothenburg. Issues and pull requests welcome.
 ```
 git clone https://github.com/dtekcth/mat-chalmers.git
 cd mat-chalmers
-stack build
+cabal build         # (or cabal run)
 ```
 
-Please use [brittany](http://hackage.haskell.org/package/brittany) and
-[hlint](https://hackage.haskell.org/package/hlint) to format your
-source code.
+If you're using [NixOS] (or just Nix package manager), use the
+following instructions to get a development environment running:
+
+```
+nix develop         # Download dependencies and start a dev-shell with everything setup
+```
+
+Or, to build everything:
+
+```
+nix build           # (or nix run)
+```
+
+Pro-tip, to get shorter build times, consider using [Cachix] and use
+the `jassob` cache:
+
+```
+cachix use jassob   # Only needed once
+```
 
 ## Credits
 
@@ -22,3 +38,6 @@ Favicon made by Freepik from <a href="http://www.flaticon.com"
 title="Flaticon">www.flaticon.com</a> is licensed by <a
 href="http://creativecommons.org/licenses/by/3.0/" title="Creative
 Commons BY 3.0">CC BY 3.0</a>
+
+[nixos]: https://nixos.org/
+[cachix]: https://docs.cachix.org/installation
