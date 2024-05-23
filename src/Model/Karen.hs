@@ -142,7 +142,7 @@ fetchAndCreateRestaurant
 fetchAndCreateRestaurant day title tag uuid =
   Restaurant
       title
-      (  "http://carbonatescreen.azurewebsites.net/menu/week/"
+      (  "https://plateimpact-screen.azurewebsites.net/menu/week/"
       <> tag
       <> "/"
       <> uuid
