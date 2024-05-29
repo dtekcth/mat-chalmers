@@ -82,6 +82,7 @@ Test-Suite test-mat
   build-depends: base
                , bytestring
                , mat-chalmers
+               , aeson >= 2.1.2.1 && < 3.0
                , hspec >= 2.10.10 && < 3.0
                , HUnit >= 1.6.2.0 && < 2.0
                , text
