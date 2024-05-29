@@ -24,6 +24,7 @@ library
   exposed-modules: Model
                  , Model.Types
                  , Model.Karen
+                 , Model.Linsen
                  , Model.Wijkanders
                  , View
                  , Config
