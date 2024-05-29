@@ -1,5 +1,5 @@
 dist-newstyle
 Dockerfile
-docker-compose
+docker-compose.yml
 flake.nix
 flake.lock
