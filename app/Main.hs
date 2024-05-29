@@ -29,7 +29,6 @@ import           Data.Time.Format                         ( defaultTimeLocale
 import           Lens.Micro.Platform                      ( set
                                                           , view
                                                           )
-import           Network.HTTP.Client.TLS                  ( newTlsManager )
 import           Network.Wai.Middleware.RequestLogger     ( logStdout )
 import           Network.Wai.Middleware.StaticEmbedded    ( static )
 import           System.Console.GetOpt                    ( ArgDescr(..)
@@ -49,7 +48,6 @@ import           Web.Scotty                               ( get
 
 import           Config
 import           Model
-import           Model.Types                              ( ClientContext(..) )
 import           View                                     ( render )
 
 opts :: [OptDescr (Config -> Config)]
@@ -72,7 +70,6 @@ main = (reifyConfig . getOpt Permute opts <$> getArgs) >>= \case
   (Config { _cHelp = True }, _    , _    ) -> usage
   (config                  , _    , _    ) -> do
     upd     <- newEmptyMVar -- putMVar when to update
-    mgr     <- newTlsManager
     viewRef <- createViewReference
 
     -- In the list there are three items running concurrently:
@@ -83,17 +80,17 @@ main = (reifyConfig . getOpt Permute opts <$> getArgs) >>= \case
       Async.Concurrently
       [ timer upd config
       , webserver config viewRef upd
-      , updater mgr upd viewRef config
+      , updater upd viewRef config
       ]
  where
   timer upd cfg =
     forever $ tryPutMVar upd () >> threadDelay (view cInterval cfg)
 
-  updater mgr upd viewRef cfg =
+  updater upd viewRef cfg =
     forever
       $ withFDHandler defaultBatchingOptions stdout 1.0 80
       $ \logCallback -> runLoggingT
-          (runReaderT (refresh viewRef upd) (ClientContext cfg mgr))
+          (runReaderT (refresh viewRef upd) cfg)
           ( logCallback
           . renderWithTimestamp
             (formatTime defaultTimeLocale "T%H:%M:%S")
