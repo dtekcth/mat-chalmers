@@ -8,18 +8,15 @@ where
 
 import           Control.Monad                            ( (>=>)
                                                           , (<=<)
-                                                          , foldM
                                                           , zipWithM
                                                           , ap
                                                           )
 import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.IO.Class                   ( MonadIO )
 import           Data.Aeson                               ( (.:)
-                                                          , withArray
                                                           , withObject
                                                           , Value
                                                           )
-import           Data.Aeson.Key                           ( fromString )
 import           Data.Aeson.Types                         ( Parser
                                                           , parseEither
                                                           )
@@ -29,7 +26,6 @@ import           Data.Functor                             ( (<&>) )
 import           Data.Text.Lazy                           ( Text
                                                           , replace )
 import           Data.Thyme.Calendar                      ( Day )
-import qualified Data.Vector                   as V       ( last )
 import           Network.HTTP.Req
 import           Model.Types                              ( NoMenu(..)
                                                           , Menu(..)
@@ -75,7 +71,7 @@ parse day =
     first (\msg -> NMParseError msg . BL8.pack . show $ x) (action x)
 
   menuParser :: [Value] -> Parser [Menu]
-  menuParser = pure . (zip [0..] >=> \case
+  menuParser = pure . (zip [0 :: Integer ..] >=> \case
                           (2 ,vs) -> [vs]
                           (6 ,vs) -> [vs]
                           (10,vs) -> [vs]
