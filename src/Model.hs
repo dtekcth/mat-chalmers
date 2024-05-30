@@ -56,6 +56,7 @@ import           Config
 import           Model.Types
 import           Model.Karen
 import           Model.Wijkanders
+import           Model.Linsen
 
 -- | Refreshes menus.
 -- The refresh function evaluates to `Some monad m => m (View model, Update signal)`,
@@ -108,6 +109,7 @@ update = do
     , karenR "L's Kitchen" "ls-kitchen" "c74da2cf-aa1a-4d3a-9ba6-08d5569587a1"
     , Restaurant "Wijkanders" (fromStrict $ renderUrl wijkandersAPIURL) .
       getWijkanders day' . responseBody <$> req GET wijkandersAPIURL NoReqBody lbsResponse mempty
+    , fetchAndCreateLinsen day'
     ]
 
   for_ rest $ \r -> case menu r of

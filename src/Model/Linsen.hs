@@ -1,14 +1,16 @@
-{-# LANGUAGE FlexibleContexts, OverloadedStrings, QuasiQuotes #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, LambdaCase  #-}
 
 module Model.Linsen
-  ( fetch
-  , parse
-  , fetchAndCreateRestaurant
+  (
+    fetchAndCreateLinsen
   )
 where
 
 import           Control.Monad                            ( (>=>)
+                                                          , (<=<)
                                                           , foldM
+                                                          , zipWithM
+                                                          , ap
                                                           )
 import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.IO.Class                   ( MonadIO )
@@ -26,17 +28,10 @@ import           Data.Aeson.Types                         ( Parser
 import           Data.Bifunctor                           ( first )
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Functor                             ( (<&>) )
-import           Data.Text.Lazy                           ( Text
-                                                          )
-import           Data.Thyme.Calendar                      ( Day)
--- import           Lens.Micro.Platform                      ( (^.)
---                                                           , (&)
---                                                           , (%~)
---                                                           , view
---                                                           )
+import           Data.Text.Lazy                           ( Text )
+import           Data.Thyme.Calendar                      ( Day )
 import           Network.HTTP.Req
 -- import           Text.Heredoc                             ( str )
-
 import           Model.Types                              ( NoMenu(..)
                                                           , Menu(..)
                                                           , Restaurant
@@ -51,7 +46,7 @@ fetch
   => m Value  -- ^ A JSON response or horrible crash
 fetch =
   req
-    POST
+    GET
     (https "cafe-linsen.se" /: "api" /: "menu")
     NoReqBody
     jsonResponse
@@ -67,11 +62,11 @@ parse day =
       (parseEither
         (   withObject "Parse meals"
         $   (.: "docs")
-        >=> (.: fromString (show (6 - (\(_,_,a) -> a) (toWeekDate day))))
+        >=> (pure . (!! (6 - (\(_,_,a) -> a) (toWeekDate day))))
         >=> (.: "richText")
         >=> (.: "root")
         >=> (.: "children")
-        >=> (foldM menuParser [] :: [Value] -> Parser [Menu])
+        >=> menuParser
         )
       )
     >=> menusToEitherNoLunch
@@ -80,25 +75,31 @@ parse day =
   failWithNoMenu action x =
     first (\msg -> NMParseError msg . BL8.pack . show $ x) (action x)
 
-  menuParser :: [Menu] -> Value -> Parser [Menu]
-  menuParser o v = (:o) <$> (withObject "Menu Object" $ \_obj ->
-    Menu
-      <$> undefined
-      <*> undefined --TODO: parse
-      -- Just needs fields (2,3), & (6,7), & (10,11)
-      -- (2,3)   is Meat
-      -- (6,7)   is Fish
-      -- (10,11) is Vegetarian
-    ) v
+  menuParser :: [Value] -> Parser [Menu]
+  menuParser =  pure . concatMap f . zip [0..] <=< ap (zipWithM sumFood) tail
 
+  f :: (Int, Text) -> [Menu]
+  f = (\case
+        (2 ,a) -> [Menu "Kött" a]
+        (6 ,a) -> [Menu "Fisk" a]
+        (10,a) -> [Menu  "Veg" a]
+        _      -> [])
 
-fetchAndCreateRestaurant
+  sumFood :: Value -> Value -> Parser Text
+  sumFood a b = getFood a <> pure " " <> getFood b
+
+  getFood :: Value -> Parser Text
+  getFood = withObject "Menu Object"
+            $   (.: "children")
+            >=> pure . last
+            >=> (.: "text")
+
+fetchAndCreateLinsen
   :: (MonadHttp m, MonadIO m, MonadThrow m)
   => Day          -- ^ Day
-  -> Text         -- ^ Title
   -> m Restaurant -- ^ Fetched Restaurant
-fetchAndCreateRestaurant day title =
+fetchAndCreateLinsen day =
   Restaurant
-      title
+      "Café Linsen"
       "https://plateimpact-screen.azurewebsites.net/menu/week/"
     <$> fmap (parse day) fetch
