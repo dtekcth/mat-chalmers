@@ -28,6 +28,7 @@ import           Data.Text.Lazy                           ( Text
                                                           , replace
                                                           , strip )
 import           Data.Thyme.Calendar                      ( Day )
+import           Lens.Micro.Platform                      ( (^.) )
 import           Network.HTTP.Req
 import           Model.Types                              ( NoMenu(..)
                                                           , Menu(..)
@@ -36,7 +37,8 @@ import           Model.Types                              ( NoMenu(..)
                                                             )
                                                           )
 import           Util                                     ( menusToEitherNoLunch )
-import           Data.Thyme.Calendar.WeekDate             ( toWeekDate )
+import           Data.Thyme.Calendar.WeekDate             ( weekDate
+                                                          , _wdDay)
 
 fetch
   :: (MonadHttp m, MonadIO m, MonadThrow m)
@@ -59,7 +61,7 @@ parse day =
       (parseEither
         (   withObject "Parse meals"
         $   (.: "docs")
-        >=> (pure . (!! (6 - (\(_,_,a) -> a) (toWeekDate day))))
+        >=> (pure . (!! (6 - (day ^. weekDate . _wdDay))))
         >=> (.: "richText")
         >=> (.: "root")
         >=> (.: "children")
@@ -74,9 +76,9 @@ parse day =
 
   menuParser :: [Value] -> Parser [Menu]
   menuParser = pure . (zip [0 :: Integer ..] >=> \case
-                          (2 ,vs) -> [vs]
-                          (6 ,vs) -> [vs]
-                          (10,vs) -> [vs]
+                          (2 ,vs) -> [vs] -- Index of Meat dish
+                          (6 ,vs) -> [vs] -- Index of Fish dish
+                          (10,vs) -> [vs] -- Index of Veg  dish
                           _       -> []) <=< ap (zipWithM sumFood) tail
 
   sumFood :: Value -> Value -> Parser Menu
@@ -87,8 +89,8 @@ parse day =
             $   (.: "children")
             >=> \case
                   [] -> pure mempty
-                  vs -> last vs .: "text"
-                    <&> strip . replace "/ " ", "
+                  vs -> strip . replace "/ " ", "
+                        <$> last vs .: "text"
 
 fetchAndCreateLinsen
   :: (MonadHttp m, MonadIO m, MonadThrow m)
