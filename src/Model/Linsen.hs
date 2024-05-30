@@ -2,7 +2,8 @@
 
 module Model.Linsen
   (
-    fetchAndCreateLinsen
+    parse
+  , fetchAndCreateLinsen
   )
 where
 
@@ -24,7 +25,8 @@ import           Data.Bifunctor                           ( first )
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Functor                             ( (<&>) )
 import           Data.Text.Lazy                           ( Text
-                                                          , replace )
+                                                          , replace
+                                                          , strip )
 import           Data.Thyme.Calendar                      ( Day )
 import           Network.HTTP.Req
 import           Model.Types                              ( NoMenu(..)
@@ -86,7 +88,7 @@ parse day =
             >=> \case
                   [] -> pure mempty
                   vs -> last vs .: "text"
-                    <&> replace "/ " ", "
+                    <&> strip . replace "/ " ", "
 
 fetchAndCreateLinsen
   :: (MonadHttp m, MonadIO m, MonadThrow m)
