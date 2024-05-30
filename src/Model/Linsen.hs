@@ -14,10 +14,8 @@ import           Control.Monad                            ( (>=>)
                                                           )
 import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.IO.Class                   ( MonadIO )
-import           Data.Aeson                               ( -- object
-                                                          -- , (.=)
-                                                          (.:)
-                                                          -- , withArray
+import           Data.Aeson                               ( (.:)
+                                                          , withArray
                                                           , withObject
                                                           , Value
                                                           )
@@ -30,6 +28,7 @@ import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Functor                             ( (<&>) )
 import           Data.Text.Lazy                           ( Text )
 import           Data.Thyme.Calendar                      ( Day )
+import qualified Data.Vector                   as V       ( last )
 import           Network.HTTP.Req
 -- import           Text.Heredoc                             ( str )
 import           Model.Types                              ( NoMenu(..)
@@ -76,23 +75,28 @@ parse day =
     first (\msg -> NMParseError msg . BL8.pack . show $ x) (action x)
 
   menuParser :: [Value] -> Parser [Menu]
-  menuParser =  pure . concatMap f . zip [0..] <=< ap (zipWithM sumFood) tail
+  menuParser = pure . concatMap f . zip [0..] <=< ap (zipWithM sumFood) tail
 
   f :: (Int, Text) -> [Menu]
-  f = (\case
+  f = \case
         (2 ,a) -> [Menu "Kött" a]
         (6 ,a) -> [Menu "Fisk" a]
         (10,a) -> [Menu  "Veg" a]
-        _      -> [])
+        _      -> []
 
   sumFood :: Value -> Value -> Parser Text
-  sumFood a b = getFood a <> pure " " <> getFood b
+  sumFood a b = do
+    a' <- getFood a
+    b' <- getFood b
+    pure (a' <> " " <> b')
+
 
   getFood :: Value -> Parser Text
   getFood = withObject "Menu Object"
             $   (.: "children")
-            >=> pure . last
-            >=> (.: "text")
+            >=> \case
+                  [] -> pure mempty
+                  vs -> last vs .: "text" --TODO: replace / with ,
 
 fetchAndCreateLinsen
   :: (MonadHttp m, MonadIO m, MonadThrow m)
