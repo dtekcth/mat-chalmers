@@ -24,6 +24,7 @@ import           Data.Aeson.Types                         ( Parser
 import           Data.Bifunctor                           ( first )
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Functor                             ( (<&>) )
+import           Data.List.Extra                          ( (!?) )
 import           Data.Text.Lazy                           ( Text
                                                           , replace
                                                           , strip )
@@ -61,7 +62,9 @@ parse day =
       (parseEither
         (   withObject "Parse meals"
         $   (.: "docs")
-        >=> (pure . (!! (6 - (day ^. weekDate . _wdDay))))
+        >=> ((!? (6 - (day ^. weekDate . _wdDay))) <&> \case
+          Nothing -> fail "Day doesnt exist"
+          Just v  -> pure v)
         >=> (.: "richText")
         >=> (.: "root")
         >=> (.: "children")
