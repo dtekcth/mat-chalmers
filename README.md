@@ -9,6 +9,7 @@ Lunch menus on Chalmers in Gothenburg. Issues and pull requests welcome.
 ```
 git clone https://github.com/dtekcth/mat-chalmers.git
 cd mat-chalmers
+cabal update
 cabal build         # (or cabal run)
 ```
 
