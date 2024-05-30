@@ -26,11 +26,11 @@ import           Data.Aeson.Types                         ( Parser
 import           Data.Bifunctor                           ( first )
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Functor                             ( (<&>) )
-import           Data.Text.Lazy                           ( Text )
+import           Data.Text.Lazy                           ( Text
+                                                          , replace )
 import           Data.Thyme.Calendar                      ( Day )
 import qualified Data.Vector                   as V       ( last )
 import           Network.HTTP.Req
--- import           Text.Heredoc                             ( str )
 import           Model.Types                              ( NoMenu(..)
                                                           , Menu(..)
                                                           , Restaurant
@@ -75,28 +75,22 @@ parse day =
     first (\msg -> NMParseError msg . BL8.pack . show $ x) (action x)
 
   menuParser :: [Value] -> Parser [Menu]
-  menuParser = pure . concatMap f . zip [0..] <=< ap (zipWithM sumFood) tail
+  menuParser = pure . (zip [0..] >=> \case
+                          (2 ,vs) -> [vs]
+                          (6 ,vs) -> [vs]
+                          (10,vs) -> [vs]
+                          _       -> []) <=< ap (zipWithM sumFood) tail
 
-  f :: (Int, Text) -> [Menu]
-  f = \case
-        (2 ,a) -> [Menu "Kött" a]
-        (6 ,a) -> [Menu "Fisk" a]
-        (10,a) -> [Menu  "Veg" a]
-        _      -> []
-
-  sumFood :: Value -> Value -> Parser Text
-  sumFood a b = do
-    a' <- getFood a
-    b' <- getFood b
-    pure (a' <> " " <> b')
-
+  sumFood :: Value -> Value -> Parser Menu
+  sumFood a b = Menu <$> getFood a <*> getFood b
 
   getFood :: Value -> Parser Text
   getFood = withObject "Menu Object"
             $   (.: "children")
             >=> \case
                   [] -> pure mempty
-                  vs -> last vs .: "text" --TODO: replace / with ,
+                  vs -> last vs .: "text"
+                    <&> replace "/ " ", " --TODO: replace / with ,
 
 fetchAndCreateLinsen
   :: (MonadHttp m, MonadIO m, MonadThrow m)
