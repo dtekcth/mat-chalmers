@@ -5,6 +5,7 @@ import           Data.Aeson                               ( decode )
 import           Data.Maybe                               ( fromJust )
 import           Data.Thyme.Time.Core                     ( fromGregorian )
 import           Model.Karen                              ( parse )
+import qualified Model.Linsen                  as L       ( parse )
 import           Model.Types                              ( Menu(..)
                                                           , NoMenu
                                                           )
@@ -46,6 +47,25 @@ main = hspec $ do
         (fromJust . decode $ BL8.pack
           "{\"data\":{\"dishOccurrencesByTimeRange\":[{\"displayNames\":[{\"name\":\"Chicken africana, banan, mango raja, ris\",\"categoryName\":\"Swedish\"},{\"name\":\"Chicken africana, banana, mango raja, rice\",\"categoryName\":\"English\"}],\"startDate\":\"09/25/2023 00:00:00\",\"dishType\":{\"name\":\"Street food\"},\"dish\":{\"name\":\"Kyckling, het paprikas\195\165s & ris\"}},{\"displayNames\":[{\"name\":\"Indian linseed stew, zucchini, aubergine, ginger, coriander\",\"categoryName\":\"English\"},{\"name\":\"Indisklinsgryta, zucchini, aubergin, ingef\195\164ra, koriander, ris\",\"categoryName\":\"Swedish\"}],\"startDate\":\"09/25/2023 00:00:00\",\"dishType\":{\"name\":\"Greens\"},\"dish\":{\"name\":\"Vegan, pasta, linsbolognese\"}},{\"displayNames\":[{\"name\":\"F\195\164rskost bakad sej, vitvinss\195\165s, broccoli, potatis\",\"categoryName\":\"Swedish\"},{\"name\":\"Cream cheese baked saithe, whitewine sauce, broccoli, potatoes\",\"categoryName\":\"English\"}],\"startDate\":\"09/25/2023 00:00:00\",\"dishType\":{\"name\":\"Nordic\"},\"dish\":{\"name\":\"Bakad fisk, vitvinss\195\165s, potatispur\195\169\"}}]}}\n"
         )
+    )
+
+  describe "Cafe Linsen" $ it
+    "parses a blob of JSON without error"
+    (do
+      s1 <- BL.readFile "test/linsen.json"
+      testFun
+        [ Menu
+            (T.pack "Natt Överbakad Högrev.")
+            (T.pack "Rotfrukter, Timjansky, Persilja, Pommes Chateau.")
+        , Menu
+            (T.pack "Stekt Fisk.")
+            (T.pack "Remouladsås, Citron, Dill, Picklade Morötter, Rostad Potatis.")
+        , Menu
+            (T.pack "Chana Masala.")
+            (T.pack "Kikärtor, Grönsaker, Potatis Pakora, Nannbröd, Ris")
+        ] (L.parse
+              (fromGregorian 2024 05 31)
+              (fromJust $ decode s1))
     )
 
   describe "The Wijkander's"
