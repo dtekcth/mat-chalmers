@@ -86,7 +86,7 @@ parse day =
             >=> \case
                   [] -> pure mempty
                   vs -> last vs .: "text"
-                    <&> replace "/ " ", " --TODO: replace / with ,
+                    <&> replace "/ " ", "
 
 fetchAndCreateLinsen
   :: (MonadHttp m, MonadIO m, MonadThrow m)
