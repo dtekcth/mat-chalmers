@@ -63,11 +63,12 @@ parse day =
         (   withObject "Parse meals"
         $   (.: "docs")
         >=> ((!? (6 - (day ^. weekDate . _wdDay))) <&> \case
-          Nothing -> fail "Day doesnt exist"
+          Nothing -> fail "Day doesnt exist" -- TODO: Should early return to shortcircuit to []
           Just v  -> pure v)
         >=> (.: "richText")
         >=> (.: "root")
         >=> (.: "children")
+        >=> pure . (\v -> if length v >= 9 then v else mempty)
         >=> menuParser
         )
       )
@@ -82,7 +83,8 @@ parse day =
                           (2 ,vs) -> [vs] -- Index of Meat dish
                           (6 ,vs) -> [vs] -- Index of Fish dish
                           (10,vs) -> [vs] -- Index of Veg  dish
-                          _       -> []) <=< ap (zipWithM sumFood) tail
+                          _       -> [])
+               <=< ap (zipWithM sumFood) tail
 
   sumFood :: Value -> Value -> Parser Menu
   sumFood a b = Menu <$> getFood a <*> getFood b
