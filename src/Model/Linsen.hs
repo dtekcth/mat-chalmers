@@ -60,16 +60,19 @@ parse
 parse day =
     failWithNoMenu
       (parseEither
-        (   withObject "Parse meals"
-        $   (.: "docs")
-        >=> ((!? (6 - (day ^. weekDate . _wdDay))) <&> \case
-          Nothing -> fail "Day doesnt exist" -- TODO: Should early return to shortcircuit to []
-          Just v  -> pure v)
-        >=> (.: "richText")
-        >=> (.: "root")
-        >=> (.: "children")
-        >=> pure . (\v -> if length v >= 9 then v else mempty)
-        >=> menuParser
+        (let index = 6 - day ^. weekDate . _wdDay in
+        if index `notElem` [1..5] then
+            pure . const []
+        else
+          withObject "Parse meals"
+          $   (.: "docs")
+          >=> (\case
+                Nothing -> fail "Failed to index into days"
+                Just v -> pure v) . (!? index)
+          >=> (.: "richText")
+          >=> (.: "root")
+          >=> (.: "children")
+          >=> menuParser . (\v' -> if length v' >= 9 then v' else mempty)
         )
       )
     >=> menusToEitherNoLunch
