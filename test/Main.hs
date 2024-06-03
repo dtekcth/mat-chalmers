@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import qualified Data.Text.Lazy                as T
@@ -7,7 +8,7 @@ import           Data.Thyme.Time.Core                     ( fromGregorian )
 import           Model.Karen                              ( parse )
 import qualified Model.Linsen                  as L       ( parse )
 import           Model.Types                              ( Menu(..)
-                                                          , NoMenu
+                                                          , NoMenu( NoLunch )
                                                           )
 import           Model.Wijkanders                         ( getWijkanders
                                                           , hasDate
@@ -20,10 +21,16 @@ import           Test.HUnit                               ( (@?=)
                                                           , assertFailure
                                                           )
 
-testFun :: [Menu] -> Either NoMenu [Menu] -> IO ()
-testFun expected = either
-  (assertFailure . mappend "This is not expected, input was:\n" . show)
-  (@?= expected)
+testFun :: Either NoMenu [Menu] -> Either NoMenu [Menu] -> IO ()
+testFun = \case
+    Right e ->
+      either
+      (assertFailure . mappend "This is not expected, input was:\n" . show)
+      (@?= e)
+    Left e ->
+      either
+      (@?= e)
+      (assertFailure . mappend "This is not expected, input was:\n" . show)
 
 main :: IO ()
 main = hspec $ do
@@ -32,7 +39,7 @@ main = hspec $ do
   describe "The Karen Express" $ it
     "parses a blob of JSON without error"
     ( testFun
-        [ Menu
+        (Right [ Menu
             (T.pack "Street food")
             (T.pack "Chicken africana, banan, mango raja, ris")
         , Menu
@@ -41,7 +48,7 @@ main = hspec $ do
         , Menu
             (T.pack "Nordic")
             (T.pack "F\228rskost bakad sej, vitvinss\229s, broccoli, potatis")
-        ]
+        ])
     $ parse
         "Swedish"
         (fromJust . decode $ BL8.pack
@@ -50,11 +57,11 @@ main = hspec $ do
     )
 
   describe "Cafe Linsen" $ it
-    "parses a blob of JSON without error"
+    "parses two blob of JSON without error"
     (do
-      s1 <- BL.readFile "test/linsen.json"
+      s1 <- BL.readFile "test/linsen1.json"
       testFun
-        [ Menu
+        (Right [ Menu
             (T.pack "Natt Överbakad Högrev.")
             (T.pack "Rotfrukter, Timjansky, Persilja, Pommes Chateau.")
         , Menu
@@ -63,9 +70,14 @@ main = hspec $ do
         , Menu
             (T.pack "Chana Masala.")
             (T.pack "Kikärtor, Grönsaker, Potatis Pakora, Nannbröd, Ris")
-        ] (L.parse
+        ]) (L.parse
               (fromGregorian 2024 05 31)
               (fromJust $ decode s1))
+      s2 <- BL.readFile "test/linsen2.json" -- Test that has no lunch
+      testFun (Left NoLunch)
+        (L.parse
+              (fromGregorian 2024 06 06)
+              (fromJust $ decode s2))
     )
 
   describe "The Wijkander's"
@@ -73,7 +85,7 @@ main = hspec $ do
     $ do
         s1 <- BL.readFile "test/190517 wijkanders.html"
         testFun
-          [ Menu
+          (Right [ Menu
             (T.pack "Fisk")
             (T.pack
               "Havets Wallenbergare, kallpressad rapsolja, ärtor, dill & potatismos"
@@ -83,11 +95,11 @@ main = hspec $ do
             (T.pack
               "Helstekt kotlettred, potatisgratäng, skysås & örtbakad tomat"
             )
-          ]
+          ])
           (getWijkanders (fromGregorian 2019 05 17) s1)
         s2 <- BL.readFile "test/190913 wijkanders.html"
         testFun
-          [ Menu
+          (Right [ Menu
             (T.pack "Vegetarisk ")
             (T.pack
               "Pasta, svamp, grädde, citron, grana padano & rotfruktschips"
@@ -100,5 +112,5 @@ main = hspec $ do
             (T.pack
               "Helstekt kotlettrad, rostad potatis, svampsås & inlagd gurka"
             )
-          ]
+          ])
           (getWijkanders (fromGregorian 2019 09 13) s2)
