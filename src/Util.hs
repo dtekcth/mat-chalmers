@@ -27,5 +27,4 @@ menusToEitherNoLunch = \case
 -- | Remove text tags that only contain whitespace.
 removeWhitespaceTags :: [Tag ByteString] -> [Tag ByteString]
 removeWhitespaceTags =
-  filter (\t -> not (isTagText t) || tagText (not . BL.all W8.isSpace) t)
-
+  filter (or . ([not . isTagText, tagText (not . BL.all W8.isSpace)] <*>) . pure)
