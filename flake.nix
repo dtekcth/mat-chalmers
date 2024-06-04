@@ -10,7 +10,7 @@
 
   outputs = { self, nixpkgs, flake-utils }:
     let
-      ghcVer = "ghc945";
+      ghcVer = "ghc964";
       makeHaskellOverlay = overlay: final: prev: {
         haskell = prev.haskell // {
           packages = prev.haskell.packages // {
@@ -52,7 +52,10 @@
               packages = p: [ self.packages.${system}.mat ];
               withHoogle = true;
               buildInputs =
-                [ pkgs.docker ] ++
+                [
+                  pkgs.docker
+                  pkgs.zlib
+                ] ++
                 (with haskellPackages; [
                   haskell-language-server
                   cabal-install

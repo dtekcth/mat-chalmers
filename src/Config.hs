@@ -31,4 +31,4 @@ defaultConfig = Config False 14 (1000000 * 60 * 30) 5007
 -- TODO: Feel free to bikeshed the function name.
 reifyConfig
   :: ([Config -> Config], [String], [String]) -> (Config, [String], [String])
-reifyConfig = (& _1 %~ foldl' (flip id) defaultConfig)
+reifyConfig = _1 %~ foldl' (flip id) defaultConfig

@@ -8,6 +8,7 @@ import           Control.Arrow                            ( (***)
                                                           , (&&&)
                                                           , (>>>)
                                                           )
+import           Control.Monad                            ( (<=<) )
 import           Data.Attoparsec.ByteString.Lazy          ( maybeResult
                                                           , parse
                                                           , skip
@@ -53,7 +54,7 @@ import           Util                                     ( menusToEitherNoLunch
 -- ..and gives them in another order to play nice with the
 -- YearMonthDay constructor.
 hasDate :: ByteString -> Maybe (Months, Days)
-hasDate = maybeResult . parse ((\d m -> (m, d)) <$> parseDay <*> parseMonth)
+hasDate = maybeResult . parse (flip (,) <$> parseDay <*> parseMonth)
  where
   parseDay      = skipMany (skip (not . W8.isDigit)) *> integerParser
   parseMonth    = string (B8.pack "/") *> integerParser
@@ -90,7 +91,7 @@ getWijkanders d =
     >>> dropWhile (~/= "<strong>")
     >>> removeWhitespaceTags
     >>> partitions (~== "<strong>")
-    >>> mapMaybe ((maybeTagText =<<) . (`atMay` 1))
+    >>> mapMaybe (maybeTagText <=< (`atMay` 1))
     >>> map
           (   BL.break (== W8._colon)
           >>> (   decodeUtf8With ignore
