@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings  #-}
 module Model.Wijkanders
   ( getWijkanders
   , hasDate
@@ -22,6 +23,7 @@ import qualified Data.ByteString.Lazy          as BL
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Maybe                               ( mapMaybe )
 import           Data.Text.Encoding.Error                 ( ignore )
+import           Data.Text.Encoding                       ( encodeUtf8 )
 import           Data.Text.Lazy.Encoding                  ( decodeUtf8With )
 import           Data.Thyme                               ( Day
                                                           , Days
@@ -57,7 +59,7 @@ hasDate :: ByteString -> Maybe (Months, Days)
 hasDate = maybeResult . parse (flip (,) <$> parseDay <*> parseMonth)
  where
   parseDay      = skipMany (skip (not . W8.isDigit)) *> integerParser
-  parseMonth    = string (B8.pack "/") *> integerParser
+  parseMonth    = string (encodeUtf8 "/") *> integerParser
   integerParser = fmap (read . B8.unpack) (takeWhile1 W8.isDigit)
 
 -- | getWijkanders will either give you a list of menus or NoLunch.
@@ -74,23 +76,23 @@ getWijkanders d =
             (((pure . (ymdMonth &&& ymdDay) . view gregorian) d ==) . hasDate)
           )
     >>> takeWhile
-          (not . tagText
-            (\s -> BL.isPrefixOf (BL8.pack "Med reservation") s || maybe
-              False
-              (> d)
-              (   hasDate s
-              >>= ( gregorianValid
-                  . uncurry (YearMonthDay $ ymdYear $ view gregorian d)
-                  )
-              )
-            )
+          (not
+          . tagText (or
+                    . ([
+                           BL.isPrefixOf (BL8.pack "Med reservation")
+                       , maybe False (> d) .
+                         (( gregorianValid
+                           . uncurry (YearMonthDay $ ymdYear $ view gregorian d)
+                          ) <=< hasDate)
+                       ] <*>)
+                    . pure)
           )
 
     -- The heading is of no use to us.
     >>> drop 1
-    >>> dropWhile (~/= "<strong>")
+    >>> dropWhile (~/= ("<strong>" :: String))
     >>> removeWhitespaceTags
-    >>> partitions (~== "<strong>")
+    >>> partitions (~== ("<strong>" :: String))
     >>> mapMaybe (maybeTagText <=< (`atMay` 1))
     >>> map
           (   BL.break (== W8._colon)

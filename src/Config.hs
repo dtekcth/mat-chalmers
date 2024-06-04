@@ -29,6 +29,6 @@ defaultConfig = Config False 14 (1000000 * 60 * 30) 5007
 -- times before it makes sense, so if you're in a hurry, look at the types.
 --
 -- TODO: Feel free to bikeshed the function name.
-reifyConfig
+recreateConfig
   :: ([Config -> Config], [String], [String]) -> (Config, [String], [String])
-reifyConfig = _1 %~ foldl' (flip id) defaultConfig
+recreateConfig = _1 %~ foldl' (flip id) defaultConfig
