@@ -94,8 +94,8 @@ update = do
         if dateNow ^. _localTimeOfDay . _todHour >= nextDayHour
           then ("Tomorrow", dateNow & _localDay %~ (.+^ 1))
           else ("Today", dateNow)
-  let day'    = d ^. _localDay
-  let karenR  = fetchAndCreateRestaurant day'
+      day'    = d ^. _localDay
+      karenR  = fetchAndCreateRestaurant day'
   rest <- runReq (
             defaultHttpConfig {
               httpConfigRetryPolicy = fibonacciBackoff 30_000_000 <> limitRetries 5
@@ -113,7 +113,7 @@ update = do
   for_ rest $ \r -> case menu r of
     Left e ->
       logMessage =<< timestamp (pretty $ name r <> ": " <> pack (show e))
-    _ -> pure ()
+    Right _ -> pure ()
 
   return (View rest textday d)
  where

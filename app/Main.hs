@@ -64,7 +64,7 @@ usage :: IO ()
 usage = putStrLn $ usageInfo "mat-chalmers [OPTION...]" opts
 
 main :: IO ()
-main = (reifyConfig . getOpt Permute opts <$> getArgs) >>= \case
+main = (recreateConfig . getOpt Permute opts <$> getArgs) >>= \case
   (_                       , _    , _ : _) -> usage
   (_                       , _ : _, _    ) -> usage
   (Config { _cHelp = True }, _    , _    ) -> usage
