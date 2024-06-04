@@ -40,7 +40,6 @@ import           Prettyprinter                            ( Doc
 import           Data.Thyme                               ( _localDay
                                                           , _localTimeOfDay
                                                           , _todHour
-                                                          , _ymdDay
                                                           , _zonedTimeToLocalTime
                                                           , getZonedTime
                                                           , gregorian
@@ -57,6 +56,7 @@ import           Model.Types
 import           Model.Karen
 import           Model.Wijkanders
 import           Model.Linsen
+import           Util                                     ( nextDay )
 
 -- | Refreshes menus.
 -- The refresh function evaluates to `Some monad m => m (View model, Update signal)`,
@@ -94,7 +94,7 @@ update = do
   let (textday, d) =
         if dateNow ^. _localTimeOfDay . _todHour >= nextDayHour
           then
-            ("Tomorrow", dateNow & (_localDay . gregorian . _ymdDay) %~ (+ 1))
+            ("Tomorrow", dateNow & (_localDay . gregorian) %~ nextDay)
           else ("Today", dateNow)
   let day'    = d ^. _localDay
   let karenR  = fetchAndCreateRestaurant day'
