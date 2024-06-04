@@ -27,10 +27,11 @@ nix build           # (or nix run)
 ```
 
 Pro-tip, to get shorter build times, consider using [Cachix] and use
-the `jassob` cache:
+the `jassob` or `pingu` cache:
 
 ```
 cachix use jassob   # Only needed once
+cachix use pingu    # Probably more up to date as of 5/6-24
 ```
 
 ## Credits
