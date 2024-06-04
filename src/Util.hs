@@ -35,7 +35,7 @@ removeWhitespaceTags =
 nextDay :: YearMonthDay -> YearMonthDay
 nextDay (YearMonthDay y m d)
   | d < len   = YearMonthDay  y       m      (d + 1)
-  | m < 12    = YearMonthDay  y      (m + 1) (d - len)
-  | otherwise = YearMonthDay (y + 1)  1      (d - len)
+  | m < 12    = YearMonthDay  y      (m + 1)  1
+  | otherwise = YearMonthDay (y + 1)  1       1
   where
       len = gregorianMonthLength y m
