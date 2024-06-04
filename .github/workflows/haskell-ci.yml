@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: haskell-actions/setup@v2
         with:
-          ghc-version: '9.4.5' # Exact version of ghc to use
+          ghc-version: '9.6.4' # Exact version of ghc to use
 
       - name: update cabal index
         run: |
