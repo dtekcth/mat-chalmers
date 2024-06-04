@@ -76,16 +76,14 @@ getWijkanders d =
             (((pure . (ymdMonth &&& ymdDay) . view gregorian) d ==) . hasDate)
           )
     >>> takeWhile
-          (not
-          . tagText (or
-                    . ([
-                           BL.isPrefixOf (BL8.pack "Med reservation")
-                       , maybe False (> d) .
-                         (( gregorianValid
-                           . uncurry (YearMonthDay $ ymdYear $ view gregorian d)
-                          ) <=< hasDate)
-                       ] <*>)
-                    . pure)
+          (not . tagText
+           (or . ([
+                      BL.isPrefixOf (BL8.pack "Med reservation")
+                  , maybe False (> d) .
+                    ( gregorianValid
+                      . uncurry (YearMonthDay $ ymdYear $ view gregorian d)
+                      <=< hasDate)
+                  ] <*>) . pure)
           )
 
     -- The heading is of no use to us.
