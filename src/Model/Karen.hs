@@ -110,7 +110,7 @@ parse lang =
         >=> mapM menuParser
         )
       )
-    >=> filterM (((/= "stängt") <$>) <$> (^.^ mFood))
+    >=> filterM (((/= "stängt") <$>) . (^.^ mFood))
     >=> menusToEitherNoLunch
  where
   failWithNoMenu :: Show a => (a -> Either String b) -> a -> Either NoMenu b
