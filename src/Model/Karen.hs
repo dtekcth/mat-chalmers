@@ -40,8 +40,8 @@ import           Model.Types                              ( NoMenu(..)
                                                             ( Restaurant
                                                             )
                                                           )
-import           Util                                     ( menusToEitherNoLunch )
-import           Lens.Micro.Platform                      ( (^.) )
+import           Util                                     ( menusToEitherNoLunch
+                                                          , (^.^))
 
 
 -- brittany-disable-next-binding
@@ -110,7 +110,7 @@ parse lang =
         >=> mapM menuParser
         )
       )
-    >=> filterM (pure . (/= "stängt") . (^. mFood))
+    >=> filterM (((/= "stängt") <$>) <$> (^.^ mFood))
     >=> menusToEitherNoLunch
  where
   failWithNoMenu :: Show a => (a -> Either String b) -> a -> Either NoMenu b
