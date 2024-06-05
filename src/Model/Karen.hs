@@ -35,11 +35,13 @@ import           Text.Heredoc                             ( str )
 
 import           Model.Types                              ( NoMenu(..)
                                                           , Menu(..)
+                                                          , mFood
                                                           , Restaurant
                                                             ( Restaurant
                                                             )
                                                           )
 import           Util                                     ( menusToEitherNoLunch )
+import           Lens.Micro.Platform                      ( (^.) )
 
 
 -- brittany-disable-next-binding
@@ -108,7 +110,7 @@ parse lang =
         >=> mapM menuParser
         )
       )
-    >=> filterM (pure . (/= "stängt") . _mFood)
+    >=> filterM (pure . (/= "stängt") . (^. mFood))
     >=> menusToEitherNoLunch
  where
   failWithNoMenu :: Show a => (a -> Either String b) -> a -> Either NoMenu b

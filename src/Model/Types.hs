@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell, BangPatterns #-}
 
 -- | Types and internal functions
 
@@ -6,6 +7,7 @@ module Model.Types where
 import           Data.ByteString.Lazy                     ( ByteString )
 import           Data.Text.Lazy                           ( Text )
 import           Data.Thyme                               ( LocalTime )
+import           Lens.Micro.Platform
 
 -- | What to pass to template.
 data View = View
@@ -33,3 +35,5 @@ data Menu = Menu
   , _mFood :: Text
   }
   deriving (Eq, Show)
+
+makeLenses ''Menu
