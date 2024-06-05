@@ -37,12 +37,12 @@ import           Data.Text.Lazy                           ( fromStrict
 import           Prettyprinter                            ( Doc
                                                           , pretty
                                                           )
+import           Data.AffineSpace                         ( (.+^) )
 import           Data.Thyme                               ( _localDay
                                                           , _localTimeOfDay
                                                           , _todHour
                                                           , _zonedTimeToLocalTime
                                                           , getZonedTime
-                                                          , gregorian
                                                           )
 import           Lens.Micro.Platform                      ( (^.)
                                                           , (&)
@@ -56,7 +56,6 @@ import           Model.Types
 import           Model.Karen
 import           Model.Wijkanders
 import           Model.Linsen
-import           Util                                     ( nextDay )
 
 -- | Refreshes menus.
 -- The refresh function evaluates to `Some monad m => m (View model, Update signal)`,
@@ -94,7 +93,7 @@ update = do
   let (textday, d) =
         if dateNow ^. _localTimeOfDay . _todHour >= nextDayHour
           then
-            ("Tomorrow", dateNow & (_localDay . gregorian) %~ nextDay)
+            ("Tomorrow", dateNow & _localDay %~ (.+^ 1))
           else ("Today", dateNow)
   let day'    = d ^. _localDay
   let karenR  = fetchAndCreateRestaurant day'
