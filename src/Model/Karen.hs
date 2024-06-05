@@ -7,7 +7,7 @@ module Model.Karen
   )
 where
 
-import           Control.Monad                            ( (>=>) )
+import           Control.Monad                            ( (>=>), filterM )
 import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.IO.Class                   ( MonadIO )
 import           Data.Aeson                               ( object
@@ -108,7 +108,7 @@ parse lang =
         >=> mapM menuParser
         )
       )
-    >=> pure . filter ((/= "stängt") . _mFood)
+    >=> filterM (pure . (/= "stängt") . _mFood)
     >=> menusToEitherNoLunch
  where
   failWithNoMenu :: Show a => (a -> Either String b) -> a -> Either NoMenu b
