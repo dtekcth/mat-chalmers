@@ -28,5 +28,8 @@ data NoMenu
 
 -- | Menu of a restaurant.
 -- Title, Body text
-data Menu = Menu Text Text
+data Menu = Menu
+  { _mName :: Text
+  , _mFood :: Text
+  }
   deriving (Eq, Show)
