@@ -14,6 +14,7 @@ import           Text.HTML.TagSoup.Match                  ( tagText )
 import           Model.Types                              ( Menu
                                                           , NoMenu(..)
                                                           )
+import           Lens.Micro.Platform
 
 takeNext :: [a] -> [a]
 takeNext = take 1 . drop 1
@@ -28,3 +29,7 @@ menusToEitherNoLunch = \case
 removeWhitespaceTags :: [Tag ByteString] -> [Tag ByteString]
 removeWhitespaceTags =
   filter (or . ([not . isTagText, tagText (not . BL.all W8.isSpace)] <*>) . pure)
+
+(^.^) :: Monad m => s -> Getting a s a -> m a
+(^.^)  = (pure .) . (^.)
+infixl 8 ^.^
