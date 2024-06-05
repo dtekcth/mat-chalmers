@@ -78,7 +78,7 @@ getWijkanders d =
     >>> takeWhile
           (not . tagText
            (or . ([
-                      BL.isPrefixOf (BL8.pack "Med reservation")
+                    BL.isPrefixOf (BL8.pack "Med reservation")
                   , maybe False (> d) .
                     ( gregorianValid
                       . uncurry (YearMonthDay $ ymdYear $ view gregorian d)
