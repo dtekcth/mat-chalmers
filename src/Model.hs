@@ -92,8 +92,7 @@ update = do
   dateNow     <- liftIO $ fmap (view _zonedTimeToLocalTime) getZonedTime
   let (textday, d) =
         if dateNow ^. _localTimeOfDay . _todHour >= nextDayHour
-          then
-            ("Tomorrow", dateNow & _localDay %~ (.+^ 1))
+          then ("Tomorrow", dateNow & _localDay %~ (.+^ 1))
           else ("Today", dateNow)
   let day'    = d ^. _localDay
   let karenR  = fetchAndCreateRestaurant day'
