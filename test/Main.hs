@@ -57,7 +57,7 @@ main = hspec $ do
     )
 
   describe "Cafe Linsen" $ it
-    "parses two blob of JSON without error"
+    "parses a blob of JSON without error"
     (do
       s1 <- BL.readFile "test/linsen1.json"
       testFun
@@ -73,11 +73,27 @@ main = hspec $ do
         ]) (L.parse
               (fromGregorian 2024 05 31)
               (fromJust $ decode s1))
+    )
+
+  describe "Cafe Linsen" $ it
+    "parses a blob of JSON without error, that has no lunch"
+    (do
       s2 <- BL.readFile "test/linsen2.json" -- Test that has no lunch
       testFun (Left NoLunch)
         (L.parse
               (fromGregorian 2024 06 06)
               (fromJust $ decode s2))
+    )
+
+
+  describe "Cafe Linsen" $ it
+    "parses a blob of JSON without error, that has the wrong week"
+    (do
+      s3 <- BL.readFile "test/linsen3.json"
+      testFun (Left NoLunch)
+        (L.parse
+              (fromGregorian 2024 06 26)
+              (fromJust $ decode s3))
     )
 
   describe "The Wijkander's"
