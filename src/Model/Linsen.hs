@@ -29,15 +29,14 @@ import           Data.Thyme                               ( parseTime
                                                           , defaultTimeLocale )
 import           Data.Thyme.Calendar                      ( Day )
 import           Data.Thyme.Calendar.WeekDate             ( weekDate
-                                                          , _wdDay, _wdWeek)
+                                                          , _wdDay )
 import           Lens.Micro.Platform                      ( (^.) )
 import           Network.HTTP.Req
 import           Model.Types                              ( NoMenu(..)
                                                           , Menu(..)
                                                           , Restaurant ( Restaurant ) )
 import           Safe                                     ( headMay )
-import           Util                                     ( menusToEitherNoLunch
-                                                          , (^.^) )
+import           Util                                     ( menusToEitherNoLunch )
 
 fetch
   :: (MonadHttp m, MonadIO m, MonadThrow m)
@@ -71,18 +70,17 @@ parse day =
           >=> (.: "root")
           >=> (.: "children")
           >=> (\v' ->
-                 withObject "asd" (
+                 withObject "Parse day" (
                   (.: "children")
                   >=> (\case
                           Nothing -> fail "Failed to index into food"
                           Just v -> pure v) . headMay
                   >=> (.: "text")
-                  >=> pure . (== pure (day ^. weekDate . _wdWeek)) .
-                        (parseTime defaultTimeLocale "V. %U" >=> (^.^ _wdWeek))
+                  >=> pure . (== pure day) . parseTime defaultTimeLocale "%d-%m-%Y"
                   >=> \case
                           True -> pure v'
                           False -> pure [])
-                  (head v'))
+                  (v' !! 1))
           >=> menuParser . (\v' -> if length v' >= 9 then v' else mempty)
         )
       )
