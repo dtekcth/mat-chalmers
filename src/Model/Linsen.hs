@@ -70,17 +70,19 @@ parse day =
           >=> (.: "root")
           >=> (.: "children")
           >=> (\v' ->
+                 (case v' !? 1 of
+                   Nothing -> fail "failed to index into food"
+                   Just v -> pure v) >>=
                  withObject "Parse day" (
                   (.: "children")
                   >=> (\case
-                          Nothing -> fail "Failed to index into food"
+                          Nothing -> fail "Failed to index into richtext"
                           Just v -> pure v) . headMay
                   >=> (.: "text")
                   >=> pure . (== pure day) . parseTime defaultTimeLocale "%d-%m-%Y"
                   >=> \case
                           True -> pure v'
-                          False -> pure [])
-                  (v' !! 1))
+                          False -> pure []))
           >=> menuParser . (\v' -> if length v' >= 9 then v' else mempty)
         )
       )
