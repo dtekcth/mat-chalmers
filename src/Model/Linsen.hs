@@ -10,17 +10,14 @@ where
 import           Control.Monad                            ( (>=>)
                                                           , (<=<)
                                                           , zipWithM
-                                                          , ap
-                                                          )
+                                                          , ap )
 import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.IO.Class                   ( MonadIO )
 import           Data.Aeson                               ( (.:)
                                                           , withObject
-                                                          , Value
-                                                          )
+                                                          , Value )
 import           Data.Aeson.Types                         ( Parser
-                                                          , parseEither
-                                                          )
+                                                          , parseEither )
 import           Data.Bifunctor                           ( first )
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Functor                             ( (<&>) )
@@ -28,18 +25,17 @@ import           Data.List.Extra                          ( (!?) )
 import           Data.Text.Lazy                           ( Text
                                                           , replace
                                                           , strip )
+import           Data.Thyme                               ( parseTime
+                                                          , defaultTimeLocale )
 import           Data.Thyme.Calendar                      ( Day )
+import           Data.Thyme.Calendar.WeekDate             ( weekDate
+                                                          , _wdDay )
 import           Lens.Micro.Platform                      ( (^.) )
 import           Network.HTTP.Req
 import           Model.Types                              ( NoMenu(..)
                                                           , Menu(..)
-                                                          , Restaurant
-                                                            ( Restaurant
-                                                            )
-                                                          )
+                                                          , Restaurant ( Restaurant ) )
 import           Util                                     ( menusToEitherNoLunch )
-import           Data.Thyme.Calendar.WeekDate             ( weekDate
-                                                          , _wdDay)
 
 fetch
   :: (MonadHttp m, MonadIO m, MonadThrow m)
@@ -72,7 +68,20 @@ parse day =
           >=> (.: "richText")
           >=> (.: "root")
           >=> (.: "children")
-          >=> menuParser . (\v' -> if length v' >= 9 then v' else mempty)
+          >=> (\v' ->
+                 (case v' !? 1 of
+                   Nothing -> fail "failed to index into food"
+                   Just v -> pure v) >>=
+                 withObject "Parse day" (
+                  (.: "children")
+                  >=> (\case
+                          []    -> fail "Failed to index into richtext"
+                          (v:_) -> pure v)
+                  >=> (.: "text")
+                  >=> \s -> if pure day == parseTime defaultTimeLocale "%d-%m-%Y" s && length v' >= 9
+                               then pure v'
+                               else pure mempty))
+          >=> menuParser
         )
       )
     >=> menusToEitherNoLunch
