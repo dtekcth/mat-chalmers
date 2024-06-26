@@ -107,5 +107,5 @@ fetchAndCreateLinsen
 fetchAndCreateLinsen day =
   Restaurant
       "Café Linsen"
-      "https://plateimpact-screen.azurewebsites.net/menu/week/"
+      "https://cafe-linsen.se/#menu"
     <$> fmap (parse day) fetch
