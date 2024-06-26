@@ -35,7 +35,6 @@ import           Network.HTTP.Req
 import           Model.Types                              ( NoMenu(..)
                                                           , Menu(..)
                                                           , Restaurant ( Restaurant ) )
-import           Safe                                     ( headMay )
 import           Util                                     ( menusToEitherNoLunch )
 
 fetch
@@ -76,14 +75,13 @@ parse day =
                  withObject "Parse day" (
                   (.: "children")
                   >=> (\case
-                          Nothing -> fail "Failed to index into richtext"
-                          Just v -> pure v) . headMay
+                          []    -> fail "Failed to index into richtext"
+                          (v:_) -> pure v)
                   >=> (.: "text")
-                  >=> pure . (== pure day) . parseTime defaultTimeLocale "%d-%m-%Y"
-                  >=> \case
-                          True -> pure v'
-                          False -> pure []))
-          >=> menuParser . (\v' -> if length v' >= 9 then v' else mempty)
+                  >=> \s -> if pure day == parseTime defaultTimeLocale "%d-%m-%Y" s && length v' >= 9
+                               then pure v'
+                               else pure mempty))
+          >=> menuParser
         )
       )
     >=> menusToEitherNoLunch
