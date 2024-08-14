@@ -56,6 +56,28 @@ main = hspec $ do
         )
     )
 
+  describe "The Karen Express" $ it
+    "parses a blob of JSON without error, but it has an dish without dishType"
+    ( testFun
+        (Right [ Menu
+            (T.pack "Unknown menu")
+            (T.pack "Fläskfilé, svampsås & rostad klyftpotatis")
+        , Menu
+            (T.pack "Greens")
+            (T.pack "Bönburgare, syrad vitkål- morot, vitlöksdressing & rostad potatis")
+        , Menu
+            (T.pack "Street food")
+            (T.pack "Färskost bakad fisk, vitvinssås, broccoli, potatis")
+        , Menu
+            (T.pack "Nordic")
+            (T.pack "Köttbullar, gräddsås, potatispuré, rårörda lingon, pressgurka")
+        ])
+    $ parse
+        "Swedish"
+        (fromJust . decode $ BL8.pack "{\"data\":{\"dishOccurrencesByTimeRange\":[{\"dish\":{\"name\":\"Fl\195\164skfil\195\169, svamps\195\165s & rostad klyftpotatis\"},\"dishType\":null,\"displayNames\":[{\"categoryName\":\"Swedish\",\"name\":\"Fl\195\164skfil\195\169, svamps\195\165s & rostad klyftpotatis\"}],\"startDate\":\"08/14/2024 00:00:00\"},{\"dish\":{\"name\":\"B\195\182nbiff, rostad matvetesallad, purjol\195\182k, citroncr\195\168me\\n\"},\"dishType\":{\"name\":\"Greens\"},\"displayNames\":[{\"categoryName\":\"Swedish\",\"name\":\"B\195\182nburgare, syrad vitk\195\165l- morot, vitl\195\182ksdressing & rostad potatis\"},{\"categoryName\":\"English\",\"name\":\"Beanburger, pickled cabbage- carrot, garlic dressin & roasted potatoe\"}],\"startDate\":\"08/14/2024 00:00:00\"},{\"dish\":{\"name\":\"Bakad fisk, vitvinss\195\165s, potatispur\195\169\"},\"dishType\":{\"name\":\"Street food\"},\"displayNames\":[{\"categoryName\":\"Swedish\",\"name\":\"F\195\164rskost bakad fisk, vitvinss\195\165s, broccoli, potatis\"},{\"categoryName\":\"English\",\"name\":\"Cream cheese baked fish, whitewine sauce, broccoli, potatoes\"}],\"startDate\":\"08/14/2024 00:00:00\"},{\"dish\":{\"name\":\"K\195\182ttbullar, gr\195\164dds\195\165s, potatispur\195\169, lingon\"},\"dishType\":{\"name\":\"Nordic\"},\"displayNames\":[{\"categoryName\":\"English\",\"name\":\"Meat balls, cream sauce, mashed potato, lingonberries, pickled cucumber\"},{\"categoryName\":\"Swedish\",\"name\":\"K\195\182ttbullar, gr\195\164dds\195\165s, potatispur\195\169, r\195\165r\195\182rda lingon, pressgurka\"}],\"startDate\":\"08/14/2024 00:00:00\"}]}}"
+        )
+    )
+
   describe "Cafe Linsen" $ it
     "parses a blob of JSON without error"
     (do
