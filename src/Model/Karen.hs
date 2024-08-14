@@ -120,7 +120,7 @@ parse lang =
   menuParser :: Value -> Parser Menu
   menuParser = withObject "Menu Object" $ \obj ->
     Menu
-      <$> (obj .: "dishType" >>= (.: "name"))
+      <$> (obj .: "dishType" >>= maybe (pure "Unknown menu") (.: "name"))
       <*> ((obj .: "displayNames") >>= withArray
             "An array of meal names"
             (   mapM
