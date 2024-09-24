@@ -1,4 +1,5 @@
-{-# LANGUAGE FlexibleContexts, OverloadedStrings, LambdaCase  #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, LambdaCase #-}
+{-# LANGUAGE PatternSynonyms #-}
 
 module Model.Linsen
   (
@@ -25,8 +26,8 @@ import           Data.List.Extra                          ( (!?) )
 import           Data.Text.Lazy                           ( Text
                                                           , replace
                                                           , strip )
-import           Data.Thyme                               ( parseTime )
-import           Data.Time.Format                         (TimeLocale (..) )
+import           Data.Thyme                               ( parseTime
+                                                          , TimeLocale (..) )
 import           Data.Thyme.Calendar                      ( Day )
 import           Data.Thyme.Calendar.WeekDate             ( weekDate
                                                           , _wdDay )
@@ -69,6 +70,13 @@ swedishTimeLocale = TimeLocale
         , time12Fmt = "%I:%M:%S %p"
         , knownTimeZones = []
         }
+
+pattern MeatDish :: Integer
+pattern MeatDish = 3
+pattern FishDish :: Integer
+pattern FishDish = 8
+pattern VegDish :: Integer
+pattern VegDish = 13
 
 fetch
   :: (MonadHttp m, MonadIO m, MonadThrow m)
@@ -128,9 +136,9 @@ parse day =
 
   menuParser :: [Value] -> Parser [Menu]
   menuParser = pure . (zip [0 :: Integer ..] >=> \case
-                          (3 ,vs) -> [vs] -- Index of Meat dish
-                          (8 ,vs) -> [vs] -- Index of Fish dish
-                          (13,vs) -> [vs] -- Index of Veg  dish
+                          (MeatDish ,vs) -> [vs]
+                          (FishDish ,vs) -> [vs]
+                          (VegDish  ,vs) -> [vs]
                           _       -> [])
                <=< ap (zipWithM sumFood) tail
 
