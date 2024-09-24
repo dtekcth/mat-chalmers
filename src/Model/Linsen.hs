@@ -62,9 +62,9 @@ swedishTimeLocale = TimeLocale
             , ("November",  "Nov")
             , ("December",  "Dec")
             ]
-        , amPm = ("AM", "PM")
-        , dateTimeFmt = "%a %b %e %H:%M:%S %Z %Y"
-        , dateFmt = "%m/%d/%y"
+        , amPm = ("fm", "em")
+        , dateTimeFmt = "%a %f %e %H:%M:%S %Z %Y"
+        , dateFmt = "%d/%m/%y"
         , timeFmt = "%H:%M:%S"
         , time12Fmt = "%I:%M:%S %p"
         , knownTimeZones = []
