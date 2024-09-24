@@ -25,8 +25,8 @@ import           Data.List.Extra                          ( (!?) )
 import           Data.Text.Lazy                           ( Text
                                                           , replace
                                                           , strip )
-import           Data.Thyme                               ( parseTime
-                                                          , defaultTimeLocale )
+import           Data.Thyme                               ( parseTime )
+import           Data.Time.Format                         (TimeLocale (..) )
 import           Data.Thyme.Calendar                      ( Day )
 import           Data.Thyme.Calendar.WeekDate             ( weekDate
                                                           , _wdDay )
@@ -36,6 +36,39 @@ import           Model.Types                              ( NoMenu(..)
                                                           , Menu(..)
                                                           , Restaurant ( Restaurant ) )
 import           Util                                     ( menusToEitherNoLunch )
+
+swedishTimeLocale :: TimeLocale
+swedishTimeLocale = TimeLocale
+        { wDays =
+            [ ("Söndag",  "Sön")
+            , ("Måndag",  "Mån")
+            , ("Tisdag",  "Tis")
+            , ("Onsdag",  "Ons")
+            , ("Torsdag", "Tors")
+            , ("Fredag",  "Fre")
+            , ("Lördag",  "Lör")
+            ]
+        , months =
+            [ ("Januari",   "Jan")
+            , ("Februari",  "Feb")
+            , ("Mars",      "Mar")
+            , ("April",     "Apr")
+            , ("Maj",       "Maj")
+            , ("Juni",      "Jun")
+            , ("Juli",      "Jul")
+            , ("Augusti",   "Aug")
+            , ("September", "Sep")
+            , ("Oktober",   "Oct")
+            , ("November",  "Nov")
+            , ("December",  "Dec")
+            ]
+        , amPm = ("AM", "PM")
+        , dateTimeFmt = "%a %b %e %H:%M:%S %Z %Y"
+        , dateFmt = "%m/%d/%y"
+        , timeFmt = "%H:%M:%S"
+        , time12Fmt = "%I:%M:%S %p"
+        , knownTimeZones = []
+        }
 
 fetch
   :: (MonadHttp m, MonadIO m, MonadThrow m)
@@ -78,7 +111,10 @@ parse day =
                           []    -> fail "Failed to index into richtext"
                           (v:_) -> pure v)
                   >=> (.: "text")
-                  >=> \s -> if pure day == parseTime defaultTimeLocale "%d-%m-%Y" s && length v' >= 9
+                  >=> \s -> if
+                      pure day ==
+                        parseTime swedishTimeLocale "%A %d-%m-%Y" s &&
+                      length v' >= 9
                                then pure v'
                                else pure mempty))
           >=> menuParser
@@ -92,9 +128,9 @@ parse day =
 
   menuParser :: [Value] -> Parser [Menu]
   menuParser = pure . (zip [0 :: Integer ..] >=> \case
-                          (2 ,vs) -> [vs] -- Index of Meat dish
-                          (6 ,vs) -> [vs] -- Index of Fish dish
-                          (10,vs) -> [vs] -- Index of Veg  dish
+                          (3 ,vs) -> [vs] -- Index of Meat dish
+                          (8 ,vs) -> [vs] -- Index of Fish dish
+                          (13,vs) -> [vs] -- Index of Veg  dish
                           _       -> [])
                <=< ap (zipWithM sumFood) tail
 

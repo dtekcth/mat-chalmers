@@ -84,16 +84,16 @@ main = hspec $ do
       s1 <- BL.readFile "test/linsen1.json"
       testFun
         (Right [ Menu
-            (T.pack "Natt Överbakad Högrev.")
-            (T.pack "Rotfrukter, Timjansky, Persilja, Pommes Chateau.")
+            (T.pack "Raggmunk.")
+            (T.pack "Stekt Fläsk, Lingon, Persilja.")
         , Menu
-            (T.pack "Stekt Fisk.")
-            (T.pack "Remouladsås, Citron, Dill, Picklade Morötter, Rostad Potatis.")
+            (T.pack "Pocherad Dagens Fångst.")
+            (T.pack "Sandefjordsås, Brocoli, Brynt Lime, Gräslök Stekt Potatis.")
         , Menu
-            (T.pack "Chana Masala.")
-            (T.pack "Kikärtor, Grönsaker, Potatis Pakora, Nannbröd, Ris")
+            (T.pack "Dagens Pasta.")
+            (T.pack "Tortelioni, Tryffelsås, Baby Spenat, Grana Padano, Roccola.")
         ]) (L.parse
-              (fromGregorian 2024 05 31)
+              (fromGregorian 2024 09 24)
               (fromJust $ decode s1))
     )
 
