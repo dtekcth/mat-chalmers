@@ -71,11 +71,9 @@ swedishTimeLocale = TimeLocale
         , knownTimeZones = []
         }
 
-pattern MeatDish :: Integer
+pattern MeatDish, FishDish, VegDish :: Integer
 pattern MeatDish = 3
-pattern FishDish :: Integer
 pattern FishDish = 8
-pattern VegDish :: Integer
 pattern VegDish = 13
 
 fetch
@@ -136,9 +134,9 @@ parse day =
 
   menuParser :: [Value] -> Parser [Menu]
   menuParser = pure . (zip [0 :: Integer ..] >=> \case
-                          (MeatDish ,vs) -> [vs]
-                          (FishDish ,vs) -> [vs]
-                          (VegDish  ,vs) -> [vs]
+                          (MeatDish, vs) -> [vs]
+                          (FishDish, vs) -> [vs]
+                          (VegDish , vs) -> [vs]
                           _       -> [])
                <=< ap (zipWithM sumFood) tail
 
