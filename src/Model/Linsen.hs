@@ -117,12 +117,11 @@ parse day =
                           []    -> fail "Failed to index into richtext"
                           (v:_) -> pure v)
                   >=> (.: "text")
-                  >=> \s -> if
-                      pure day == parseTime swedishTimeLocale "%A %d-%m-%Y" s
-                      then if length v' >= 9
-                               then pure v'
-                               else pure mempty
-                      else fail "Unable to parse day"))
+                  >=> \s ->
+                    case pure day == parseTime swedishTimeLocale "%A %d-%m-%Y" s of
+                      True | length v' >= 9 -> pure v'
+                           | otherwise      -> pure mempty
+                      False                 -> fail "Unable to parse day"))
           >=> menuParser
         )
       )
