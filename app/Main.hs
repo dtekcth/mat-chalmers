@@ -55,7 +55,7 @@ opts :: [OptDescr (Config -> Config)]
 opts =
   [ Option [] ["help"] (NoArg (set cHelp True))           "Show usage info"
   , Option [] ["port"] (ReqArg (set cPort . read) "PORT") "Port to run on"
-  , Option [] ["path"] (ReqArg (set cLogPath) "PATH") "Path to save log files to, default is 'logs'"
+  , Option [] ["path"] (ReqArg (set cLogPath) "PATH")     "Path to save log files to, default is 'logs'"
   , Option []
            ["interval"]
            (ReqArg (set cInterval . (1000000 *) . read) "INTERVAL (s)")
