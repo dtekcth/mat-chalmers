@@ -45,6 +45,7 @@ import           Lens.Micro.Platform                      ( (^.)
                                                           , (%~)
                                                           , view
                                                           )
+import           Text.Printf                              ( printf )
 import           Network.HTTP.Req
 
 import           Config
@@ -52,7 +53,6 @@ import           Model.Types
 import           Model.Karen
 import           Model.Wijkanders
 import           Model.Linsen
-import Text.Printf (printf)
 
 -- | Refreshes menus.
 -- The refresh function evaluates to `Some monad m => m (View model, Update signal)`,
