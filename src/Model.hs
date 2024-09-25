@@ -38,7 +38,8 @@ import           Data.Thyme                               ( _localDay
                                                           , _localTimeOfDay
                                                           , _todHour
                                                           , _zonedTimeToLocalTime
-                                                          , getZonedTime, getCurrentTime
+                                                          , getZonedTime
+                                                          , getCurrentTime
                                                           )
 import           Lens.Micro.Platform                      ( (^.)
                                                           , (&)
