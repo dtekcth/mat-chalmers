@@ -31,18 +31,14 @@ import           Data.IORef                               ( IORef
                                                           , writeIORef
                                                           )
 import           Data.Foldable                            ( for_ )
-import           Data.Text.Lazy                           ( fromStrict
-                                                          , pack
-                                                          )
-import           Prettyprinter                            ( Doc
-                                                          , pretty
-                                                          )
+import           Data.Text.Lazy                           ( fromStrict )
+import           Prettyprinter                            ( Doc )
 import           Data.AffineSpace                         ( (.+^) )
 import           Data.Thyme                               ( _localDay
                                                           , _localTimeOfDay
                                                           , _todHour
                                                           , _zonedTimeToLocalTime
-                                                          , getZonedTime
+                                                          , getZonedTime, getCurrentTime
                                                           )
 import           Lens.Micro.Platform                      ( (^.)
                                                           , (&)
@@ -56,6 +52,7 @@ import           Model.Types
 import           Model.Karen
 import           Model.Wijkanders
 import           Model.Linsen
+import Text.Printf (printf)
 
 -- | Refreshes menus.
 -- The refresh function evaluates to `Some monad m => m (View model, Update signal)`,
@@ -112,7 +109,9 @@ update = do
 
   for_ rest $ \r -> case menu r of
     Left e ->
-      logMessage =<< timestamp (pretty $ name r <> ": " <> pack (show e))
+      asks _cLogPath >>= \path ->
+      liftIO getCurrentTime >>=
+      liftIO . flip writeFile (show e) . flip (printf "%s/%s%s.txt" path) (name r) . show
     Right _ -> pure ()
 
   return (View rest textday d)
