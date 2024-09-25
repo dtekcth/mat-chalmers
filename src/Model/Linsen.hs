@@ -118,11 +118,11 @@ parse day =
                           (v:_) -> pure v)
                   >=> (.: "text")
                   >=> \s -> if
-                      pure day ==
-                        parseTime swedishTimeLocale "%A %d-%m-%Y" s &&
-                      length v' >= 9
+                      pure day == parseTime swedishTimeLocale "%A %d-%m-%Y" s
+                      then if length v' >= 9
                                then pure v'
-                               else pure mempty))
+                               else pure mempty
+                      else fail "Unable to parse day"))
           >=> menuParser
         )
       )

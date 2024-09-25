@@ -37,6 +37,7 @@ import           System.Console.GetOpt                    ( ArgDescr(..)
                                                           , getOpt
                                                           , usageInfo
                                                           )
+import           System.Directory                         ( createDirectoryIfMissing )
 import           System.Environment                       ( getArgs )
 import           System.IO                                ( stdout )
 import           Web.Scotty                               ( get
@@ -54,6 +55,7 @@ opts :: [OptDescr (Config -> Config)]
 opts =
   [ Option [] ["help"] (NoArg (set cHelp True))           "Show usage info"
   , Option [] ["port"] (ReqArg (set cPort . read) "PORT") "Port to run on"
+  , Option [] ["path"] (ReqArg (set cLogPath) "PATH") "Path to save log files to, default is 'logs'"
   , Option []
            ["interval"]
            (ReqArg (set cInterval . (1000000 *) . read) "INTERVAL (s)")
@@ -71,6 +73,7 @@ main = (recreateConfig . getOpt Permute opts <$> getArgs) >>= \case
   (config                  , _    , _    ) -> do
     upd     <- newEmptyMVar -- putMVar when to update
     viewRef <- createViewReference
+    createDirectoryIfMissing True (_cLogPath config)
 
     -- In the list there are three items running concurrently:
     -- 1. Timer that sends a signal to the updater when it's time to update
