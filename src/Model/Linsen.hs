@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, OverloadedStrings, LambdaCase #-}
+{-# LANGUAGE FlexibleContexts, LambdaCase, MultiWayIf, OverloadedStrings #-}
 {-# LANGUAGE PatternSynonyms #-}
 
 module Model.Linsen
@@ -118,10 +118,10 @@ parse day =
                           (v:_) -> pure v)
                   >=> (.: "text")
                   >=> \s ->
-                    case pure day == parseTime swedishTimeLocale "%A %d-%m-%Y" s of
-                      True | length v' >= 9 -> pure v'
-                           | otherwise      -> pure mempty
-                      False                 -> fail "Unable to parse day"))
+                    let sameDay = pure day == parseTime swedishTimeLocale "%A %d-%m-%Y" s
+                     in if | sameDay && length v' >= 9 -> pure v'
+                           | sameDay                   -> pure mempty
+                           | otherwise                 -> fail "Unable to parse day"))
           >=> menuParser
         )
       )
