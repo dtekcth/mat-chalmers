@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE LambdaCase, OverloadedStrings  #-}
 module Model.Wijkanders
   ( getWijkanders
   , hasDate
@@ -48,9 +48,7 @@ import           Text.HTML.TagSoup.Match                  ( tagText )
 import           Model.Types                              ( Menu(..)
                                                           , NoMenu(..)
                                                           )
-import           Util                                     ( menusToEitherNoLunch
-                                                          , removeWhitespaceTags
-                                                          )
+import           Util                                     ( removeWhitespaceTags )
 
 -- | Looks for strings looking like dates, dd/mm where d and m are digits.
 -- ..and gives them in another order to play nice with the
@@ -67,8 +65,9 @@ hasDate = maybeResult . parse (flip (,) <$> parseDay <*> parseMonth)
 -- We also bet all our money on red 17, and that the maintainers of
 -- Wijkander's homepage keep writing dd/mm for every day.
 getWijkanders :: Day -> ByteString -> Either NoMenu [Menu]
-getWijkanders d =
-  parseTags
+getWijkanders d b = go b
+ where
+  go = parseTags
     -- Take tags from a start date to the next parsable date or to the
     -- phrase "Med reservation".
     >>> dropWhile
@@ -101,4 +100,6 @@ getWijkanders d =
               )
           >>> uncurry Menu
           )
-    >>> menusToEitherNoLunch
+    >>> \case
+          [] -> Left (NMParseError "Wijkanders failed" b)
+          xs -> Right xs
