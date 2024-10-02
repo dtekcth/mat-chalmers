@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE LambdaCase, OverloadedStrings  #-}
 module Model.Wijkanders
   ( getWijkanders
   , hasDate
@@ -48,11 +48,7 @@ import           Text.HTML.TagSoup.Match                  ( tagText )
 import           Model.Types                              ( Menu(..)
                                                           , NoMenu(..)
                                                           )
-import           Util                                     ( removeWhitespaceTags
-                                                          , menusToEitherNMParseError
-                                                          , (|>)
-                                                          , (>*>)
-                                                          )
+import           Util                                     ( removeWhitespaceTags )
 
 -- | Looks for strings looking like dates, dd/mm where d and m are digits.
 -- ..and gives them in another order to play nice with the
@@ -69,15 +65,16 @@ hasDate = maybeResult . parse (flip (,) <$> parseDay <*> parseMonth)
 -- We also bet all our money on red 17, and that the maintainers of
 -- Wijkander's homepage keep writing dd/mm for every day.
 getWijkanders :: Day -> ByteString -> Either NoMenu [Menu]
-getWijkanders d b =
-  parseTags b
+getWijkanders d b = go b
+ where
+  go = parseTags
     -- Take tags from a start date to the next parsable date or to the
     -- phrase "Med reservation".
-    |> dropWhile
+    >>> dropWhile
           (not . tagText
             (((pure . (ymdMonth &&& ymdDay) . view gregorian) d ==) . hasDate)
           )
-    >*> takeWhile
+    >>> takeWhile
           (not . tagText
            (or . ([
                     BL.isPrefixOf (BL8.pack "Med reservation")
@@ -89,12 +86,12 @@ getWijkanders d b =
           )
 
     -- The heading is of no use to us.
-    >*> drop 1
-    >*> dropWhile (~/= ("<strong>" :: String))
-    >*> removeWhitespaceTags
-    >*> partitions (~== ("<strong>" :: String))
-    >*> mapMaybe (maybeTagText <=< (`atMay` 1))
-    >*> map
+    >>> drop 1
+    >>> dropWhile (~/= ("<strong>" :: String))
+    >>> removeWhitespaceTags
+    >>> partitions (~== ("<strong>" :: String))
+    >>> mapMaybe (maybeTagText <=< (`atMay` 1))
+    >>> map
           (   BL.break (== W8._colon)
           >>> (   decodeUtf8With ignore
               *** (decodeUtf8With ignore . BL.dropWhile W8.isSpace . BL.drop
@@ -103,4 +100,6 @@ getWijkanders d b =
               )
           >>> uncurry Menu
           )
-    >*> menusToEitherNMParseError "Wijkanders failed" b
+    >>> \case
+          [] -> Left (NMParseError "Wijkanders failed" b)
+          xs -> Right xs
