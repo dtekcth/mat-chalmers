@@ -25,6 +25,11 @@ menusToEitherNoLunch = \case
   [] -> Left NoLunch
   xs -> Right xs
 
+menusToEitherNMParseError :: String -> ByteString -> [Menu] -> Either NoMenu [Menu]
+menusToEitherNMParseError s b = \case
+  [] -> Left (NMParseError s b)
+  xs -> Right xs
+
 -- | Remove text tags that only contain whitespace.
 removeWhitespaceTags :: [Tag ByteString] -> [Tag ByteString]
 removeWhitespaceTags =
@@ -33,3 +38,11 @@ removeWhitespaceTags =
 (^.^) :: Monad m => s -> Getting a s a -> m a
 (^.^)  = (pure .) . (^.)
 infixl 8 ^.^
+
+(|>) :: a -> (a -> b) -> b
+(|>) = flip ($)
+infixl 8 |>
+
+(>*>) :: (a -> b) -> (b -> c) -> (a -> c)
+(>*>) = flip (.)
+infixl 9 >*>
