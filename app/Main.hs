@@ -53,9 +53,10 @@ import           View                                     ( render )
 
 opts :: [OptDescr (Config -> Config)]
 opts =
-  [ Option [] ["help"] (NoArg (set cHelp True))           "Show usage info"
-  , Option [] ["port"] (ReqArg (set cPort . read) "PORT") "Port to run on"
-  , Option [] ["path"] (ReqArg (set cLogPath) "PATH")     "Path to save log files to, default is 'logs'"
+  [ Option [] ["help"] (NoArg (set cHelp True))            "Show usage info"
+  , Option [] ["port"] (ReqArg (set cPort . read) "PORT")  "Port to run on"
+  , Option [] ["path"] (ReqArg (set cLogPath) "PATH")      "Path to save log files to, default is 'logs'"
+  , Option [] ["age"]  (ReqArg (set cLogAge . read) "AGE") "Amount of days to keep logs"
   , Option []
            ["interval"]
            (ReqArg (set cInterval . (1000000 *) . read) "INTERVAL (s)")
