@@ -98,11 +98,10 @@ removeOldLogs :: ( MonadIO m
 removeOldLogs =
       liftIO getCurrentTime >>= \now ->
       asks _cLogAge >>= \offset ->
-      let old = now & _utctDay %~ (.-^ offset) in
       asks _cLogPath >>= \path ->
       liftIO (listDirectory path) >>=
       mapM (\s -> liftIO (getAccessTime s) <&> (s,)) . fmap ((path ++ "/") ++) >>=
-      fmap (fmap fst) . filterM (pure . (<= old) . toThyme . snd) >>= \files ->
+      fmap (fmap fst) . filterM (pure . (<= (now & _utctDay %~ (.-^ offset))) . toThyme . snd) >>= \files ->
       timestamp ("Removing the following files:" <+> prettyList files) >>=
       logMessage >>
       liftIO (mapM_ removeFile files)
