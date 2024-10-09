@@ -11,6 +11,7 @@ where
 import           Control.Concurrent.MVar                  ( MVar
                                                           , takeMVar
                                                           )
+import           Control.Monad                            ( filterM )
 import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.IO.Class                   ( MonadIO
                                                           , liftIO
@@ -31,21 +32,32 @@ import           Data.IORef                               ( IORef
                                                           , writeIORef
                                                           )
 import           Data.Foldable                            ( for_ )
+import           Data.Functor                             ( (<&>) )
 import           Data.Text.Lazy                           ( fromStrict )
-import           Prettyprinter                            ( Doc )
-import           Data.AffineSpace                         ( (.+^) )
+import           Prettyprinter                            ( Doc
+                                                          , prettyList
+                                                          , (<+>)
+                                                          )
+import           Data.AffineSpace                         ( (.+^)
+                                                          , (.-^)
+                                                          )
 import           Data.Thyme                               ( _localDay
                                                           , _localTimeOfDay
                                                           , _todHour
                                                           , _zonedTimeToLocalTime
                                                           , getZonedTime
                                                           , getCurrentTime
+                                                          , _utctDay
                                                           )
+import           Data.Thyme.Time                          ( toThyme )
 import           Lens.Micro.Platform                      ( (^.)
                                                           , (&)
                                                           , (%~)
                                                           , view
                                                           )
+import           System.Directory                         ( listDirectory
+                                                          , getAccessTime
+                                                          , removeFile )
 import           Text.Printf                              ( printf )
 import           Network.HTTP.Req
 
@@ -78,6 +90,23 @@ createViewReference = liftIO $ do
   now <- getZonedTime
   newIORef (View [] "" (now ^. _zonedTimeToLocalTime))
 
+-- | Deletes old logs in the logs folder, that are
+removeOldLogs :: ( MonadIO m
+                 , MonadLog (WithTimestamp (Doc ann)) m
+                 , MonadReader Config m
+                 ) => m ()
+removeOldLogs =
+      liftIO getCurrentTime >>= \now ->
+      asks _cLogAge >>= \offset ->
+      let old = now & _utctDay %~ (.-^ offset) in
+      asks _cLogPath >>= \path ->
+      liftIO (listDirectory path) >>=
+      mapM (\s -> liftIO (getAccessTime s) <&> (s,)) . fmap ((path ++ "/") ++) >>=
+      fmap (fmap fst) . filterM (pure . (<= old) . toThyme . snd) >>= \files ->
+      timestamp ("Removing the following files:" <+> prettyList files) >>=
+      logMessage >>
+      liftIO (mapM_ removeFile files)
+
 update
   :: ( MonadIO m
      , MonadLog (WithTimestamp (Doc ann)) m
@@ -94,6 +123,7 @@ update = do
           else ("Today", dateNow)
       day'    = d ^. _localDay
       karenR  = fetchAndCreateRestaurant day'
+  removeOldLogs
   rest <- runReq (
             defaultHttpConfig {
               httpConfigRetryPolicy = fibonacciBackoff 30_000_000 <> limitRetries 5
