@@ -90,21 +90,21 @@ createViewReference = liftIO $ do
   now <- getZonedTime
   newIORef (View [] "" (now ^. _zonedTimeToLocalTime))
 
--- | Deletes old logs in the logs folder, that are
+-- | Deletes logs in the logs folder that are older than `_cLogAge`
 removeOldLogs :: ( MonadIO m
                  , MonadLog (WithTimestamp (Doc ann)) m
                  , MonadReader Config m
                  ) => m ()
 removeOldLogs =
-      liftIO getCurrentTime >>= \now ->
-      asks _cLogAge >>= \offset ->
-      asks _cLogPath >>= \path ->
-      liftIO (listDirectory path) >>=
-      mapM (\s -> liftIO (getAccessTime s) <&> (s,)) . fmap ((path ++ "/") ++) >>=
-      fmap (fmap fst) . filterM (pure . (<= (now & _utctDay %~ (.-^ offset))) . toThyme . snd) >>= \files ->
-      timestamp ("Removing the following files:" <+> prettyList files) >>=
-      logMessage >>
-      liftIO (mapM_ removeFile files)
+  liftIO getCurrentTime >>= \now ->
+  asks _cLogAge >>= \offset ->
+  asks _cLogPath >>= \path ->
+  liftIO (listDirectory path) >>=
+  mapM (\s -> liftIO (getAccessTime s) <&> (s,)) . fmap ((path ++ "/") ++) >>=
+  fmap (fmap fst) . filterM (pure . (<= (now & _utctDay %~ (.-^ offset))) . toThyme . snd) >>= \files ->
+  timestamp ("Removing the following files:" <+> prettyList files) >>=
+  logMessage >>
+  liftIO (mapM_ removeFile files)
 
 update
   :: ( MonadIO m
