@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts, NumericUnderscores, OverloadedStrings #-}
+{-# LANGUAGE LambdaCase #-}
 module Model
   ( Restaurant(..)
   , Menu(..)
@@ -99,13 +100,14 @@ removeOldLogs = do
   now <- liftIO getCurrentTime
   offset <- asks _cLogAge
   path <- asks _cLogPath
-  files <- liftIO (listDirectory path) >>=
-    mapM (\s -> liftIO (getAccessTime s) <&> (s,)) . fmap ((path ++ "/") ++) >>=
+  liftIO (listDirectory path) >>=
+    mapM (\s -> liftIO (getAccessTime s) <&> (s,)) . (((path ++ "/") ++) <$>) >>=
     filterM (pure . (<= (now & _utctDay %~ (.-^ offset))) . toThyme . snd) <&>
-    fmap fst
-  timestamp ("Removing the following files:" <+> prettyList files) >>=
-    logMessage >>
-    liftIO (mapM_ removeFile files)
+    (fst <$>) >>= \case
+      [] -> pure ()
+      files -> timestamp ("Removing the following files:" <+> prettyList files) >>=
+        logMessage >>
+        liftIO (mapM_ removeFile files)
 
 update
   :: ( MonadIO m
