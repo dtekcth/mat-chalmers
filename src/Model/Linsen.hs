@@ -11,6 +11,7 @@ where
 import           Control.Monad                            ( (>=>)
                                                           , (<=<)
                                                           , zipWithM
+                                                          , filterM
                                                           , ap )
 import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.IO.Class                   ( MonadIO )
@@ -21,9 +22,11 @@ import           Data.Aeson.Types                         ( Parser
                                                           , parseEither )
 import           Data.Bifunctor                           ( first )
 import qualified Data.ByteString.Lazy.Char8    as BL8
+import           Data.Char                                ( isSpace )
 import           Data.Functor                             ( (<&>) )
 import           Data.List.Extra                          ( (!?) )
 import           Data.Text.Lazy                           ( Text
+                                                          , all
                                                           , replace
                                                           , strip )
 import           Data.Thyme                               ( parseTime
@@ -36,6 +39,7 @@ import           Network.HTTP.Req
 import           Model.Types                              ( NoMenu(..)
                                                           , Menu(..)
                                                           , Restaurant ( Restaurant ) )
+import           Prelude                       hiding     ( all )
 import           Util                                     ( menusToEitherNoLunch )
 
 swedishTimeLocale :: TimeLocale
@@ -72,9 +76,9 @@ swedishTimeLocale = TimeLocale
         }
 
 pattern MeatDish, FishDish, VegDish :: Integer
-pattern MeatDish = 3
-pattern FishDish = 8
-pattern VegDish = 13
+pattern MeatDish = 2
+pattern FishDish = 6
+pattern VegDish = 10
 
 fetch
   :: (MonadHttp m, MonadIO m, MonadThrow m)
@@ -107,6 +111,13 @@ parse day =
           >=> (.: "richText")
           >=> (.: "root")
           >=> (.: "children")
+          >=> filterM (withObject "filter whitespace"
+                       $   (.: "children")
+                       >=> \case
+                            []    -> fail "no text"
+                            (v:_) -> pure v
+                       >=> (.: "text")
+                       >=> (pure . not . all isSpace))
           >=> (\v' ->
                  (case v' !? 1 of
                    Nothing -> fail "failed to index into food"
