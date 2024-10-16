@@ -114,7 +114,7 @@ parse day =
           >=> filterM (withObject "filter whitespace"
                        $   (.: "children")
                        >=> \case
-                            []    -> fail "no text"
+                            []    -> fail "Empty list"
                             (v:_) -> pure v
                        >=> (.: "text")
                        >=> (pure . not . all isSpace))
