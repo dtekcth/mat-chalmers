@@ -42,6 +42,7 @@ import           Text.HTML.TagSoup                        ( (~==)
                                                           , maybeTagText
                                                           , parseTags
                                                           , partitions
+                                                          , Tag(..)
                                                           )
 import           Text.HTML.TagSoup.Match                  ( tagText )
 
@@ -84,22 +85,27 @@ getWijkanders d b = go b
                       <=< hasDate)
                   ] <*>) . pure)
           )
-
-    -- The heading is of no use to us.
-    >>> drop 1
-    >>> dropWhile (~/= ("<strong>" :: String))
-    >>> removeWhitespaceTags
-    >>> partitions (~== ("<strong>" :: String))
-    >>> mapMaybe (maybeTagText <=< (`atMay` 1))
-    >>> map
-          (   BL.break (== W8._colon)
-          >>> (   decodeUtf8With ignore
-              *** (decodeUtf8With ignore . BL.dropWhile W8.isSpace . BL.drop
-                    1
-                  )
-              )
-          >>> uncurry Menu
-          )
     >>> \case
-          [] -> Left (NMParseError "Wijkanders failed" b)
-          xs -> Right xs
+      [] -> Left NoLunch -- No lunch in the case that we cannot parse the date
+      a  -> parseWijkanderLunch a
+
+  parseWijkanderLunch :: [Tag ByteString] -> Either NoMenu [Menu]
+  parseWijkanderLunch =
+        -- The heading is of no use to us.
+        drop 1
+        >>> dropWhile (~/= ("<strong>" :: String))
+        >>> removeWhitespaceTags
+        >>> partitions (~== ("<strong>" :: String))
+        >>> mapMaybe (maybeTagText <=< (`atMay` 1))
+        >>> map
+              (   BL.break (== W8._colon)
+              >>> (   decodeUtf8With ignore
+                  *** (decodeUtf8With ignore . BL.dropWhile W8.isSpace . BL.drop
+                        1
+                      )
+                  )
+              >>> uncurry Menu
+              )
+        >>> \case
+              [] -> Left (NMParseError "Wijkanders failed" b)
+              xs -> Right xs

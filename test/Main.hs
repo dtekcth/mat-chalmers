@@ -156,3 +156,11 @@ main = hspec $ do
             )
           ])
           (getWijkanders (fromGregorian 2019 09 13) s2)
+
+  describe "The Wijkander's"
+    $ it "Parses blob of HTML that fails on weekends"
+    $ do
+        s1 <- BL.readFile "test/241016 wijkanders.html"
+        testFun
+          (Left NoLunch)
+          (getWijkanders (fromGregorian 2024 10 19) s1)
