@@ -164,3 +164,11 @@ main = hspec $ do
         testFun
           (Left NoLunch)
           (getWijkanders (fromGregorian 2024 10 19) s1)
+
+  describe "The Wijkander's"
+    $ it "Parses blob of HTML that fails on a thursday with faulty parsing"
+    $ do
+        s1 <- BL.readFile "test/241016 wijkanders.html"
+        testFun
+          (Left (NMParseError "Wijkanders failed" undefined))
+          (getWijkanders (fromGregorian 2024 10 17) s1)
