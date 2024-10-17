@@ -3,8 +3,8 @@ name: mat-chalmers
 version: 0.1.0.0
 license: MIT
 license-file: LICENSE
-author: Adam Sandberg Eriksson
-maintainer: adam@sandbergericsson.se
+author: Nor Führ
+maintainer: nor@acorneroftheweb.com
 category: Web
 build-type: Simple
 Tested-With: GHC ==9.6.4
