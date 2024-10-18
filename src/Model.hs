@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, NumericUnderscores, OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE LambdaCase #-}
 module Model
   ( Restaurant(..)
@@ -25,16 +25,12 @@ import           Control.Monad.Log                        ( MonadLog
 import           Control.Monad.Reader                     ( MonadReader
                                                           , asks
                                                           )
-import           Control.Retry                            ( fibonacciBackoff
-                                                          , limitRetries
-                                                          )
 import           Data.IORef                               ( IORef
                                                           , newIORef
                                                           , writeIORef
                                                           )
 import           Data.Foldable                            ( for_ )
 import           Data.Functor                             ( (<&>) )
-import           Data.Text.Lazy                           ( fromStrict )
 import           Prettyprinter                            ( Doc
                                                           , prettyList
                                                           , (<+>)
@@ -51,6 +47,7 @@ import           Data.Thyme                               ( _localDay
                                                           , _utctDay
                                                           )
 import           Data.Thyme.Time                          ( toThyme )
+import           Data.Text.Lazy                           ( pack )
 import           Lens.Micro.Platform                      ( (^.)
                                                           , (&)
                                                           , (%~)
@@ -60,13 +57,15 @@ import           System.Directory                         ( listDirectory
                                                           , getAccessTime
                                                           , removeFile )
 import           Text.Printf                              ( printf )
-import           Network.HTTP.Req
+import           Network.Wreq                             ( get
+                                                          , responseBody )
 
 import           Config
 import           Model.Types
 import           Model.Karen
 import           Model.Wijkanders
 import           Model.Linsen
+import           Util                                     ( (^.^) )
 
 -- | Refreshes menus.
 -- The refresh function evaluates to `Some monad m => m (View model, Update signal)`,
@@ -126,17 +125,14 @@ update = do
       day'    = d ^. _localDay
       karenR  = fetchAndCreateRestaurant day'
   removeOldLogs
-  rest <- runReq (
-            defaultHttpConfig {
-              httpConfigRetryPolicy = fibonacciBackoff 30_000_000 <> limitRetries 5
-            }) $ sequence
+  rest <- sequence
     [ karenR "K\229rrestaurangen"
              "karrestaurangen"
              "21f31565-5c2b-4b47-d2a1-08d558129279"
     , karenR "S.M.A.K." "smak" "3ac68e11-bcee-425e-d2a8-08d558129279"
     , karenR "L's Kitchen" "ls-kitchen" "c74da2cf-aa1a-4d3a-9ba6-08d5569587a1"
-    , Restaurant "Wijkanders" (fromStrict $ renderUrl wijkandersAPIURL) .
-      getWijkanders day' . responseBody <$> req GET wijkandersAPIURL NoReqBody lbsResponse mempty
+    , liftIO (get wijkandersAPIURL) >>= (^.^ responseBody) <&>
+      Restaurant "Wijkanders" (pack wijkandersAPIURL) . getWijkanders day'
     , fetchAndCreateLinsen day'
     ]
 
@@ -149,4 +145,4 @@ update = do
 
   return (View rest textday d)
  where
-  wijkandersAPIURL = http "www.wijkanders.se" /: "restaurangen"
+  wijkandersAPIURL = "https://www.wijkanders.se/restaurangen"

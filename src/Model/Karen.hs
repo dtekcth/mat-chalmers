@@ -9,7 +9,7 @@ where
 
 import           Control.Monad                            ( (>=>), filterM )
 import           Control.Monad.Catch                      ( MonadThrow )
-import           Control.Monad.IO.Class                   ( MonadIO )
+import           Control.Monad.IO.Class                   ( MonadIO (liftIO) )
 import           Data.Aeson                               ( object
                                                           , (.=)
                                                           , (.:)
@@ -23,14 +23,15 @@ import           Data.Aeson.Types                         ( Parser
 import           Data.Bifunctor                           ( first )
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Foldable                            ( find )
-import           Data.Functor                             ( (<&>) )
 import           Data.Text.Lazy                           ( Text
                                                           , unpack
                                                           )
 import           Data.Thyme.Calendar                      ( Day
                                                           , showGregorian
                                                           )
-import           Network.HTTP.Req
+import           Network.Wreq                             ( asValue
+                                                          , post
+                                                          , responseBody )
 import           Text.Heredoc                             ( str )
 
 import           Model.Types                              ( NoMenu(..)
@@ -41,7 +42,7 @@ import           Model.Types                              ( NoMenu(..)
                                                             )
                                                           )
 import           Util                                     ( menusToEitherNoLunch
-                                                          , (^.^))
+                                                          , (^.^) )
 
 
 -- brittany-disable-next-binding
@@ -71,20 +72,14 @@ graphQLQuery
 type Language = String
 
 -- | Fetch a menu from Kårens GraphQL API.
-fetch
-  :: (MonadHttp m, MonadIO m, MonadThrow m)
-  => String   -- ^ RestaurantUUID
+fetch ::
+     String   -- ^ RestaurantUUID
   -> Day      -- ^ Day
-  -> m Value  -- ^ A JSON response or horrible crash
+  -> IO Value  -- ^ A JSON response or horrible crash
 fetch restaurantUUID day =
-  req
-    POST
-    (https "plateimpact-heimdall.azurewebsites.net" /: "graphql")
-    (ReqBodyJson requestData)
-    jsonResponse
-    mempty
-  <&> responseBody
-
+  post
+    "https://plateimpact-heimdall.azurewebsites.net/graphql"
+    requestData >>= asValue >>= (^.^ responseBody)
  where
   requestData = object
     [ "query" .= graphQLQuery
@@ -136,7 +131,7 @@ parse lang =
 
 -- | Fetch a restaurant from Kåren's GraphQL API
 fetchAndCreateRestaurant
-  :: (MonadHttp m, MonadIO m, MonadThrow m)
+  :: (MonadIO m, MonadThrow m)
   => Day          -- ^ Day
   -> Text         -- ^ Title
   -> Text         -- ^ Tag
@@ -150,4 +145,4 @@ fetchAndCreateRestaurant day title tag uuid =
       <> "/"
       <> uuid
       )
-    <$> fmap (parse "Swedish") (fetch (unpack uuid) day)
+    <$> fmap (parse "Swedish") (liftIO (fetch (unpack uuid) day))
