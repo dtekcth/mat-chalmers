@@ -141,11 +141,11 @@ update = do
     ]
 
   for_ rest $ \r -> case menu r of
-    Left e ->
+    Left e@(NMParseError _ _) ->
       asks _cLogPath >>= \path ->
       liftIO getCurrentTime >>=
       liftIO . flip writeFile (show e) . flip (printf "%s/%s%s.txt" path) (name r) . show
-    Right _ -> pure ()
+    _ -> pure ()
 
   return (View rest textday d)
  where
