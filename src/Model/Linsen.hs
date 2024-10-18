@@ -14,7 +14,7 @@ import           Control.Monad                            ( (>=>)
                                                           , filterM
                                                           , ap )
 import           Control.Monad.Catch                      ( MonadThrow )
-import           Control.Monad.IO.Class                   ( MonadIO )
+import           Control.Monad.IO.Class                   ( MonadIO (liftIO) )
 import           Data.Aeson                               ( (.:)
                                                           , withObject
                                                           , Value )
@@ -23,7 +23,6 @@ import           Data.Aeson.Types                         ( Parser
 import           Data.Bifunctor                           ( first )
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Char                                ( isSpace )
-import           Data.Functor                             ( (<&>) )
 import           Data.List.Extra                          ( (!?) )
 import           Data.Text.Lazy                           ( Text
                                                           , all
@@ -35,12 +34,15 @@ import           Data.Thyme.Calendar                      ( Day )
 import           Data.Thyme.Calendar.WeekDate             ( weekDate
                                                           , _wdDay )
 import           Lens.Micro.Platform                      ( (^.) )
-import           Network.HTTP.Req
+import           Network.Wreq                             ( asValue
+                                                          , get
+                                                          , responseBody )
 import           Model.Types                              ( NoMenu(..)
                                                           , Menu(..)
                                                           , Restaurant ( Restaurant ) )
 import           Prelude                       hiding     ( all )
-import           Util                                     ( menusToEitherNoLunch )
+import           Util                                     ( menusToEitherNoLunch
+                                                          , (^.^) )
 
 swedishTimeLocale :: TimeLocale
 swedishTimeLocale = TimeLocale
@@ -80,17 +82,9 @@ pattern MeatDish = 2
 pattern FishDish = 6
 pattern VegDish = 10
 
-fetch
-  :: (MonadHttp m, MonadIO m, MonadThrow m)
-  => m Value  -- ^ A JSON response or horrible crash
+fetch :: IO Value  -- ^ A JSON response or horrible crash
 fetch =
-  req
-    GET
-    (https "cafe-linsen.se" /: "api" /: "menu")
-    NoReqBody
-    jsonResponse
-    mempty
-  <&> responseBody
+  get "https://cafe-linsen.se/api/menu" >>= asValue >>= (^.^ responseBody)
 
 parse
   :: Day                  -- ^ Day to parse
@@ -162,11 +156,11 @@ parse day =
                         <$> last vs .: "text"
 
 fetchAndCreateLinsen
-  :: (MonadHttp m, MonadIO m, MonadThrow m)
+  :: (MonadIO m, MonadThrow m)
   => Day          -- ^ Day
   -> m Restaurant -- ^ Fetched Restaurant
 fetchAndCreateLinsen day =
   Restaurant
       "Café Linsen"
       "https://cafe-linsen.se/#menu"
-    <$> fmap (parse day) fetch
+    <$> fmap (parse day) (liftIO fetch)

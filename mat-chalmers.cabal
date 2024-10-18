@@ -45,7 +45,7 @@ library
                , mtl >= 2.3.1 && < 2.5
                , old-locale == 1.0.0.7
                , prettyprinter == 1.7.1
-               , req >= 3.13 && < 4.0
+               , wreq >= 0.5.4.2 && < 1.0.0.0
                , retry == 0.9.3.1
                , safe >= 0.3.21 && < 0.4
                , tagsoup == 0.14.8
@@ -69,7 +69,6 @@ executable mat-chalmers
                , microlens-platform
                , logging-effect
                , mtl
-               , req
                , prettyprinter
                , scotty >= 0.20 && < 0.30
                , time >= 1.12.2 && < 1.13
