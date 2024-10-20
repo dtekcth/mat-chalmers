@@ -52,7 +52,8 @@ import           Text.HTML.TagSoup                        ( (~==)
 import           Text.HTML.TagSoup.Match                  ( tagText )
 
 import           Model.Types                              ( Menu(..)
-                                                          , NoMenu(..), Restaurant (Restaurant)
+                                                          , NoMenu(..)
+                                                          , Restaurant (Restaurant)
                                                           )
 import           Util                                     ( removeWhitespaceTags
                                                           , (^.^) )
@@ -124,6 +125,5 @@ fetchAndCreateWijkanders
   => Day
   -> m Restaurant
 fetchAndCreateWijkanders day =
-    liftIO (get wijkandersAPIURL) >>=
-    (^.^ responseBody) <&>
-      Restaurant "Wijkanders" (pack wijkandersAPIURL) . getWijkanders day
+  liftIO (get wijkandersAPIURL) >>= (^.^ responseBody) <&>
+    Restaurant "Wijkanders" (pack wijkandersAPIURL) . getWijkanders day
