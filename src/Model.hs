@@ -1,5 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings, LambdaCase #-}
 module Model
   ( Restaurant(..)
   , Menu(..)
