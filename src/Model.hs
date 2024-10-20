@@ -47,7 +47,6 @@ import           Data.Thyme                               ( _localDay
                                                           , _utctDay
                                                           )
 import           Data.Thyme.Time                          ( toThyme )
-import           Data.Text.Lazy                           ( pack )
 import           Lens.Micro.Platform                      ( (^.)
                                                           , (&)
                                                           , (%~)
@@ -57,15 +56,12 @@ import           System.Directory                         ( listDirectory
                                                           , getAccessTime
                                                           , removeFile )
 import           Text.Printf                              ( printf )
-import           Network.Wreq                             ( get
-                                                          , responseBody )
 
 import           Config
 import           Model.Types
 import           Model.Karen
 import           Model.Wijkanders
 import           Model.Linsen
-import           Util                                     ( (^.^) )
 
 -- | Refreshes menus.
 -- The refresh function evaluates to `Some monad m => m (View model, Update signal)`,
@@ -131,8 +127,7 @@ update = do
              "21f31565-5c2b-4b47-d2a1-08d558129279"
     , karenR "S.M.A.K." "smak" "3ac68e11-bcee-425e-d2a8-08d558129279"
     , karenR "L's Kitchen" "ls-kitchen" "c74da2cf-aa1a-4d3a-9ba6-08d5569587a1"
-    , liftIO (get wijkandersAPIURL) >>= (^.^ responseBody) <&>
-      Restaurant "Wijkanders" (pack wijkandersAPIURL) . getWijkanders day'
+    , fetchAndCreateWijkanders day'
     , fetchAndCreateLinsen day'
     ]
 
@@ -142,7 +137,4 @@ update = do
       liftIO getCurrentTime >>=
       liftIO . flip writeFile (show e) . flip (printf "%s/%s%s.txt" path) (name r) . show
     _ -> pure ()
-
   return (View rest textday d)
- where
-  wijkandersAPIURL = "https://www.wijkanders.se/restaurangen"
