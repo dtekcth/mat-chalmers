@@ -1,7 +1,6 @@
 {-# LANGUAGE LambdaCase, OverloadedStrings  #-}
 module Model.Wijkanders
-  ( getWijkanders
-  , hasDate
+  ( fetchAndCreateWijkanders
   )
 where
 
@@ -10,6 +9,8 @@ import           Control.Arrow                            ( (***)
                                                           , (>>>)
                                                           )
 import           Control.Monad                            ( (<=<) )
+import           Control.Monad.Catch                      ( MonadThrow )
+import           Control.Monad.IO.Class                   ( MonadIO (liftIO) )
 import           Data.Attoparsec.ByteString.Lazy          ( maybeResult
                                                           , parse
                                                           , skip
@@ -18,9 +19,11 @@ import           Data.Attoparsec.ByteString.Lazy          ( maybeResult
                                                           , takeWhile1
                                                           )
 import           Data.ByteString.Lazy                     ( ByteString )
+import           Data.Text.Lazy                           ( pack )
 import qualified Data.ByteString.Char8         as B8
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.ByteString.Lazy.Char8    as BL8
+import           Data.Functor                             ( (<&>) )
 import           Data.Maybe                               ( mapMaybe )
 import           Data.Text.Encoding.Error                 ( ignore )
 import           Data.Text.Encoding                       ( encodeUtf8 )
@@ -36,6 +39,8 @@ import           Data.Thyme                               ( Day
                                                           )
 import qualified Data.Word8                    as W8
 import           Lens.Micro.Platform                      ( view )
+import           Network.Wreq                             ( get
+                                                          , responseBody )
 import           Safe                                     ( atMay )
 import           Text.HTML.TagSoup                        ( (~==)
                                                           , (~/=)
@@ -47,9 +52,13 @@ import           Text.HTML.TagSoup                        ( (~==)
 import           Text.HTML.TagSoup.Match                  ( tagText )
 
 import           Model.Types                              ( Menu(..)
-                                                          , NoMenu(..)
+                                                          , NoMenu(..), Restaurant (Restaurant)
                                                           )
-import           Util                                     ( removeWhitespaceTags )
+import           Util                                     ( removeWhitespaceTags
+                                                          , (^.^) )
+
+wijkandersAPIURL :: String
+wijkandersAPIURL = "https://www.wijkanders.se/restaurangen"
 
 -- | Looks for strings looking like dates, dd/mm where d and m are digits.
 -- ..and gives them in another order to play nice with the
@@ -109,3 +118,12 @@ getWijkanders d b = go b
         >>> \case
               [] -> Left (NMParseError "Wijkanders failed" b)
               xs -> Right xs
+
+fetchAndCreateWijkanders
+  :: (MonadIO m, MonadThrow m)
+  => Day
+  -> m Restaurant
+fetchAndCreateWijkanders day =
+    liftIO (get wijkandersAPIURL) >>=
+    (^.^ responseBody) <&>
+      Restaurant "Wijkanders" (pack wijkandersAPIURL) . getWijkanders day
