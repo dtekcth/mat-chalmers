@@ -1,6 +1,8 @@
 {-# LANGUAGE LambdaCase, OverloadedStrings  #-}
 module Model.Wijkanders
   ( fetchAndCreateWijkanders
+  , getWijkanders
+  , hasDate
   )
 where
 
