@@ -1,6 +1,6 @@
 services:
   mat:
-    build: .
+    image: mat-chalmers:latest
     restart: unless-stopped
     ports:
       - "5007:5007"

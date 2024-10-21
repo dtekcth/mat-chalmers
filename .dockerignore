@@ -1,5 +1,0 @@
-dist-newstyle
-Dockerfile
-docker-compose.yml
-flake.nix
-flake.lock
