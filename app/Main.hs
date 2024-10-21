@@ -109,9 +109,9 @@ webserver
   -> MVar () -- ^ Update signal
   -> IO ()
 webserver Config{_cPort=webserverPort} viewRef upd =
-  run webserverPort $ foldr ($) (notFound (send $ html "not found..."))
-    [ middleware . get "/"  (liftIO (readIORef viewRef) >>= send . html . encodeUtf8 . render)
-    , middleware . get "/r" (liftIO (tryPutMVar upd ()) >> send (redirect302 "/"))
+  run webserverPort $ foldr
+    (logStdout . static $(embedDir "static") <$>)
+    (notFound (send $ html "not found..."))
+    [ get "/"  (liftIO (readIORef viewRef) >>= send . html . encodeUtf8 . render)
+    , get "/r" (liftIO (tryPutMVar upd ()) >> send (redirect302 "/"))
     ]
- where
-   middleware = logStdout . static $(embedDir "static")
