@@ -42,8 +42,7 @@ import           System.Directory                         ( createDirectoryIfMis
 import           System.Environment                       ( getArgs )
 import           System.IO                                ( stdout )
 import           Data.Text.Lazy.Encoding                  ( encodeUtf8 )
-import           Web.Twain                                ( ResponderM
-                                                          , get
+import           Web.Twain                                ( get
                                                           , html
                                                           , notFound
                                                           , redirect302
@@ -110,22 +109,9 @@ webserver
   -> MVar () -- ^ Update signal
   -> IO ()
 webserver Config{_cPort=webserverPort} viewRef upd =
-  run webserverPort $ foldr ($) (notFound missing)
-    [ middleware . get "/"  index
-    , middleware . get "/r" forceUpdate
+  run webserverPort $ foldr ($) (notFound (send $ html "not found..."))
+    [ middleware . get "/"  (liftIO (readIORef viewRef) >>= send . html . encodeUtf8 . render)
+    , middleware . get "/r" (liftIO (tryPutMVar upd ()) >> send (redirect302 "/"))
     ]
  where
-   index :: ResponderM a
-   index = do
-     theCurrentView <- liftIO (readIORef viewRef)
-     (send . html . encodeUtf8 . render) theCurrentView
-
-   forceUpdate :: ResponderM a
-   forceUpdate = do
-     _ <- liftIO $ tryPutMVar upd ()
-     send $ redirect302 "/"
-
-   missing :: ResponderM a
-   missing = send $ html "Not found..."
-
    middleware = logStdout . static $(embedDir "static")
