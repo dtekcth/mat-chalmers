@@ -87,11 +87,7 @@
             #
             # don't check version bounds
             # friendly = hlib.doJailbreak hprev.friendly;
-            #
           });
-
       };
     };
-
-
 }
