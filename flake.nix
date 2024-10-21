@@ -36,6 +36,15 @@
           packages = rec {
             default = mat;
             mat = pkgs.haskell.packages.${ghcVer}.mat;
+            docker = pkgs.dockerTools.buildLayeredImage {
+              name = "mat-chalmers";
+              tag = "latest";
+              contents = with pkgs; [ cacert glibcLocalesUtf8 ];
+              config = {
+                Cmd = "${mat}/bin/mat-chalmers";
+                Env = [ "LANG=C.UTF-8" ];
+              };
+            };
           };
 
           checks = {
