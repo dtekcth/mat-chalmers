@@ -10,7 +10,7 @@
 
   outputs = { self, nixpkgs, flake-utils }:
     let
-      ghcVer = "ghc964";
+      ghcVer = "ghc96";
       makeHaskellOverlay = overlay: final: prev: {
         haskell = prev.haskell // {
           packages = prev.haskell.packages // {
@@ -53,7 +53,6 @@
               withHoogle = true;
               buildInputs =
                 [
-                  pkgs.docker
                   pkgs.zlib
                 ] ++
                 (with haskellPackages; [
