@@ -18,3 +18,4 @@ cabal.sandbox.config
 dist-newstyle/
 result/
 logs/
+demo_files/
