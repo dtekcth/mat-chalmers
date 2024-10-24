@@ -36,8 +36,8 @@ cachix use pingu    # Probably more up to date as of 5/6-24
 
 ### Updating the view?
 Currently, the css framework used is [TailwindCSS](https://tailwindcss.com).
-To generate the css file, visit the website, wait until menus have loaded, and then save the html to `demo.html`.
-Then use [Tailwinds cli](https://tailwindcss.com/blog/standalone-cli) program to generate the new css by running `tailwindcss --content demo.html --output static/style.css --minify`.
+To generate the css file, visit the website, wait until menus have loaded, and then save the html to `Lunch at Chalmers.html`.
+Then use [Tailwinds cli](https://tailwindcss.com/blog/standalone-cli) program to generate the new css by running `tailwindcss --content Lunch\ at\ Chalmers.html --output static/style.css --minify`.
 
 Worth noting is that the css is embedded in the binary, and changes to it aren't well captured by cabal, so `cabal clean && cabal run` or `docker compose up --build` might be needed to see the updated styling.
 

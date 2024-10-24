@@ -27,12 +27,12 @@ renderView View {..} = doctypehtml_ $ do
       toHtml (formatTime defaultTimeLocale "%F" date)
     if null restaurants
       then div_ . box_ . h3_ $ ("No lunches " >> toHtml day)
-      else div_ [class_ "grid grid-cols-1 md:grid-cols-4"] . mconcat $ map renderRest restaurants
+      else div_ [class_ "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 justify-evenly"] . mconcat $ map renderRest restaurants
     sitefooter
 
 renderRest :: Restaurant -> Html ()
 renderRest Restaurant {..} = box_ $ do
-  h2_ [class_ "text-2xl text-orange-500"] (toHtml name >> " " >> a_ [href_ (T.toStrict url)] "☛")
+  h2_ [class_ "text-2xl text-orange-500"] (toHtml name >> " " >> a_ [href_ (T.toStrict url)] "☛")
   ul_ [class_ "food-menu"] $ case menu of
     Left NoLunch -> li_ "No lunch this day!"
     Left _       -> li_ "Something went wrong, " <> a_
