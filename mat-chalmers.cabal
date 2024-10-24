@@ -11,11 +11,6 @@ Tested-With: GHC ==9.6.6
 data-files:
            static/style.css
            static/icon.png
-           static/fonts/AnonymousPro-Bold.ttf
-           static/fonts/AnonymousPro-BoldItalic.ttf
-           static/fonts/AnonymousPro-Italic.ttf
-           static/fonts/AnonymousPro-Regular.ttf
-           static/fonts/OFL.txt
 
 library
   default-language: GHC2021
