@@ -55,6 +55,7 @@
                 (with pkgs; [
                   zlib
                   tailwindcss
+                  just
                 ]) ++
                 (with haskellPackages; [
                   haskell-language-server
