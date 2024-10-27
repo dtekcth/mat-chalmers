@@ -52,9 +52,11 @@
               packages = p: [ self.packages.${system}.mat ];
               withHoogle = true;
               buildInputs =
-                [
-                  pkgs.zlib
-                ] ++
+                (with pkgs; [
+                  zlib
+                  tailwindcss
+                  just
+                ]) ++
                 (with haskellPackages; [
                   haskell-language-server
                   cabal-install

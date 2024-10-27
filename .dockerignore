@@ -3,3 +3,4 @@ Dockerfile
 docker-compose.yml
 flake.nix
 flake.lock
+static/style.css
