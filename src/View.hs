@@ -20,7 +20,7 @@ render v = renderText (renderView v)
 renderView :: View -> Html ()
 renderView View {..} = doctypehtml_ $ do
   sitehead
-  body_ [class_ "bg-[#e9e7e7]"] $ div_ [class_ "px-4 py-4 mx-auto"] $ do
+  body_ [class_ "bg-[#e9e7e7] font-sans"] $ div_ [class_ "px-4 py-4 mx-auto"] $ do
     h1_ [class_ "text-4xl"] $ do
       toHtml day
       " / "
