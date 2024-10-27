@@ -38,7 +38,7 @@ renderRest Restaurant {..} = box_ $ do
     Left _       -> li_ "Something went wrong, " <> a_
       [href_ "https://github.com/dtekcth/mat-chalmers/issues/new", class_ "text-orange-500 visited:text-orange-800"]
       "please file an issue."
-    Right menus -> mconcat (map renderMenu menus)
+    Right menus -> foldMap renderMenu menus
 
 renderMenu :: Menu -> Html ()
 renderMenu (Menu lunch spec) = li_ [class_ "text-lg"]
