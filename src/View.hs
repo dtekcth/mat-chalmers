@@ -27,7 +27,7 @@ renderView View {..} = doctypehtml_ $ do
       toHtml (formatTime defaultTimeLocale "%F" date)
     if null restaurants
       then div_ . box_ . h3_ $ ("No lunches " >> toHtml day)
-      else div_ [class_ "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 justify-evenly"] $ foldMap renderRest restaurants
+      else div_ [class_ "grid grid-cols-1 lg:grid-cols-4 gap-5 justify-evenly"] $ foldMap renderRest restaurants
     sitefooter
 
 renderRest :: Restaurant -> Html ()
