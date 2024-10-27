@@ -43,9 +43,8 @@ renderRest Restaurant {..} = box_ $ do
 renderMenu :: Menu -> Html ()
 renderMenu (Menu lunch spec) = li_ [class_ "text-lg"]
   (do
-    h3_ [class_ "inline-block font-bold text-orange-500"](toHtml lunch)
-    span_ [class_ "invisible"] " "
-    toHtml spec
+    h3_ [class_ "inline font-bold text-orange-500 me-2"] (toHtml lunch)
+    span_ (toHtml spec)
   )
 
 box_ :: Html () -> Html ()
