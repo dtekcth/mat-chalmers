@@ -13,7 +13,6 @@ import           Control.Monad                            ( (>=>)
                                                           , zipWithM
                                                           , filterM
                                                           , ap )
-import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.IO.Class                   ( MonadIO (liftIO) )
 import           Data.Aeson                               ( (.:)
                                                           , withObject
@@ -156,7 +155,7 @@ parse day =
                         <$> last vs .: "text"
 
 fetchAndCreateLinsen
-  :: (MonadIO m, MonadThrow m)
+  :: (MonadIO m)
   => Day          -- ^ Day
   -> m Restaurant -- ^ Fetched Restaurant
 fetchAndCreateLinsen day =

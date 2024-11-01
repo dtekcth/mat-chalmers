@@ -12,7 +12,6 @@ import           Control.Concurrent.MVar                  ( MVar
                                                           , takeMVar
                                                           )
 import           Control.Monad                            ( filterM )
-import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.IO.Class                   ( MonadIO
                                                           , liftIO
                                                           )
@@ -71,7 +70,6 @@ refresh
      , MonadIO m
      , MonadLog (WithTimestamp (Doc ann)) m
      , MonadReader Config m
-     , MonadThrow m
      )
   => IORef View -> MVar () -> m ()
 refresh ref upd = do
@@ -107,7 +105,6 @@ update
   :: ( MonadIO m
      , MonadLog (WithTimestamp (Doc ann)) m
      , MonadReader Config m
-     , MonadThrow m
      )
   => m View
 update = do
