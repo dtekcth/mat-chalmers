@@ -8,7 +8,6 @@ module Model.Karen
 where
 
 import           Control.Monad                            ( (>=>), filterM )
-import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.IO.Class                   ( MonadIO (liftIO) )
 import           Data.Aeson                               ( object
                                                           , (.=)
@@ -131,7 +130,7 @@ parse lang =
 
 -- | Fetch a restaurant from Kåren's GraphQL API
 fetchAndCreateRestaurant
-  :: (MonadIO m, MonadThrow m)
+  :: (MonadIO m)
   => Day          -- ^ Day
   -> Text         -- ^ Title
   -> Text         -- ^ Tag

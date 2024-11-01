@@ -11,7 +11,6 @@ import           Control.Arrow                            ( (***)
                                                           , (>>>)
                                                           )
 import           Control.Monad                            ( (<=<) )
-import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.IO.Class                   ( MonadIO (liftIO) )
 import           Data.Attoparsec.ByteString.Lazy          ( maybeResult
                                                           , parse
@@ -123,7 +122,7 @@ getWijkanders d b = go b
               xs -> Right xs
 
 fetchAndCreateWijkanders
-  :: (MonadIO m, MonadThrow m)
+  :: (MonadIO m)
   => Day
   -> m Restaurant
 fetchAndCreateWijkanders day =
