@@ -5,18 +5,32 @@ module Main
   ) where
 
 import           Control.Monad                            ( forever )
-import           Effectful
-import           Effectful.Reader.Dynamic
-import           Effectful.Log                            ( runLog, defaultLogLevel )
-import           Effectful.Concurrent
-import           Effectful.Concurrent.Async
-import           Effectful.Concurrent.MVar
-import           Effectful.FileSystem
 import           Log.Backend.StandardOutput               ( withStdOutLogger )
 import           Data.FileEmbed                           ( embedDir )
 import           Data.IORef                               ( IORef
                                                           , readIORef
                                                           )
+import           Effectful                                ( IOE
+                                                          , (:>)
+                                                          , Eff
+                                                          , MonadIO(liftIO)
+                                                          , runEff )
+import           Effectful.Concurrent                     ( Concurrent
+                                                          , runConcurrent
+                                                          , threadDelay
+                                                          )
+import           Effectful.Concurrent.Async               ( mapConcurrently_ )
+import           Effectful.Concurrent.MVar                ( MVar
+                                                          , newEmptyMVar
+                                                          , tryPutMVar
+                                                          )
+import           Effectful.FileSystem                     ( runFileSystem
+                                                          , createDirectoryIfMissing
+                                                          )
+import           Effectful.Log                            ( runLog
+                                                          , defaultLogLevel
+                                                          )
+import           Effectful.Reader.Dynamic                 ( runReader )
 import           Lens.Micro.Platform                      ( set
                                                           , view
                                                           )
