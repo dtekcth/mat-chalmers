@@ -8,7 +8,6 @@ module Model.Karen
 where
 
 import           Control.Monad                            ( (>=>), filterM )
-import           Effectful
 import           Data.Aeson                               ( object
                                                           , (.=)
                                                           , (.:)
@@ -27,6 +26,11 @@ import           Data.Text.Lazy                           ( Text
                                                           )
 import           Data.Thyme.Calendar                      ( Day
                                                           , showGregorian
+                                                          )
+import           Effectful                                ( IOE
+                                                          , (:>)
+                                                          , Eff
+                                                          , MonadIO(liftIO)
                                                           )
 import           Network.Wreq                             ( asValue
                                                           , post

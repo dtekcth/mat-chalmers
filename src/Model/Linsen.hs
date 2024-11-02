@@ -13,7 +13,6 @@ import           Control.Monad                            ( (>=>)
                                                           , zipWithM
                                                           , filterM
                                                           , ap )
-import           Effectful
 import           Data.Aeson                               ( (.:)
                                                           , withObject
                                                           , Value )
@@ -32,6 +31,11 @@ import           Data.Thyme                               ( parseTime
 import           Data.Thyme.Calendar                      ( Day )
 import           Data.Thyme.Calendar.WeekDate             ( weekDate
                                                           , _wdDay )
+import           Effectful                                ( IOE
+                                                          , (:>)
+                                                          , Eff
+                                                          , MonadIO(liftIO)
+                                                          )
 import           Lens.Micro.Platform                      ( (^.) )
 import           Network.Wreq                             ( asValue
                                                           , get

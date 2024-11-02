@@ -18,10 +18,6 @@ import           Data.IORef                               ( IORef
                                                           )
 import           Data.Foldable                            ( for_ )
 import           Data.Functor                             ( (<&>) )
-import           Effectful
-import           Effectful.FileSystem
-import           Effectful.Log
-import           Effectful.Reader.Dynamic
 import           Prettyprinter                            ( prettyList
                                                           , (<+>)
                                                           )
@@ -38,6 +34,21 @@ import           Data.Thyme                               ( _localDay
                                                           , _utctDay
                                                           )
 import           Data.Thyme.Time                          ( toThyme )
+import           Effectful                                ( IOE
+                                                          , (:>)
+                                                          , Eff
+                                                          , MonadIO(..)
+                                                          )
+import           Effectful.FileSystem                     ( FileSystem
+                                                          , getAccessTime
+                                                          , listDirectory
+                                                          , removeFile )
+import           Effectful.Log                            ( Log
+                                                          , logInfo_
+                                                          )
+import           Effectful.Reader.Dynamic                 ( Reader
+                                                          , asks
+                                                          )
 import           Lens.Micro.Platform                      ( (^.)
                                                           , (&)
                                                           , (%~)

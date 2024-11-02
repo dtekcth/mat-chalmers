@@ -11,7 +11,6 @@ import           Control.Arrow                            ( (***)
                                                           , (>>>)
                                                           )
 import           Control.Monad                            ( (<=<) )
-import           Effectful
 import           Data.Attoparsec.ByteString.Lazy          ( maybeResult
                                                           , parse
                                                           , skip
@@ -39,6 +38,11 @@ import           Data.Thyme                               ( Day
                                                           , ymdDay
                                                           )
 import qualified Data.Word8                    as W8
+import           Effectful                                ( IOE
+                                                          , (:>)
+                                                          , Eff
+                                                          , MonadIO(liftIO)
+                                                          )
 import           Lens.Micro.Platform                      ( view )
 import           Network.Wreq                             ( get
                                                           , responseBody )
