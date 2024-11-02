@@ -4,20 +4,16 @@ module Main
   ( main
   ) where
 
-import           Control.Concurrent                       ( MVar
-                                                          , newEmptyMVar
-                                                          , threadDelay
-                                                          , tryPutMVar
-                                                          )
-import qualified Control.Concurrent.Async      as Async
 import           Control.Monad                            ( forever )
-import           Effectful                                ( runEff )
-import           Effectful.Reader.Dynamic                 ( runReader )
+import           Effectful
+import           Effectful.Reader.Dynamic
 import           Effectful.Log                            ( runLog, defaultLogLevel )
+import           Effectful.Concurrent
+import           Effectful.Concurrent.Async
+import           Effectful.Concurrent.MVar
+import           Effectful.FileSystem
 import           Log.Backend.StandardOutput               ( withStdOutLogger )
-import           Control.Monad.Trans                      ( liftIO )
 import           Data.FileEmbed                           ( embedDir )
-import           Data.Foldable                            ( traverse_ )
 import           Data.IORef                               ( IORef
                                                           , readIORef
                                                           )
@@ -33,7 +29,6 @@ import           System.Console.GetOpt                    ( ArgDescr(..)
                                                           , getOpt
                                                           , usageInfo
                                                           )
-import           System.Directory                         ( createDirectoryIfMissing )
 import           System.Environment                       ( getArgs )
 import           Data.Text.Lazy.Encoding                  ( encodeUtf8 )
 import           Web.Twain                                ( get
@@ -46,7 +41,6 @@ import           Web.Twain                                ( get
 import           Config
 import           Model
 import           View                                     ( render )
-import Effectful.FileSystem (runFileSystem)
 
 opts :: [OptDescr (Config -> Config)]
 opts =
@@ -68,7 +62,7 @@ main = (recreateConfig . getOpt Permute opts <$> getArgs) >>= \case
   (_                       , _    , _ : _) -> usage
   (_                       , _ : _, _    ) -> usage
   (Config { _cHelp = True }, _    , _    ) -> usage
-  (config                  , _    , _    ) -> do
+  (config                  , _    , _    ) -> runEff . runFileSystem . runConcurrent $ do
     upd     <- newEmptyMVar -- putMVar when to update
     viewRef <- createViewReference
     createDirectoryIfMissing True (_cLogPath config)
@@ -77,8 +71,7 @@ main = (recreateConfig . getOpt Permute opts <$> getArgs) >>= \case
     -- 1. Timer that sends a signal to the updater when it's time to update
     -- 2. Webserver that serves the menus to the user
     -- 3. Updater that fetches new data from the restaurants
-    Async.runConcurrently $ traverse_
-      Async.Concurrently
+    mapConcurrently_ id
       [ timer upd config
       , webserver config viewRef upd
       , updater upd viewRef config
@@ -89,22 +82,23 @@ main = (recreateConfig . getOpt Permute opts <$> getArgs) >>= \case
 
   updater upd viewRef cfg =
     forever .
-    runEff .
     runReader cfg .
-    runFileSystem .
     withStdOutLogger $ \logger ->
                          runLog "main" logger defaultLogLevel
                          (refresh viewRef upd)
 
 webserver
-  :: Config
+  :: ( IOE :> es
+     , Concurrent :> es
+     )
+  => Config
   -> IORef View -- ^ View model
   -> MVar () -- ^ Update signal
-  -> IO ()
+  -> Eff es ()
 webserver Config{_cPort=webserverPort} viewRef upd =
-  run webserverPort $ foldr
+  liftIO . run webserverPort $ foldr
     (logStdout . static $(embedDir "static") <$>)
     (notFound (send $ html "not found..."))
     [ get "/"  (liftIO (readIORef viewRef) >>= send . html . encodeUtf8 . render)
-    , get "/r" (liftIO (tryPutMVar upd ()) >> send (redirect302 "/"))
+    , get "/r" (liftIO (runEff . runConcurrent $ tryPutMVar upd ()) >> send (redirect302 "/"))
     ]
