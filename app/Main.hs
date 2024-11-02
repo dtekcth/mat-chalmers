@@ -11,20 +11,15 @@ import           Control.Concurrent                       ( MVar
                                                           )
 import qualified Control.Concurrent.Async      as Async
 import           Control.Monad                            ( forever )
-import           Control.Monad.Log                        ( defaultBatchingOptions
-                                                          , renderWithTimestamp
-                                                          , runLoggingT
-                                                          , withFDHandler
-                                                          )
-import           Control.Monad.Reader                     ( runReaderT )
+import           Effectful                                ( runEff )
+import           Effectful.Reader.Dynamic                 ( runReader )
+import           Effectful.Log                            ( runLog, defaultLogLevel )
+import           Log.Backend.StandardOutput               ( withStdOutLogger )
 import           Control.Monad.Trans                      ( liftIO )
 import           Data.FileEmbed                           ( embedDir )
 import           Data.Foldable                            ( traverse_ )
 import           Data.IORef                               ( IORef
                                                           , readIORef
-                                                          )
-import           Data.Time.Format                         ( defaultTimeLocale
-                                                          , formatTime
                                                           )
 import           Lens.Micro.Platform                      ( set
                                                           , view
@@ -40,7 +35,6 @@ import           System.Console.GetOpt                    ( ArgDescr(..)
                                                           )
 import           System.Directory                         ( createDirectoryIfMissing )
 import           System.Environment                       ( getArgs )
-import           System.IO                                ( stdout )
 import           Data.Text.Lazy.Encoding                  ( encodeUtf8 )
 import           Web.Twain                                ( get
                                                           , html
@@ -52,6 +46,7 @@ import           Web.Twain                                ( get
 import           Config
 import           Model
 import           View                                     ( render )
+import Effectful.FileSystem (runFileSystem)
 
 opts :: [OptDescr (Config -> Config)]
 opts =
@@ -93,15 +88,13 @@ main = (recreateConfig . getOpt Permute opts <$> getArgs) >>= \case
     forever $ tryPutMVar upd () >> threadDelay (view cInterval cfg)
 
   updater upd viewRef cfg =
-    forever
-      $ withFDHandler defaultBatchingOptions stdout 1.0 80
-      $ \logCallback -> runLoggingT
-          (runReaderT (refresh viewRef upd) cfg)
-          ( logCallback
-          . renderWithTimestamp
-            (formatTime defaultTimeLocale "T%H:%M:%S")
-            id
-          )
+    forever .
+    runEff .
+    runReader cfg .
+    runFileSystem .
+    withStdOutLogger $ \logger ->
+                         runLog "main" logger defaultLogLevel
+                         (refresh viewRef upd)
 
 webserver
   :: Config

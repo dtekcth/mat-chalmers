@@ -8,7 +8,7 @@ module Model.Karen
 where
 
 import           Control.Monad                            ( (>=>), filterM )
-import           Control.Monad.IO.Class                   ( MonadIO (liftIO) )
+import           Effectful
 import           Data.Aeson                               ( object
                                                           , (.=)
                                                           , (.:)
@@ -72,13 +72,14 @@ type Language = String
 
 -- | Fetch a menu from Kårens GraphQL API.
 fetch ::
-     String   -- ^ RestaurantUUID
+  (IOE :> es)
+  => String   -- ^ RestaurantUUID
   -> Day      -- ^ Day
-  -> IO Value  -- ^ A JSON response or horrible crash
+  -> Eff es Value  -- ^ A JSON response or horrible crash
 fetch restaurantUUID day =
-  post
+  liftIO (post
     "https://plateimpact-heimdall.azurewebsites.net/graphql"
-    requestData >>= asValue >>= (^.^ responseBody)
+    requestData) >>= asValue >>= (^.^ responseBody)
  where
   requestData = object
     [ "query" .= graphQLQuery
@@ -130,12 +131,12 @@ parse lang =
 
 -- | Fetch a restaurant from Kåren's GraphQL API
 fetchAndCreateRestaurant
-  :: (MonadIO m)
+  :: (IOE :> es)
   => Day          -- ^ Day
   -> Text         -- ^ Title
   -> Text         -- ^ Tag
   -> Text         -- ^ RestaurantUUID
-  -> m Restaurant -- ^ Fetched Restaurant
+  -> Eff es Restaurant -- ^ Fetched Restaurant
 fetchAndCreateRestaurant day title tag uuid =
   Restaurant
       title
@@ -144,4 +145,4 @@ fetchAndCreateRestaurant day title tag uuid =
       <> "/"
       <> uuid
       )
-    <$> fmap (parse "Swedish") (liftIO (fetch (unpack uuid) day))
+    <$> fmap (parse "Swedish") (fetch (unpack uuid) day)

@@ -13,7 +13,7 @@ import           Control.Monad                            ( (>=>)
                                                           , zipWithM
                                                           , filterM
                                                           , ap )
-import           Control.Monad.IO.Class                   ( MonadIO (liftIO) )
+import           Effectful
 import           Data.Aeson                               ( (.:)
                                                           , (.:?)
                                                           , (.!=)
@@ -84,9 +84,9 @@ pattern MeatDish = 2
 pattern FishDish = 6
 pattern VegDish = 10
 
-fetch :: IO Value  -- ^ A JSON response or horrible crash
+fetch :: (IOE :> es) => Eff es Value  -- ^ A JSON response or horrible crash
 fetch =
-  get "https://cafe-linsen.se/api/menu" >>= asValue >>= (^.^ responseBody)
+  liftIO (get "https://cafe-linsen.se/api/menu") >>= asValue >>= (^.^ responseBody)
 
 parse
   :: Day                  -- ^ Day to parse
@@ -158,11 +158,11 @@ parse day =
                         <$> mapM (.: "text") vs
 
 fetchAndCreateLinsen
-  :: (MonadIO m)
+  :: (IOE :> es)
   => Day          -- ^ Day
-  -> m Restaurant -- ^ Fetched Restaurant
+  -> Eff es Restaurant -- ^ Fetched Restaurant
 fetchAndCreateLinsen day =
   Restaurant
       "Café Linsen"
       "https://cafe-linsen.se/#menu"
-    <$> fmap (parse day) (liftIO fetch)
+    <$> fmap (parse day) fetch
