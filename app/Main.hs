@@ -30,7 +30,7 @@ import           Effectful.FileSystem                     ( runFileSystem
 import           Effectful.Log                            ( runLog
                                                           , defaultLogLevel
                                                           )
-import           Effectful.Reader.Dynamic                 ( runReader )
+import           Effectful.Reader.Static                  ( runReader )
 import           Lens.Micro.Platform                      ( set
                                                           , view
                                                           )
