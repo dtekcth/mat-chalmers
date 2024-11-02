@@ -11,7 +11,7 @@ import           Control.Arrow                            ( (***)
                                                           , (>>>)
                                                           )
 import           Control.Monad                            ( (<=<) )
-import           Control.Monad.IO.Class                   ( MonadIO (liftIO) )
+import           Effectful
 import           Data.Attoparsec.ByteString.Lazy          ( maybeResult
                                                           , parse
                                                           , skip
@@ -122,9 +122,9 @@ getWijkanders d b = go b
               xs -> Right xs
 
 fetchAndCreateWijkanders
-  :: (MonadIO m)
+  :: (IOE :> es)
   => Day
-  -> m Restaurant
+  -> Eff es Restaurant
 fetchAndCreateWijkanders day =
   liftIO (get wijkandersAPIURL) >>= (^.^ responseBody) <&>
     Restaurant "Wijkanders" (pack wijkandersAPIURL) . getWijkanders day
