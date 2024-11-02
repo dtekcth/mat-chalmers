@@ -46,7 +46,7 @@ import           Effectful.FileSystem                     ( FileSystem
 import           Effectful.Log                            ( Log
                                                           , logInfo_
                                                           )
-import           Effectful.Reader.Dynamic                 ( Reader
+import           Effectful.Reader.Static                  ( Reader
                                                           , asks
                                                           )
 import           Lens.Micro.Platform                      ( (^.)
