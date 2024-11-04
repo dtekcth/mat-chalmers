@@ -38,13 +38,12 @@ import           Data.Thyme                               ( Day
                                                           , ymdDay
                                                           )
 import qualified Data.Word8                    as W8
-import           Effectful                                ( IOE
-                                                          , (:>)
+import           Effectful                                ( (:>)
                                                           , Eff
-                                                          , MonadIO(liftIO)
                                                           )
 import           Lens.Micro.Platform                      ( view )
-import           Network.Wreq                             ( get
+import           Effectful.Wreq                           ( Wreq
+                                                          , get
                                                           , responseBody )
 import           Safe                                     ( atMay )
 import           Text.HTML.TagSoup                        ( (~==)
@@ -126,9 +125,9 @@ getWijkanders d b = go b
               xs -> Right xs
 
 fetchAndCreateWijkanders
-  :: (IOE :> es)
+  :: (Wreq :> es)
   => Day
   -> Eff es Restaurant
 fetchAndCreateWijkanders day =
-  liftIO (get wijkandersAPIURL) >>= (^.^ responseBody) <&>
+  get wijkandersAPIURL >>= (^.^ responseBody) <&>
     Restaurant "Wijkanders" (pack wijkandersAPIURL) . getWijkanders day

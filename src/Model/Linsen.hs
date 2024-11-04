@@ -31,13 +31,12 @@ import           Data.Thyme                               ( parseTime
 import           Data.Thyme.Calendar                      ( Day )
 import           Data.Thyme.Calendar.WeekDate             ( weekDate
                                                           , _wdDay )
-import           Effectful                                ( IOE
-                                                          , (:>)
+import           Effectful                                ( (:>)
                                                           , Eff
-                                                          , MonadIO(liftIO)
                                                           )
 import           Lens.Micro.Platform                      ( (^.) )
-import           Network.Wreq                             ( asValue
+import           Effectful.Wreq                           ( Wreq
+                                                          , asValue
                                                           , get
                                                           , responseBody )
 import           Model.Types                              ( NoMenu(..)
@@ -85,9 +84,9 @@ pattern MeatDish = 2
 pattern FishDish = 6
 pattern VegDish = 10
 
-fetch :: (IOE :> es) => Eff es Value  -- ^ A JSON response or horrible crash
+fetch :: (Wreq :> es) => Eff es Value  -- ^ A JSON response or horrible crash
 fetch =
-  liftIO (get "https://cafe-linsen.se/api/menu") >>= asValue >>= (^.^ responseBody)
+  get "https://cafe-linsen.se/api/menu" >>= asValue >>= (^.^ responseBody)
 
 parse
   :: Day                  -- ^ Day to parse
@@ -159,7 +158,7 @@ parse day =
                         <$> last vs .: "text"
 
 fetchAndCreateLinsen
-  :: (IOE :> es)
+  :: (Wreq :> es)
   => Day          -- ^ Day
   -> Eff es Restaurant -- ^ Fetched Restaurant
 fetchAndCreateLinsen day =

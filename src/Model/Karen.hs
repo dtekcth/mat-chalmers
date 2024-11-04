@@ -27,12 +27,11 @@ import           Data.Text.Lazy                           ( Text
 import           Data.Thyme.Calendar                      ( Day
                                                           , showGregorian
                                                           )
-import           Effectful                                ( IOE
-                                                          , (:>)
+import           Effectful                                ( (:>)
                                                           , Eff
-                                                          , MonadIO(liftIO)
                                                           )
-import           Network.Wreq                             ( asValue
+import           Effectful.Wreq                           ( Wreq
+                                                          , asValue
                                                           , post
                                                           , responseBody )
 import           Text.Heredoc                             ( str )
@@ -76,14 +75,14 @@ type Language = String
 
 -- | Fetch a menu from Kårens GraphQL API.
 fetch ::
-  (IOE :> es)
+  (Wreq :> es)
   => String   -- ^ RestaurantUUID
   -> Day      -- ^ Day
   -> Eff es Value  -- ^ A JSON response or horrible crash
 fetch restaurantUUID day =
-  liftIO (post
+  post
     "https://plateimpact-heimdall.azurewebsites.net/graphql"
-    requestData) >>= asValue >>= (^.^ responseBody)
+    requestData >>= asValue >>= (^.^ responseBody)
  where
   requestData = object
     [ "query" .= graphQLQuery
@@ -135,7 +134,7 @@ parse lang =
 
 -- | Fetch a restaurant from Kåren's GraphQL API
 fetchAndCreateRestaurant
-  :: (IOE :> es)
+  :: (Wreq :> es)
   => Day          -- ^ Day
   -> Text         -- ^ Title
   -> Text         -- ^ Tag
