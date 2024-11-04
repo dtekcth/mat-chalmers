@@ -31,6 +31,7 @@ import           Effectful.Log                            ( runLog
                                                           , defaultLogLevel
                                                           )
 import           Effectful.Reader.Static                  ( runReader )
+import           Effectful.Wreq                           ( runWreq )
 import           Lens.Micro.Platform                      ( set
                                                           , view
                                                           )
@@ -96,6 +97,7 @@ main = (recreateConfig . getOpt Permute opts <$> getArgs) >>= \case
 
   updater upd viewRef cfg =
     forever .
+    runWreq .
     runReader cfg .
     withStdOutLogger $ \logger ->
                          runLog "main" logger defaultLogLevel

@@ -49,6 +49,7 @@ import           Effectful.Log                            ( Log
 import           Effectful.Reader.Static                  ( Reader
                                                           , asks
                                                           )
+import           Effectful.Wreq                           ( Wreq )
 import           Lens.Micro.Platform                      ( (^.)
                                                           , (&)
                                                           , (%~)
@@ -68,6 +69,7 @@ import           Model.Linsen
 -- new data from the data sources.
 refresh
   :: ( IOE :> es
+     , Wreq :> es
      , Reader Config :> es
      , Log :> es
      , FileSystem :> es
@@ -104,6 +106,7 @@ removeOldLogs = do
 
 update
   :: ( IOE :> es
+     , Wreq :> es
      , Reader Config :> es
      , Log :> es
      , FileSystem :> es
