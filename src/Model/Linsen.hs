@@ -123,7 +123,8 @@ parse day =
                           (v:_) -> pure v)
                   >=> (.: "text")
                   >=> \s ->
-                    let sameDay = pure day == parseTime swedishTimeLocale "%A %d-%m-%Y" s
+                    let sameDay = pure day == parseTime swedishTimeLocale "%A %d-%m-%Y" s ||
+                                  pure day == parseTime swedishTimeLocale "%d-%m-%Y" s
                      in if | sameDay && length v' >= 9 -> pure v'
                            | sameDay                   -> pure mempty
                            | otherwise                 -> fail "Unable to parse day"))
@@ -152,8 +153,8 @@ parse day =
             $   (.: "children")
             >=> \case
                   [] -> pure mempty
-                  vs -> strip . replace "/ " ", "
-                        <$> last vs .: "text"
+                  vs -> strip . replace "/ " ", " . mconcat
+                        <$> mapM (.: "text") vs
 
 fetchAndCreateLinsen
   :: (MonadIO m, MonadThrow m)
