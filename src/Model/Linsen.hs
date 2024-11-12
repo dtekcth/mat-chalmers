@@ -122,6 +122,7 @@ parse day =
                           []    -> fail "Failed to index into richtext"
                           (v:_) -> pure v)
                   >=> (.: "text")
+                  >=> filterM (pure . not . isSpace)
                   >=> \s ->
                     let sameDay = pure day == parseTime swedishTimeLocale "%A %d-%m-%Y" s ||
                                   pure day == parseTime swedishTimeLocale "%d-%m-%Y" s
