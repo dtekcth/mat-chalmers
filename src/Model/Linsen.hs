@@ -120,11 +120,11 @@ parse day =
                   (.: "children")
                   >=> (\case
                           []    -> fail "Failed to index into richtext"
-                          (v:_) -> pure v)
+                          v -> pure $ mconcat v)
                   >=> (.: "text")
                   >=> filterM (pure . not . isSpace)
                   >=> \s ->
-                    let sameDay = pure day == parseTime swedishTimeLocale "%A %d-%m-%Y" s ||
+                    let sameDay = pure day == parseTime swedishTimeLocale "%A%d-%m-%Y" s ||
                                   pure day == parseTime swedishTimeLocale "%d-%m-%Y" s
                      in if | sameDay && length v' >= 9 -> pure v'
                            | sameDay                   -> pure mempty
