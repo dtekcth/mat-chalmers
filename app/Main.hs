@@ -4,28 +4,34 @@ module Main
   ( main
   ) where
 
-import           Control.Concurrent                       ( MVar
-                                                          , newEmptyMVar
-                                                          , threadDelay
-                                                          , tryPutMVar
-                                                          )
-import qualified Control.Concurrent.Async      as Async
 import           Control.Monad                            ( forever )
-import           Control.Monad.Log                        ( defaultBatchingOptions
-                                                          , renderWithTimestamp
-                                                          , runLoggingT
-                                                          , withFDHandler
-                                                          )
-import           Control.Monad.Reader                     ( runReaderT )
-import           Control.Monad.Trans                      ( liftIO )
+import           Log.Backend.StandardOutput               ( withStdOutLogger )
 import           Data.FileEmbed                           ( embedDir )
-import           Data.Foldable                            ( traverse_ )
 import           Data.IORef                               ( IORef
                                                           , readIORef
                                                           )
-import           Data.Time.Format                         ( defaultTimeLocale
-                                                          , formatTime
+import           Effectful                                ( IOE
+                                                          , (:>)
+                                                          , Eff
+                                                          , MonadIO(liftIO)
+                                                          , runEff )
+import           Effectful.Concurrent                     ( Concurrent
+                                                          , runConcurrent
+                                                          , threadDelay
                                                           )
+import           Effectful.Concurrent.Async               ( mapConcurrently_ )
+import           Effectful.Concurrent.MVar                ( MVar
+                                                          , newEmptyMVar
+                                                          , tryPutMVar
+                                                          )
+import           Effectful.FileSystem                     ( runFileSystem
+                                                          , createDirectoryIfMissing
+                                                          )
+import           Effectful.Log                            ( runLog
+                                                          , defaultLogLevel
+                                                          )
+import           Effectful.Reader.Static                  ( runReader )
+import           Effectful.Wreq                           ( runWreq )
 import           Lens.Micro.Platform                      ( set
                                                           , view
                                                           )
@@ -38,9 +44,7 @@ import           System.Console.GetOpt                    ( ArgDescr(..)
                                                           , getOpt
                                                           , usageInfo
                                                           )
-import           System.Directory                         ( createDirectoryIfMissing )
 import           System.Environment                       ( getArgs )
-import           System.IO                                ( stdout )
 import           Data.Text.Lazy.Encoding                  ( encodeUtf8 )
 import           Web.Twain                                ( get
                                                           , html
@@ -73,7 +77,7 @@ main = (recreateConfig . getOpt Permute opts <$> getArgs) >>= \case
   (_                       , _    , _ : _) -> usage
   (_                       , _ : _, _    ) -> usage
   (Config { _cHelp = True }, _    , _    ) -> usage
-  (config                  , _    , _    ) -> do
+  (config                  , _    , _    ) -> runEff . runFileSystem . runConcurrent $ do
     upd     <- newEmptyMVar -- putMVar when to update
     viewRef <- createViewReference
     createDirectoryIfMissing True (_cLogPath config)
@@ -82,8 +86,7 @@ main = (recreateConfig . getOpt Permute opts <$> getArgs) >>= \case
     -- 1. Timer that sends a signal to the updater when it's time to update
     -- 2. Webserver that serves the menus to the user
     -- 3. Updater that fetches new data from the restaurants
-    Async.runConcurrently $ traverse_
-      Async.Concurrently
+    mapConcurrently_ id
       [ timer upd config
       , webserver config viewRef upd
       , updater upd viewRef config
@@ -93,25 +96,25 @@ main = (recreateConfig . getOpt Permute opts <$> getArgs) >>= \case
     forever $ tryPutMVar upd () >> threadDelay (view cInterval cfg)
 
   updater upd viewRef cfg =
-    forever
-      $ withFDHandler defaultBatchingOptions stdout 1.0 80
-      $ \logCallback -> runLoggingT
-          (runReaderT (refresh viewRef upd) cfg)
-          ( logCallback
-          . renderWithTimestamp
-            (formatTime defaultTimeLocale "T%H:%M:%S")
-            id
-          )
+    forever .
+    runWreq .
+    runReader cfg .
+    withStdOutLogger $ \logger ->
+                         runLog "main" logger defaultLogLevel
+                         (refresh viewRef upd)
 
 webserver
-  :: Config
+  :: ( IOE :> es
+     , Concurrent :> es
+     )
+  => Config
   -> IORef View -- ^ View model
   -> MVar () -- ^ Update signal
-  -> IO ()
+  -> Eff es ()
 webserver Config{_cPort=webserverPort} viewRef upd =
-  run webserverPort $ foldr
+  liftIO . run webserverPort $ foldr
     (logStdout . static $(embedDir "static") <$>)
     (notFound (send $ html "not found..."))
     [ get "/"  (liftIO (readIORef viewRef) >>= send . html . encodeUtf8 . render)
-    , get "/r" (liftIO (tryPutMVar upd ()) >> send (redirect302 "/"))
+    , get "/r" (liftIO (runEff . runConcurrent $ tryPutMVar upd ()) >> send (redirect302 "/"))
     ]
