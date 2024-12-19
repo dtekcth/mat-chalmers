@@ -16,6 +16,8 @@ import           Control.Monad                            ( (>=>)
 import           Control.Monad.Catch                      ( MonadThrow )
 import           Control.Monad.IO.Class                   ( MonadIO (liftIO) )
 import           Data.Aeson                               ( (.:)
+                                                          , (.:?)
+                                                          , (.!=)
                                                           , withObject
                                                           , Value )
 import           Data.Aeson.Types                         ( Parser
@@ -23,6 +25,7 @@ import           Data.Aeson.Types                         ( Parser
 import           Data.Bifunctor                           ( first )
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Char                                ( isSpace )
+import           Data.Functor                             ( (<&>) )
 import           Data.List.Extra                          ( (!?) )
 import           Data.Text.Lazy                           ( Text
                                                           , all
@@ -108,10 +111,8 @@ parse day =
           >=> filterM (withObject "filter whitespace"
                        $   (.: "children")
                        >=> \case
-                            []    -> fail "Empty list"
-                            (v:_) -> pure v
-                       >=> (.: "text")
-                       >=> (pure . not . all isSpace))
+                            []    -> pure False
+                            (v:_) -> (v .:? "text" .!= " ") <&> not . all isSpace)
           >=> (\v' ->
                  (case v' !? 1 of
                    Nothing -> fail "failed to index into food"
