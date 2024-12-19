@@ -12,31 +12,19 @@ import           Control.Concurrent.MVar                  ( MVar
                                                           , takeMVar
                                                           )
 import           Control.Monad                            ( filterM )
-import           Control.Monad.Catch                      ( MonadThrow )
-import           Control.Monad.IO.Class                   ( MonadIO
-                                                          , liftIO
-                                                          )
-import           Control.Monad.Log                        ( MonadLog
-                                                          , WithTimestamp
-                                                          , logMessage
-                                                          , timestamp
-                                                          )
-import           Control.Monad.Reader                     ( MonadReader
-                                                          , asks
-                                                          )
 import           Data.IORef                               ( IORef
                                                           , newIORef
                                                           , writeIORef
                                                           )
 import           Data.Foldable                            ( for_ )
 import           Data.Functor                             ( (<&>) )
-import           Prettyprinter                            ( Doc
-                                                          , prettyList
+import           Prettyprinter                            ( prettyList
                                                           , (<+>)
                                                           )
 import           Data.AffineSpace                         ( (.+^)
                                                           , (.-^)
                                                           )
+import           Data.Text                                ( pack )
 import           Data.Thyme                               ( _localDay
                                                           , _localTimeOfDay
                                                           , _todHour
@@ -46,14 +34,27 @@ import           Data.Thyme                               ( _localDay
                                                           , _utctDay
                                                           )
 import           Data.Thyme.Time                          ( toThyme )
+import           Effectful                                ( IOE
+                                                          , (:>)
+                                                          , Eff
+                                                          , MonadIO(..)
+                                                          )
+import           Effectful.FileSystem                     ( FileSystem
+                                                          , getAccessTime
+                                                          , listDirectory
+                                                          , removeFile )
+import           Effectful.Log                            ( Log
+                                                          , logInfo_
+                                                          )
+import           Effectful.Reader.Static                  ( Reader
+                                                          , asks
+                                                          )
+import           Effectful.Wreq                           ( Wreq )
 import           Lens.Micro.Platform                      ( (^.)
                                                           , (&)
                                                           , (%~)
                                                           , view
                                                           )
-import           System.Directory                         ( listDirectory
-                                                          , getAccessTime
-                                                          , removeFile )
 import           Text.Printf                              ( printf )
 
 import           Config
@@ -67,16 +68,16 @@ import           Model.Linsen
 -- where the View model has all the current data. Call update signal to get
 -- new data from the data sources.
 refresh
-  :: ( Monad m
-     , MonadIO m
-     , MonadLog (WithTimestamp (Doc ann)) m
-     , MonadReader Config m
-     , MonadThrow m
+  :: ( IOE :> es
+     , Wreq :> es
+     , Reader Config :> es
+     , Log :> es
+     , FileSystem :> es
      )
-  => IORef View -> MVar () -> m ()
+  => IORef View -> MVar () -> Eff es ()
 refresh ref upd = do
   liftIO $ takeMVar upd
-  logMessage =<< timestamp "Updating view..."
+  logInfo_ "Updating view..."
   v <- update
   liftIO $ writeIORef ref v
 
@@ -86,30 +87,31 @@ createViewReference = liftIO $ do
   newIORef (View [] "" (now ^. _zonedTimeToLocalTime))
 
 -- | Deletes logs in the logs folder that are older than `_cLogAge`
-removeOldLogs :: ( MonadIO m
-                 , MonadLog (WithTimestamp (Doc ann)) m
-                 , MonadReader Config m
-                 ) => m ()
+removeOldLogs :: ( IOE :> es
+                 , Reader Config :> es
+                 , FileSystem :> es
+                 , Log :> es
+                 ) => Eff es ()
 removeOldLogs = do
   now <- liftIO getCurrentTime
   offset <- asks _cLogAge
   path <- asks _cLogPath
-  liftIO (listDirectory path) >>=
-    mapM (\s -> liftIO (getAccessTime s) <&> (s,)) . (((path ++ "/") ++) <$>) >>=
+  listDirectory path >>=
+    mapM (\s -> getAccessTime s <&> (s,)) . (((path ++ "/") ++) <$>) >>=
     filterM (pure . (<= (now & _utctDay %~ (.-^ offset))) . toThyme . snd) <&>
     (fst <$>) >>= \case
       [] -> pure ()
-      files -> timestamp ("Removing the following files:" <+> prettyList files) >>=
-        logMessage >>
-        liftIO (mapM_ removeFile files)
+      files -> logInfo_ (pack . show $ "Removing the following files:" <+> prettyList files) >>
+        mapM_ removeFile files
 
 update
-  :: ( MonadIO m
-     , MonadLog (WithTimestamp (Doc ann)) m
-     , MonadReader Config m
-     , MonadThrow m
+  :: ( IOE :> es
+     , Wreq :> es
+     , Reader Config :> es
+     , Log :> es
+     , FileSystem :> es
      )
-  => m View
+  => Eff es View
 update = do
   nextDayHour <- asks _cNextDayHour
   dateNow     <- liftIO $ fmap (view _zonedTimeToLocalTime) getZonedTime

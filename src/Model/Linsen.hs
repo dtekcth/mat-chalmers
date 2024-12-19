@@ -13,8 +13,6 @@ import           Control.Monad                            ( (>=>)
                                                           , zipWithM
                                                           , filterM
                                                           , ap )
-import           Control.Monad.Catch                      ( MonadThrow )
-import           Control.Monad.IO.Class                   ( MonadIO (liftIO) )
 import           Data.Aeson                               ( (.:)
                                                           , (.:?)
                                                           , (.!=)
@@ -36,8 +34,12 @@ import           Data.Thyme                               ( parseTime
 import           Data.Thyme.Calendar                      ( Day )
 import           Data.Thyme.Calendar.WeekDate             ( weekDate
                                                           , _wdDay )
+import           Effectful                                ( (:>)
+                                                          , Eff
+                                                          )
 import           Lens.Micro.Platform                      ( (^.) )
-import           Network.Wreq                             ( asValue
+import           Effectful.Wreq                           ( Wreq
+                                                          , asValue
                                                           , get
                                                           , responseBody )
 import           Model.Types                              ( NoMenu(..)
@@ -85,7 +87,7 @@ pattern MeatDish = 2
 pattern FishDish = 6
 pattern VegDish = 10
 
-fetch :: IO Value  -- ^ A JSON response or horrible crash
+fetch :: (Wreq :> es) => Eff es Value  -- ^ A JSON response or horrible crash
 fetch =
   get "https://cafe-linsen.se/api/menu" >>= asValue >>= (^.^ responseBody)
 
@@ -159,11 +161,11 @@ parse day =
                         <$> mapM (.: "text") vs
 
 fetchAndCreateLinsen
-  :: (MonadIO m, MonadThrow m)
+  :: (Wreq :> es)
   => Day          -- ^ Day
-  -> m Restaurant -- ^ Fetched Restaurant
+  -> Eff es Restaurant -- ^ Fetched Restaurant
 fetchAndCreateLinsen day =
   Restaurant
       "Café Linsen"
       "https://cafe-linsen.se/#menu"
-    <$> fmap (parse day) (liftIO fetch)
+    <$> fmap (parse day) fetch

@@ -11,8 +11,6 @@ import           Control.Arrow                            ( (***)
                                                           , (>>>)
                                                           )
 import           Control.Monad                            ( (<=<) )
-import           Control.Monad.Catch                      ( MonadThrow )
-import           Control.Monad.IO.Class                   ( MonadIO (liftIO) )
 import           Data.Attoparsec.ByteString.Lazy          ( maybeResult
                                                           , parse
                                                           , skip
@@ -40,8 +38,12 @@ import           Data.Thyme                               ( Day
                                                           , ymdDay
                                                           )
 import qualified Data.Word8                    as W8
+import           Effectful                                ( (:>)
+                                                          , Eff
+                                                          )
 import           Lens.Micro.Platform                      ( view )
-import           Network.Wreq                             ( get
+import           Effectful.Wreq                           ( Wreq
+                                                          , get
                                                           , responseBody )
 import           Safe                                     ( atMay )
 import           Text.HTML.TagSoup                        ( (~==)
@@ -123,9 +125,9 @@ getWijkanders d b = go b
               xs -> Right xs
 
 fetchAndCreateWijkanders
-  :: (MonadIO m, MonadThrow m)
+  :: (Wreq :> es)
   => Day
-  -> m Restaurant
+  -> Eff es Restaurant
 fetchAndCreateWijkanders day =
-  liftIO (get wijkandersAPIURL) >>= (^.^ responseBody) <&>
+  get wijkandersAPIURL >>= (^.^ responseBody) <&>
     Restaurant "Wijkanders" (pack wijkandersAPIURL) . getWijkanders day
