@@ -105,7 +105,7 @@ main = hspec $ do
     "parses a blob of JSON without error, that has no lunch"
     (do
       s2 <- BL.readFile "test/linsen2.json" -- Test that has no lunch
-      testFun (Left (NMParseError "Error in $: Empty list" undefined))
+      testFun (Left NoLunch)
         (L.parse
               (fromGregorian 2024 06 06)
               (fromJust $ decode s2))
@@ -116,7 +116,7 @@ main = hspec $ do
     "parses a blob of JSON without error, that has the wrong week"
     (do
       s3 <- BL.readFile "test/linsen3.json"
-      testFun (Left (NMParseError "Error in $: Empty list" undefined))
+      testFun (Left (NMParseError "Error in $: Unable to parse day" undefined))
         (L.parse
               (fromGregorian 2024 06 26)
               (fromJust $ decode s3))
