@@ -5,6 +5,7 @@ module Model.Linsen
   (
     parse
   , fetchAndCreateLinsen
+  , swedishTimeLocale
   )
 where
 
@@ -17,6 +18,7 @@ import           Data.Aeson                               ( (.:)
                                                           , (.:?)
                                                           , (.!=)
                                                           , withObject
+                                                          , Object
                                                           , Value )
 import           Data.Aeson.Types                         ( Parser
                                                           , parseEither )
@@ -110,28 +112,29 @@ parse day =
           >=> (.: "richText")
           >=> (.: "root")
           >=> (.: "children")
-          >=> filterM (withObject "filter whitespace"
-                       $   (.: "children")
-                       >=> \case
+          >=> (\case
+                  [] -> fail "No items in day"
+                  [x] -> (x .: "children")
+                  xs -> pure xs)
+          >=> filterM ((.: "children") >=> \case
                             []    -> pure False
                             (v:_) -> (v .:? "text" .!= " ") <&> not . all isSpace)
           >=> (\v' ->
                  (case v' !? 1 of
                    Nothing -> fail "failed to index into food"
                    Just v -> pure v) >>=
-                 withObject "Parse day" (
                   (.: "children")
-                  >=> (\case
+                  >>= (\case
                           []    -> fail "Failed to index into richtext"
                           v -> pure $ mconcat v)
-                  >=> (.: "text")
-                  >=> filterM (pure . not . isSpace)
-                  >=> \s ->
+                  >>= (.: "text")
+                  >>= filterM (pure . not . isSpace)
+                  >>= \s ->
                     let sameDay = pure day == parseTime swedishTimeLocale "%A%d-%m-%Y" s ||
                                   pure day == parseTime swedishTimeLocale "%d-%m-%Y" s
                      in if | sameDay && length v' >= 9 -> pure v'
                            | sameDay                   -> pure mempty
-                           | otherwise                 -> fail "Unable to parse day"))
+                           | otherwise                 -> fail "Unable to parse day")
           >=> menuParser
         )
       )
@@ -141,7 +144,7 @@ parse day =
   failWithNoMenu action x =
     first (\msg -> NMParseError msg . BL8.pack . show $ x) (action x)
 
-  menuParser :: [Value] -> Parser [Menu]
+  menuParser :: [Object] -> Parser [Menu]
   menuParser = pure . (zip [0 :: Integer ..] >=> \case
                           (MeatDish, vs) -> [vs]
                           (FishDish, vs) -> [vs]
@@ -149,13 +152,11 @@ parse day =
                           _       -> [])
                <=< ap (zipWithM sumFood) tail
 
-  sumFood :: Value -> Value -> Parser Menu
+  sumFood :: Object -> Object -> Parser Menu
   sumFood a b = Menu <$> getFood a <*> getFood b
 
-  getFood :: Value -> Parser Text
-  getFood = withObject "Menu Object"
-            $   (.: "children")
-            >=> \case
+  getFood :: Object -> Parser Text
+  getFood = (.: "children") >=> \case
                   [] -> pure mempty
                   vs -> strip . replace "/ " ", " . mconcat
                         <$> mapM (.: "text") vs
