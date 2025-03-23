@@ -5,7 +5,6 @@ module Model.Linsen
   (
     parse
   , fetchAndCreateLinsen
-  , swedishTimeLocale
   )
 where
 
@@ -31,8 +30,7 @@ import           Data.Text.Lazy                           ( Text
                                                           , all
                                                           , replace
                                                           , strip )
-import           Data.Thyme                               ( parseTime
-                                                          , TimeLocale (..) )
+import           Data.Thyme                               ( parseTime )
 import           Data.Thyme.Calendar                      ( Day )
 import           Data.Thyme.Calendar.WeekDate             ( weekDate
                                                           , _wdDay )
@@ -49,40 +47,9 @@ import           Model.Types                              ( NoMenu(..)
                                                           , Restaurant ( Restaurant ) )
 import           Prelude                       hiding     ( all )
 import           Util                                     ( menusToEitherNoLunch
+                                                          , swedishTimeLocale
                                                           , (^.^) )
 
-swedishTimeLocale :: TimeLocale
-swedishTimeLocale = TimeLocale
-        { wDays =
-            [ ("Söndag",  "Sön")
-            , ("Måndag",  "Mån")
-            , ("Tisdag",  "Tis")
-            , ("Onsdag",  "Ons")
-            , ("Torsdag", "Tors")
-            , ("Fredag",  "Fre")
-            , ("Lördag",  "Lör")
-            ]
-        , months =
-            [ ("Januari",   "Jan")
-            , ("Februari",  "Feb")
-            , ("Mars",      "Mar")
-            , ("April",     "Apr")
-            , ("Maj",       "Maj")
-            , ("Juni",      "Jun")
-            , ("Juli",      "Jul")
-            , ("Augusti",   "Aug")
-            , ("September", "Sep")
-            , ("Oktober",   "Oct")
-            , ("November",  "Nov")
-            , ("December",  "Dec")
-            ]
-        , amPm = ("fm", "em")
-        , dateTimeFmt = "%a %f %e %H:%M:%S %Z %Y"
-        , dateFmt = "%d/%m/%y"
-        , timeFmt = "%H:%M:%S"
-        , time12Fmt = "%I:%M:%S %p"
-        , knownTimeZones = []
-        }
 
 pattern MeatDish, FishDish, VegDish :: Integer
 pattern MeatDish = 2
