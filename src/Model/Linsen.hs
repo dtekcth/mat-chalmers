@@ -90,18 +90,18 @@ parse day =
                  (case v' !? 1 of
                    Nothing -> fail "failed to index into food"
                    Just v -> pure v) >>=
-                  (.: "children")
-                  >>= (\case
+                  ((.: "children")
+                  >=> (\case
                           []    -> fail "Failed to index into richtext"
                           v -> pure $ mconcat v)
-                  >>= (.: "text")
-                  >>= filterM (pure . not . isSpace)
-                  >>= \s ->
+                  >=> (.: "text")
+                  >=> filterM (pure . not . isSpace)
+                  >=> \s ->
                     let sameDay = pure day == parseTime swedishTimeLocale "%A%d-%m-%Y" s ||
                                   pure day == parseTime swedishTimeLocale "%d-%m-%Y" s
                      in if | sameDay && length v' >= 9 -> pure v'
                            | sameDay                   -> pure mempty
-                           | otherwise                 -> fail "Unable to parse day")
+                           | otherwise                 -> fail "Unable to parse day"))
           >=> menuParser
         )
       )
