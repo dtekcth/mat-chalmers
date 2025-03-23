@@ -4,13 +4,11 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    wreq-effectful.url = "github:The1Penguin/wreq-effectful";
-    wreq-effectful.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   nixConfig.allow-import-from-derivation = true; # cabal2nix uses IFD
 
-  outputs = { self, nixpkgs, flake-utils, wreq-effectful }:
+  outputs = { self, nixpkgs, flake-utils }:
     let
       ghcVer = "ghc96";
       makeHaskellOverlay = overlay: final: prev: {
@@ -74,8 +72,11 @@
         default = makeHaskellOverlay (prev: hfinal: hprev:
           let hlib = prev.haskell.lib; in
           {
-            mat = hprev.callCabal2nix "mat" ./. { };
-            wreq-effectful = wreq-effectful.packages."x86_64-linux".wreq-effectful;
+            mat = hlib.overrideCabal (hprev.callCabal2nix "mat" ./. { }) (_: {
+              preBuild = ''
+                       ${prev.tailwindcss}/bin/tailwindcss --content src/View.hs --output static/style.css --minify
+              '';
+            });
 
             # here's how to do hacks to the package set
             # don't run the test suite
@@ -83,7 +84,7 @@
             #
             # don't check version bounds
             # friendly = hlib.doJailbreak hprev.friendly;
-          });
+        });
       };
     };
 }
