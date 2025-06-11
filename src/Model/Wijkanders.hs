@@ -55,8 +55,8 @@ import           Text.HTML.TagSoup                        ( (~==)
                                                           )
 import           Text.HTML.TagSoup.Match                  ( tagText )
 
-import           Model.Types                              ( Menu(..)
-                                                          , NoMenu(..)
+import           Model.Types                              ( Lunch(..)
+                                                          , NoLunch(..)
                                                           , Restaurant (Restaurant)
                                                           )
 import           Util                                     ( removeWhitespaceTags
@@ -79,7 +79,7 @@ hasDate = maybeResult . parse (flip (,) <$> parseDay <*> parseMonth)
 -- At the moment there is no way to catch parsing errors.
 -- We also bet all our money on red 17, and that the maintainers of
 -- Wijkander's homepage keep writing dd/mm for every day.
-getWijkanders :: Day -> ByteString -> Either NoMenu [Menu]
+getWijkanders :: Day -> ByteString -> Either NoLunch [Lunch]
 getWijkanders d b = go b
  where
   go = parseTags
@@ -103,7 +103,7 @@ getWijkanders d b = go b
       [] -> Left NoLunch -- No lunch in the case that we cannot parse the date
       a  -> parseWijkanderLunch a
 
-  parseWijkanderLunch :: [Tag ByteString] -> Either NoMenu [Menu]
+  parseWijkanderLunch :: [Tag ByteString] -> Either NoLunch [Lunch]
   parseWijkanderLunch =
         -- The heading is of no use to us.
         drop 1
@@ -118,7 +118,7 @@ getWijkanders d b = go b
                         1
                       )
                   )
-              >>> uncurry Menu
+              >>> uncurry Lunch
               )
         >>> \case
               [] -> Left (NMParseError "Wijkanders failed" b)

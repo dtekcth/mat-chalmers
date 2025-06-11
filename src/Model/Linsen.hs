@@ -42,11 +42,11 @@ import           Effectful.Wreq                           ( Wreq
                                                           , asValue
                                                           , get
                                                           , responseBody )
-import           Model.Types                              ( NoMenu(..)
-                                                          , Menu(..)
+import           Model.Types                              ( NoLunch(..)
+                                                          , Lunch(..)
                                                           , Restaurant ( Restaurant ) )
 import           Prelude                       hiding     ( all )
-import           Util                                     ( menusToEitherNoLunch
+import           Util                                     ( lunchToEitherNoLunch
                                                           , swedishTimeLocale
                                                           , (^.^) )
 
@@ -63,9 +63,9 @@ fetch =
 parse
   :: Day                  -- ^ Day to parse
   -> Value                -- ^ JSON result from `fetch`
-  -> Either NoMenu [Menu] -- ^ Either list of parsed `Menu`s or `NoMenu` error
+  -> Either NoLunch [Lunch] -- ^ Either list of parsed `Lunch`s or `NoLunch` error
 parse day =
-    failWithNoMenu
+    failWithNoLunch
       (parseEither
         (let index = 6 - day ^. weekDate . _wdDay in
         if index `notElem` [1..5] then
@@ -105,13 +105,13 @@ parse day =
           >=> menuParser
         )
       )
-    >=> menusToEitherNoLunch
+    >=> lunchToEitherNoLunch
  where
-  failWithNoMenu :: Show a => (a -> Either String b) -> a -> Either NoMenu b
-  failWithNoMenu action x =
+  failWithNoLunch :: Show a => (a -> Either String b) -> a -> Either NoLunch b
+  failWithNoLunch action x =
     first (\msg -> NMParseError msg . BL8.pack . show $ x) (action x)
 
-  menuParser :: [Object] -> Parser [Menu]
+  menuParser :: [Object] -> Parser [Lunch]
   menuParser = pure . (zip [0 :: Integer ..] >=> \case
                           (MeatDish, vs) -> [vs]
                           (FishDish, vs) -> [vs]
@@ -119,8 +119,8 @@ parse day =
                           _       -> [])
                <=< ap (zipWithM sumFood) tail
 
-  sumFood :: Object -> Object -> Parser Menu
-  sumFood a b = Menu <$> getFood a <*> getFood b
+  sumFood :: Object -> Object -> Parser Lunch
+  sumFood a b = Lunch <$> getFood a <*> getFood b
 
   getFood :: Object -> Parser Text
   getFood = (.: "children") >=> \case

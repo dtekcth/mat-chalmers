@@ -36,14 +36,14 @@ import           Effectful.Wreq                           ( Wreq
                                                           , responseBody )
 import           Text.Heredoc                             ( str )
 
-import           Model.Types                              ( NoMenu(..)
-                                                          , Menu(..)
-                                                          , mFood
+import           Model.Types                              ( NoLunch(..)
+                                                          , Lunch(..)
+                                                          , lFood
                                                           , Restaurant
                                                             ( Restaurant
                                                             )
                                                           )
-import           Util                                     ( menusToEitherNoLunch
+import           Util                                     ( lunchToEitherNoLunch
                                                           , (^.^) )
 
 
@@ -98,9 +98,9 @@ fetch restaurantUUID day =
 parse
   :: Language             -- ^ Language
   -> Value                -- ^ JSON result from `fetch`
-  -> Either NoMenu [Menu] -- ^ Either list of parsed `Menu`s or `NoMenu` error
+  -> Either NoLunch [Lunch] -- ^ Either list of parsed `Lunch`s or `NoLunch` error
 parse lang =
-    failWithNoMenu
+    failWithNoLunch
       (parseEither
         (   withObject "Parse meals"
         $   (.: "data")
@@ -108,16 +108,16 @@ parse lang =
         >=> mapM menuParser
         )
       )
-    >=> filterM (((/= "stängt") <$>) . (^.^ mFood))
-    >=> menusToEitherNoLunch
+    >=> filterM (((/= "stängt") <$>) . (^.^ lFood))
+    >=> lunchToEitherNoLunch
  where
-  failWithNoMenu :: Show a => (a -> Either String b) -> a -> Either NoMenu b
-  failWithNoMenu action x =
+  failWithNoLunch :: Show a => (a -> Either String b) -> a -> Either NoLunch b
+  failWithNoLunch action x =
     first (\msg -> NMParseError msg . BL8.pack . show $ x) (action x)
 
-  menuParser :: Value -> Parser Menu
-  menuParser = withObject "Menu Object" $ \obj ->
-    Menu
+  menuParser :: Value -> Parser Lunch
+  menuParser = withObject "Lunch Object" $ \obj ->
+    Lunch
       <$> (obj .: "dishType" >>= maybe (pure "Unknown menu") (.: "name"))
       <*> ((obj .: "displayNames") >>= withArray
             "An array of meal names"

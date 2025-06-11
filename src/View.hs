@@ -12,7 +12,7 @@ import           Data.Thyme                               ( defaultTimeLocale
 import           Lucid
 
 import           Model
-import           Model.Types                              ( NoMenu(..) )
+import           Model.Types                              ( NoLunch(..) )
 
 render :: View -> T.Text
 render v = renderText (renderView v)
@@ -40,8 +40,8 @@ renderRest Restaurant {..} = box_ $ do
       "please file an issue."
     Right menus -> foldMap renderMenu menus
 
-renderMenu :: Menu -> Html ()
-renderMenu (Menu lunch spec) = li_ [class_ "text-lg"]
+renderMenu :: Lunch -> Html ()
+renderMenu (Lunch lunch spec) = li_ [class_ "text-lg"]
   (do
     h3_ [class_ "inline font-bold text-orange-500 me-2"] (toHtml lunch)
     span_ (toHtml spec)

@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings, LambdaCase #-}
 module Model
   ( Restaurant(..)
-  , Menu(..)
+  , Lunch(..)
   , View(..)
   , createViewReference
   , refresh

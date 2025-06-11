@@ -12,17 +12,17 @@ import           Text.HTML.TagSoup                        ( Tag
                                                           )
 import           Text.HTML.TagSoup.Match                  ( tagText )
 
-import           Model.Types                              ( Menu
-                                                          , NoMenu(..)
+import           Model.Types                              ( Lunch
+                                                          , NoLunch(..)
                                                           )
 import           Lens.Micro.Platform
 
 takeNext :: [a] -> [a]
 takeNext = take 1 . drop 1
 
--- | Turn a list of Menu into an `Either NoMenu [Menu]`
-menusToEitherNoLunch :: [Menu] -> Either NoMenu [Menu]
-menusToEitherNoLunch = \case
+-- | Turn a list of Lunch into an `Either NoLunch [Lunch]`
+lunchToEitherNoLunch :: [Lunch] -> Either NoLunch [Lunch]
+lunchToEitherNoLunch = \case
   [] -> Left NoLunch
   xs -> Right xs
 
