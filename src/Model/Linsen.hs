@@ -18,7 +18,8 @@ import           Data.Aeson                               ( (.:)
                                                           , (.!=)
                                                           , withObject
                                                           , Object
-                                                          , Value )
+                                                          , Value
+                                                          )
 import           Data.Aeson.Types                         ( Parser
                                                           , parseEither )
 import           Data.Bifunctor                           ( first )
@@ -37,6 +38,7 @@ import           Data.Thyme.Calendar.WeekDate             ( weekDate
 import           Effectful                                ( (:>)
                                                           , Eff
                                                           )
+import           Effectful.Exception                      ( handleIO )
 import           Lens.Micro.Platform                      ( (^.) )
 import           Effectful.Wreq                           ( Wreq
                                                           , asValue
@@ -136,4 +138,6 @@ fetchAndCreateLinsen day =
   Restaurant
       "Café Linsen"
       "https://cafe-linsen.se/#menu"
-    <$> fmap (parse day) fetch
+    <$> handleIO
+          (const . pure $ Left NMAccessError)
+          (parse day <$> fetch)

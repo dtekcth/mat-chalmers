@@ -30,6 +30,7 @@ import           Data.Thyme.Calendar                      ( Day
 import           Effectful                                ( (:>)
                                                           , Eff
                                                           )
+import           Effectful.Exception                      ( handleIO )
 import           Effectful.Wreq                           ( Wreq
                                                           , asValue
                                                           , post
@@ -148,4 +149,6 @@ fetchAndCreateRestaurant day title tag uuid =
       <> "/"
       <> uuid
       )
-    <$> fmap (parse "Swedish") (fetch (unpack uuid) day)
+    <$> handleIO
+          (const . pure $ Left NMAccessError)
+          (parse "Swedish" <$> fetch (unpack uuid) day)

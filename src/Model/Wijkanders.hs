@@ -41,6 +41,7 @@ import qualified Data.Word8                    as W8
 import           Effectful                                ( (:>)
                                                           , Eff
                                                           )
+import           Effectful.Exception                      ( handleIO )
 import           Lens.Micro.Platform                      ( view )
 import           Effectful.Wreq                           ( Wreq
                                                           , get
@@ -129,5 +130,9 @@ fetchAndCreateWijkanders
   => Day
   -> Eff es Restaurant
 fetchAndCreateWijkanders day =
-  get wijkandersAPIURL >>= (^.^ responseBody) <&>
-    Restaurant "Wijkanders" (pack wijkandersAPIURL) . getWijkanders day
+  Restaurant
+      "Wijkanders"
+      (pack wijkandersAPIURL)
+  <$> handleIO
+        (const . pure $ Left NMAccessError)
+        (get wijkandersAPIURL >>= (^.^ responseBody) <&> getWijkanders day)
