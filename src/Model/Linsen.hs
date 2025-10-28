@@ -38,7 +38,7 @@ import           Data.Thyme.Calendar.WeekDate             ( weekDate
 import           Effectful                                ( (:>)
                                                           , Eff
                                                           )
-import           Effectful.Exception                      ( handleIO )
+import           Effectful.Exception                      ( handle )
 import           Lens.Micro.Platform                      ( (^.) )
 import           Effectful.Wreq                           ( Wreq
                                                           , asValue
@@ -49,8 +49,10 @@ import           Model.Types                              ( NoMenu(..)
                                                           , Restaurant ( Restaurant ) )
 import           Prelude                       hiding     ( all )
 import           Util                                     ( menusToEitherNoLunch
+                                                          , networkExceptionHandler
                                                           , swedishTimeLocale
-                                                          , (^.^) )
+                                                          , (^.^)
+                                                          )
 
 
 pattern MeatDish, FishDish, VegDish :: Integer
@@ -138,6 +140,5 @@ fetchAndCreateLinsen day =
   Restaurant
       "Café Linsen"
       "https://cafe-linsen.se/#menu"
-    <$> handleIO
-          (const . pure $ Left NMAccessError)
+    <$> handle networkExceptionHandler
           (parse day <$> fetch)

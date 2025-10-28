@@ -7,6 +7,8 @@ import qualified Data.ByteString.Lazy          as BL
 import qualified Data.Word8                    as W8
 
 import           Data.Thyme                               ( TimeLocale (..) )
+import           Effectful                                ( Eff )
+import           Effectful.Exception                      ( SomeException )
 import           Text.HTML.TagSoup                        ( Tag
                                                           , isTagText
                                                           )
@@ -68,3 +70,7 @@ swedishTimeLocale = TimeLocale
         , time12Fmt = "%I:%M:%S %p"
         , knownTimeZones = []
         }
+
+-- If something raises an exception while fetching and parsing data, default handler for saving said exception.
+networkExceptionHandler :: (SomeException -> Eff es (Either NoMenu [Menu]))
+networkExceptionHandler = pure . Left . NMExceptionRaised . show

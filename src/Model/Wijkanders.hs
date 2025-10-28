@@ -41,7 +41,7 @@ import qualified Data.Word8                    as W8
 import           Effectful                                ( (:>)
                                                           , Eff
                                                           )
-import           Effectful.Exception                      ( handleIO )
+import           Effectful.Exception                      ( handle )
 import           Lens.Micro.Platform                      ( view )
 import           Effectful.Wreq                           ( Wreq
                                                           , get
@@ -60,8 +60,10 @@ import           Model.Types                              ( Menu(..)
                                                           , NoMenu(..)
                                                           , Restaurant (Restaurant)
                                                           )
-import           Util                                     ( removeWhitespaceTags
-                                                          , (^.^) )
+import           Util                                     ( networkExceptionHandler
+                                                          , removeWhitespaceTags
+                                                          , (^.^)
+                                                          )
 
 wijkandersAPIURL :: String
 wijkandersAPIURL = "https://www.wijkanders.se/restaurangen"
@@ -133,6 +135,5 @@ fetchAndCreateWijkanders day =
   Restaurant
       "Wijkanders"
       (pack wijkandersAPIURL)
-  <$> handleIO
-        (const . pure $ Left NMAccessError)
+  <$> handle networkExceptionHandler
         (get wijkandersAPIURL >>= (^.^ responseBody) <&> getWijkanders day)

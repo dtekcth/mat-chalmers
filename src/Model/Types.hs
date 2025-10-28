@@ -26,7 +26,7 @@ data Restaurant = Restaurant
 data NoMenu
   = NoLunch
   | NMParseError String ByteString -- ^ The parse error. The string we tried to parse.
-  | NMAccessError
+  | NMExceptionRaised String -- ^ The exception raised.
   deriving (Eq, Show)
 
 -- | Menu of a restaurant.
