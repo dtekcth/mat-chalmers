@@ -4,7 +4,7 @@ on:
 jobs:
   check:
     name: Compile and test
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - uses: haskell-actions/setup@v2
