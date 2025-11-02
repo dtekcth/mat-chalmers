@@ -30,6 +30,7 @@ import           Data.Thyme.Calendar                      ( Day
 import           Effectful                                ( (:>)
                                                           , Eff
                                                           )
+import           Effectful.Exception                      ( handle )
 import           Effectful.Wreq                           ( Wreq
                                                           , asValue
                                                           , post
@@ -44,7 +45,9 @@ import           Model.Types                              ( NoMenu(..)
                                                             )
                                                           )
 import           Util                                     ( menusToEitherNoLunch
-                                                          , (^.^) )
+                                                          , networkExceptionHandler
+                                                          , (^.^)
+                                                          )
 
 
 -- brittany-disable-next-binding
@@ -148,4 +151,5 @@ fetchAndCreateRestaurant day title tag uuid =
       <> "/"
       <> uuid
       )
-    <$> fmap (parse "Swedish") (fetch (unpack uuid) day)
+    <$> handle networkExceptionHandler
+          (parse "Swedish" <$> fetch (unpack uuid) day)

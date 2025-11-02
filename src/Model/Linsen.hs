@@ -18,7 +18,8 @@ import           Data.Aeson                               ( (.:)
                                                           , (.!=)
                                                           , withObject
                                                           , Object
-                                                          , Value )
+                                                          , Value
+                                                          )
 import           Data.Aeson.Types                         ( Parser
                                                           , parseEither )
 import           Data.Bifunctor                           ( first )
@@ -37,6 +38,7 @@ import           Data.Thyme.Calendar.WeekDate             ( weekDate
 import           Effectful                                ( (:>)
                                                           , Eff
                                                           )
+import           Effectful.Exception                      ( handle )
 import           Lens.Micro.Platform                      ( (^.) )
 import           Effectful.Wreq                           ( Wreq
                                                           , asValue
@@ -47,8 +49,10 @@ import           Model.Types                              ( NoMenu(..)
                                                           , Restaurant ( Restaurant ) )
 import           Prelude                       hiding     ( all )
 import           Util                                     ( menusToEitherNoLunch
+                                                          , networkExceptionHandler
                                                           , swedishTimeLocale
-                                                          , (^.^) )
+                                                          , (^.^)
+                                                          )
 
 
 pattern MeatDish, FishDish, VegDish :: Integer
@@ -136,4 +140,5 @@ fetchAndCreateLinsen day =
   Restaurant
       "Café Linsen"
       "https://cafe-linsen.se/#menu"
-    <$> fmap (parse day) fetch
+    <$> handle networkExceptionHandler
+          (parse day <$> fetch)

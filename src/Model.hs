@@ -132,10 +132,14 @@ update = do
     , fetchAndCreateLinsen day'
     ]
 
-  for_ rest $ \r -> case menu r of
-    Left e@(NMParseError _ _) ->
-      asks _cLogPath >>= \path ->
-      liftIO getCurrentTime >>=
-      liftIO . flip writeFile (show e) . flip (printf "%s/%s%s.txt" path) (name r) . show
-    _ -> pure ()
+  for_ rest $ \r ->
+    let f e = asks _cLogPath >>= \path ->
+              liftIO getCurrentTime >>=
+              liftIO . flip writeFile (show e) . flip (printf "%s/%s%s.txt" path) (name r) . show
+    in case menu r of
+        Left e@(NMParseError _ _) -> f e
+        Left e@(NMExceptionRaised _) -> f e
+        Left NoLunch -> pure ()
+        Right _ -> pure ()
+
   return (View rest textday d)
