@@ -21,6 +21,7 @@ import           Data.Aeson.Types                         ( Parser
 import           Data.Bifunctor                           ( first )
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Foldable                            ( find )
+import           Data.List.NonEmpty                       ( NonEmpty )
 import           Data.Text.Lazy                           ( Text
                                                           , unpack
                                                           )
@@ -99,9 +100,9 @@ fetch restaurantUUID day =
 
 -- | Parses menus from Kåren's GraphQL API.
 parse
-  :: Language             -- ^ Language
-  -> Value                -- ^ JSON result from `fetch`
-  -> Either NoMenu [Menu] -- ^ Either list of parsed `Menu`s or `NoMenu` error
+  :: Language                      -- ^ Language
+  -> Value                         -- ^ JSON result from `fetch`
+  -> Either NoMenu (NonEmpty Menu) -- ^ Either non-empty list of parsed `Menu`s or `NoMenu` error
 parse lang =
     failWithNoMenu
       (parseEither

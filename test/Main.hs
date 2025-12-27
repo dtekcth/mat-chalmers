@@ -3,6 +3,8 @@ import qualified Data.ByteString.Lazy          as BL
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import qualified Data.Text.Lazy                as T
 import           Data.Aeson                               ( decode )
+import           Data.List.NonEmpty                       ( NonEmpty )
+import qualified Data.List.NonEmpty            as NE
 import           Data.Maybe                               ( fromJust )
 import           Data.Thyme.Time.Core                     ( fromGregorian )
 import           Model.Karen                              ( parse )
@@ -21,7 +23,7 @@ import           Test.HUnit                               ( (@?=)
                                                           , assertFailure
                                                           )
 
-testFun :: Either NoMenu [Menu] -> Either NoMenu [Menu] -> IO ()
+testFun :: Either NoMenu (NonEmpty Menu) -> Either NoMenu (NonEmpty Menu) -> IO ()
 testFun = \case
     Right e ->
       either
@@ -43,7 +45,7 @@ main = hspec $ do
   describe "The Karen Express" $ it
     "parses a blob of JSON without error"
     ( testFun
-        (Right [ Menu
+        ((Right . NE.fromList) [ Menu
             (T.pack "Street food")
             (T.pack "Chicken africana, banan, mango raja, ris")
         , Menu
@@ -63,7 +65,7 @@ main = hspec $ do
   describe "The Karen Express" $ it
     "parses a blob of JSON without error, but it has an dish without dishType"
     ( testFun
-        (Right [ Menu
+        ((Right . NE.fromList) [ Menu
             (T.pack "Unknown menu")
             (T.pack "Fläskfilé, svampsås & rostad klyftpotatis")
         , Menu
@@ -87,7 +89,7 @@ main = hspec $ do
     (do
       s1 <- BL.readFile "test/linsen1.json"
       testFun
-        (Right [ Menu
+        ((Right . NE.fromList) [ Menu
             (T.pack "Raggmunk.")
             (T.pack "Stekt Fläsk, Lingon, Persilja.")
         , Menu
@@ -126,7 +128,7 @@ main = hspec $ do
     "parses a blob of JSON without error, with a new layout"
     (do
       s4 <- BL.readFile "test/linsen4.json"
-      testFun (Right [ Menu
+      testFun ((Right . NE.fromList) [ Menu
             (T.pack "Lammfärsbiffar.")
             (T.pack "Ratatouille, Tzatziki, Rosmarin, Klyftpotatis.")
         , Menu
@@ -146,7 +148,7 @@ main = hspec $ do
     $ do
         s1 <- BL.readFile "test/190517 wijkanders.html"
         testFun
-          (Right [ Menu
+          ((Right . NE.fromList) [ Menu
             (T.pack "Fisk")
             (T.pack
               "Havets Wallenbergare, kallpressad rapsolja, ärtor, dill & potatismos"
@@ -160,7 +162,7 @@ main = hspec $ do
           (getWijkanders (fromGregorian 2019 05 17) s1)
         s2 <- BL.readFile "test/190913 wijkanders.html"
         testFun
-          (Right [ Menu
+          ((Right . NE.fromList) [ Menu
             (T.pack "Vegetarisk ")
             (T.pack
               "Pasta, svamp, grädde, citron, grana padano & rotfruktschips"

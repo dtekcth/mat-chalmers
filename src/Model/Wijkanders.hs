@@ -24,6 +24,8 @@ import qualified Data.ByteString.Char8         as B8
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Functor                             ( (<&>) )
+import           Data.List.NonEmpty                       ( NonEmpty )
+import qualified Data.List.NonEmpty            as NE
 import           Data.Maybe                               ( mapMaybe )
 import           Data.Text.Encoding.Error                 ( ignore )
 import           Data.Text.Encoding                       ( encodeUtf8 )
@@ -78,11 +80,11 @@ hasDate = maybeResult . parse (flip (,) <$> parseDay <*> parseMonth)
   parseMonth    = string (encodeUtf8 "/") *> integerParser
   integerParser = fmap (read . B8.unpack) (takeWhile1 W8.isDigit)
 
--- | getWijkanders will either give you a list of menus or NoLunch.
+-- | getWijkanders will either give you a non-empty list of menus or NoLunch.
 -- At the moment there is no way to catch parsing errors.
 -- We also bet all our money on red 17, and that the maintainers of
 -- Wijkander's homepage keep writing dd/mm for every day.
-getWijkanders :: Day -> ByteString -> Either NoMenu [Menu]
+getWijkanders :: Day -> ByteString -> Either NoMenu (NonEmpty Menu)
 getWijkanders d b = go b
  where
   go = parseTags
@@ -106,7 +108,7 @@ getWijkanders d b = go b
       [] -> Left NoLunch -- No lunch in the case that we cannot parse the date
       a  -> parseWijkanderLunch a
 
-  parseWijkanderLunch :: [Tag ByteString] -> Either NoMenu [Menu]
+  parseWijkanderLunch :: [Tag ByteString] -> Either NoMenu (NonEmpty Menu)
   parseWijkanderLunch =
         -- The heading is of no use to us.
         drop 1
@@ -125,7 +127,7 @@ getWijkanders d b = go b
               )
         >>> \case
               [] -> Left (NMParseError "Wijkanders failed" b)
-              xs -> Right xs
+              xs -> (Right . NE.fromList) xs
 
 fetchAndCreateWijkanders
   :: (Wreq :> es)
