@@ -5,6 +5,7 @@
 module Model.Types where
 
 import           Data.ByteString.Lazy                     ( ByteString )
+import           Data.List.NonEmpty                       ( NonEmpty )
 import           Data.Text.Lazy                           ( Text )
 import           Data.Thyme                               ( LocalTime )
 import           Lens.Micro.Platform
@@ -20,7 +21,7 @@ data View = View
 data Restaurant = Restaurant
   { name :: Text
   , url  :: Text
-  , menu :: Either NoMenu [Menu]
+  , menu :: Either NoMenu (NonEmpty Menu)
   } deriving (Show)
 
 data NoMenu
