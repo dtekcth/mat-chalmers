@@ -24,8 +24,7 @@ import qualified Data.ByteString.Char8         as B8
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Functor                             ( (<&>) )
-import           Data.List.NonEmpty                       ( NonEmpty )
-import qualified Data.List.NonEmpty            as NE
+import           Data.List.NonEmpty                       ( NonEmpty(..) )
 import           Data.Maybe                               ( mapMaybe )
 import           Data.Text.Encoding.Error                 ( ignore )
 import           Data.Text.Encoding                       ( encodeUtf8 )
@@ -127,7 +126,7 @@ getWijkanders d b = go b
               )
         >>> \case
               [] -> Left (NMParseError "Wijkanders failed" b)
-              xs -> (Right . NE.fromList) xs
+              (x:xs) -> Right (x :| xs)
 
 fetchAndCreateWijkanders
   :: (Wreq :> es)

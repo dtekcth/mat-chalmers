@@ -6,8 +6,7 @@ import           Data.ByteString.Lazy                     ( ByteString )
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.Word8                    as W8
 
-import           Data.List.NonEmpty                       ( NonEmpty )
-import qualified Data.List.NonEmpty            as NE
+import           Data.List.NonEmpty                       ( NonEmpty(..) )
 import           Data.Thyme                               ( TimeLocale (..) )
 import           Effectful                                ( Eff )
 import           Effectful.Exception                      ( SomeException )
@@ -27,7 +26,7 @@ takeNext = take 1 . drop 1
 menusToEitherNoLunch :: [Menu] -> Either NoMenu (NonEmpty Menu)
 menusToEitherNoLunch = \case
   [] -> Left NoLunch
-  xs -> (Right . NE.fromList) xs
+  (x:xs) -> Right (x :| xs)
 
 -- | Remove text tags that only contain whitespace.
 removeWhitespaceTags :: [Tag ByteString] -> [Tag ByteString]
