@@ -141,6 +141,25 @@ main = hspec $ do
               (fromJust $ decode s4))
     )
 
+  describe "Cafe Linsen" $ it
+    "parses a blob of JSON without error, with a new layout"
+    (do
+      s5 <- BL.readFile "test/linsen5.json"
+      testFun (Right [ Menu
+            (T.pack "Kalv Wallenbergare.")
+            (T.pack "Gröna Ärtor, Lingon, Skirat Smör, Persilja, Potatis Pure.")
+        , Menu
+            (T.pack "Stekt Dagens Fångst.")
+            (T.pack "Skarpsås, Fänkål, Syltat Lök, Citron, Dill, Kokt Potatis.")
+        , Menu
+            (T.pack  "Subzi Thal.")
+            (T.pack "Lins Curry, Aloo Gobhi, Raita, Koriander, Ris.")
+        ])
+        (L.parse
+              (fromGregorian 2026 01 30)
+              (fromJust $ decode s5))
+    )
+
   describe "The Wijkander's"
     $ it "Parses two blobs of HTML correctly on fridays"
     $ do
