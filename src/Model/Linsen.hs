@@ -8,7 +8,6 @@ module Model.Linsen
   )
 where
 
-import           Control.Applicative                      ( (<|>) )
 import           Control.Monad                            ( (>=>)
                                                           , (<=<)
                                                           , zipWithM
@@ -28,6 +27,7 @@ import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Char                                ( isSpace )
 import           Data.Functor                             ( (<&>) )
 import           Data.List.Extra                          ( (!?) )
+import           Data.Monoid                              ( Alt(..) )
 import           Data.Text.Lazy                           ( Text
                                                           , all
                                                           , replace
@@ -102,12 +102,14 @@ parse day =
                   >=> (.: "text")
                   >=> filterM (pure . not . isSpace)
                   >=> \s ->
-                    let parsedDate = parseTime swedishTimeLocale "%A%d-%m-%Y" s <|>
-                                     parseTime swedishTimeLocale "%d-%m-%Y"   s <|>
-                                     parseTime swedishTimeLocale "%A%d/%m-%Y" s <|>
-                                     parseTime swedishTimeLocale "%d/%m-%Y"   s <|>
-                                     parseTime swedishTimeLocale "%A%d/%m\8211\&%Y" s <|> -- \8211\& is endash
-                                     parseTime swedishTimeLocale "%d/%m\8211\&%Y"   s     -- \8211\& is endash
+                    let parsedDate = getAlt $ foldMap (Alt . flip (parseTime swedishTimeLocale) s)
+                          [ "%A%d-%m-%Y"
+                          , "%d-%m-%Y"
+                          , "%A%d/%m-%Y"
+                          , "%d/%m-%Y"
+                          , "%A%d/%m\8211\&%Y" -- \8211\& is endash
+                          , "%d/%m\8211\&%Y"   -- \8211\& is endash
+                          ]
                         sameDay = pure day == parsedDate
                      in if | sameDay && length v' >= 9 -> pure v'
                            | sameDay                   -> pure mempty
