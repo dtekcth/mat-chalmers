@@ -102,13 +102,13 @@ parse day =
                   >=> (.: "text")
                   >=> filterM (pure . not . isSpace)
                   >=> \s ->
-                    let seperators = ["-", "/", "\8211\&", ""]
+                    let separators = ["-", "/", "\8211\&", ""]
                           -- Order here matters, since 01-09-2025 could be parsed as 01 09 -2025, which is a valid date
                         parsedDate = getAlt . foldMap (Alt . flip (parseTime swedishTimeLocale) s) $
                           (\a b c -> a <> "%d" <> b <> "%m" <> c <> "%Y") <$>
-                            ("" : (("%A" <> ) <$> seperators)) <*>
-                            seperators <*>
-                            seperators
+                            ("" : (("%A" <> ) <$> separators)) <*>
+                            separators <*>
+                            separators
                         sameDay = pure day == parsedDate
                      in if | sameDay && length v' >= 9 -> pure v'
                            | sameDay                   -> pure mempty
