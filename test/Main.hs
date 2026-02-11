@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase, OverloadedStrings #-}
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.ByteString.Lazy.Char8    as BL8
 import qualified Data.Text.Lazy                as T
@@ -46,14 +46,14 @@ main = hspec $ do
     "parses a blob of JSON without error"
     ( testFun
         ((Right . NE.fromList) [ Menu
-            (T.pack "Street food")
-            (T.pack "Chicken africana, banan, mango raja, ris")
+            "Street food"
+            "Chicken africana, banan, mango raja, ris"
         , Menu
-            (T.pack "Greens")
-            (T.pack "Indisklinsgryta, zucchini, aubergin, ingef\228ra, koriander, ris")
+            "Greens"
+            "Indisklinsgryta, zucchini, aubergin, ingef\228ra, koriander, ris"
         , Menu
-            (T.pack "Nordic")
-            (T.pack "F\228rskost bakad sej, vitvinss\229s, broccoli, potatis")
+            "Nordic"
+            "F\228rskost bakad sej, vitvinss\229s, broccoli, potatis"
         ])
     $ parse
         "Swedish"
@@ -66,17 +66,17 @@ main = hspec $ do
     "parses a blob of JSON without error, but it has an dish without dishType"
     ( testFun
         ((Right . NE.fromList) [ Menu
-            (T.pack "Unknown menu")
-            (T.pack "Fläskfilé, svampsås & rostad klyftpotatis")
+            "Unknown menu"
+            "Fläskfilé, svampsås & rostad klyftpotatis"
         , Menu
-            (T.pack "Greens")
-            (T.pack "Bönburgare, syrad vitkål- morot, vitlöksdressing & rostad potatis")
+            "Greens"
+            "Bönburgare, syrad vitkål- morot, vitlöksdressing & rostad potatis"
         , Menu
-            (T.pack "Street food")
-            (T.pack "Färskost bakad fisk, vitvinssås, broccoli, potatis")
+            "Street food"
+            "Färskost bakad fisk, vitvinssås, broccoli, potatis"
         , Menu
-            (T.pack "Nordic")
-            (T.pack "Köttbullar, gräddsås, potatispuré, rårörda lingon, pressgurka")
+            "Nordic"
+            "Köttbullar, gräddsås, potatispuré, rårörda lingon, pressgurka"
         ])
     $ parse
         "Swedish"
@@ -90,14 +90,14 @@ main = hspec $ do
       s1 <- BL.readFile "test/linsen1.json"
       testFun
         ((Right . NE.fromList) [ Menu
-            (T.pack "Raggmunk.")
-            (T.pack "Stekt Fläsk, Lingon, Persilja.")
+            "Raggmunk."
+            "Stekt Fläsk, Lingon, Persilja."
         , Menu
-            (T.pack "Pocherad Dagens Fångst.")
-            (T.pack "Sandefjordsås, Brocoli, Brynt Lime, Gräslök Stekt Potatis.")
+            "Pocherad Dagens Fångst."
+            "Sandefjordsås, Brocoli, Brynt Lime, Gräslök Stekt Potatis."
         , Menu
-            (T.pack "Dagens Pasta.")
-            (T.pack "Tortelioni, Tryffelsås, Baby Spenat, Grana Padano, Roccola.")
+            "Dagens Pasta."
+            "Tortelioni, Tryffelsås, Baby Spenat, Grana Padano, Roccola."
         ]) (L.parse
               (fromGregorian 2024 09 24)
               (fromJust $ decode s1))
@@ -129,18 +129,37 @@ main = hspec $ do
     (do
       s4 <- BL.readFile "test/linsen4.json"
       testFun ((Right . NE.fromList) [ Menu
-            (T.pack "Lammfärsbiffar.")
-            (T.pack "Ratatouille, Tzatziki, Rosmarin, Klyftpotatis.")
+            "Lammfärsbiffar."
+            "Ratatouille, Tzatziki, Rosmarin, Klyftpotatis."
         , Menu
-            (T.pack "Halstrad sejrygg.")
-            (T.pack "Gubbröra, Babyspenat, Dill, Palsternacka pure.")
+            "Halstrad sejrygg."
+            "Gubbröra, Babyspenat, Dill, Palsternacka pure."
         , Menu
-            (T.pack "Vego biffar.")
-            (T.pack "Ratatouille, Tzatziki, Rosmarin, Klyftpotatis.")
+            "Vego biffar."
+            "Ratatouille, Tzatziki, Rosmarin, Klyftpotatis."
         ])
         (L.parse
               (fromGregorian 2025 03 17)
               (fromJust $ decode s4))
+    )
+
+  describe "Cafe Linsen" $ it
+    "parses a blob of JSON without error, with a new layout"
+    (do
+      s5 <- BL.readFile "test/linsen5.json"
+      testFun ((Right . NE.fromList) [ Menu
+            "Kalv Wallenbergare."
+            "Gröna Ärtor, Lingon, Skirat Smör, Persilja, Potatis Pure."
+        , Menu
+            "Stekt Dagens Fångst."
+            "Skarpsås, Fänkål, Syltat Lök, Citron, Dill, Kokt Potatis."
+        , Menu
+            "Subzi Thal."
+            "Lins Curry, Aloo Gobhi, Raita, Koriander, Ris."
+        ])
+        (L.parse
+              (fromGregorian 2026 01 30)
+              (fromJust $ decode s5))
     )
 
   describe "The Wijkander's"
@@ -149,32 +168,24 @@ main = hspec $ do
         s1 <- BL.readFile "test/190517 wijkanders.html"
         testFun
           ((Right . NE.fromList) [ Menu
-            (T.pack "Fisk")
-            (T.pack
-              "Havets Wallenbergare, kallpressad rapsolja, ärtor, dill & potatismos"
-            )
+            "Fisk"
+            "Havets Wallenbergare, kallpressad rapsolja, ärtor, dill & potatismos"
           , Menu
-            (T.pack "Kött")
-            (T.pack
-              "Helstekt kotlettred, potatisgratäng, skysås & örtbakad tomat"
-            )
+            "Kött"
+            "Helstekt kotlettred, potatisgratäng, skysås & örtbakad tomat"
           ])
           (getWijkanders (fromGregorian 2019 05 17) s1)
         s2 <- BL.readFile "test/190913 wijkanders.html"
         testFun
           ((Right . NE.fromList) [ Menu
-            (T.pack "Vegetarisk ")
-            (T.pack
-              "Pasta, svamp, grädde, citron, grana padano & rotfruktschips"
-            )
+            "Vegetarisk "
+            "Pasta, svamp, grädde, citron, grana padano & rotfruktschips"
           , Menu
-            (T.pack "Fisk")
-            (T.pack "Torskbiff, brynt smör, hackat ägg, dill- & potatismos")
+            "Fisk"
+            "Torskbiff, brynt smör, hackat ägg, dill- & potatismos"
           , Menu
-            (T.pack "Kött")
-            (T.pack
-              "Helstekt kotlettrad, rostad potatis, svampsås & inlagd gurka"
-            )
+            "Kött"
+            "Helstekt kotlettrad, rostad potatis, svampsås & inlagd gurka"
           ])
           (getWijkanders (fromGregorian 2019 09 13) s2)
 

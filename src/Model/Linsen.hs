@@ -28,6 +28,7 @@ import           Data.Char                                ( isSpace )
 import           Data.Functor                             ( (<&>) )
 import           Data.List.Extra                          ( (!?) )
 import           Data.List.NonEmpty                       ( NonEmpty )
+import           Data.Monoid                              ( Alt(..) )
 import           Data.Text.Lazy                           ( Text
                                                           , all
                                                           , replace
@@ -102,8 +103,14 @@ parse day =
                   >=> (.: "text")
                   >=> filterM (pure . not . isSpace)
                   >=> \s ->
-                    let sameDay = pure day == parseTime swedishTimeLocale "%A%d-%m-%Y" s ||
-                                  pure day == parseTime swedishTimeLocale "%d-%m-%Y" s
+                    let separators = ["-", "/", "\8211\&", ""]
+                          -- Order here matters, since 01-09-2025 could be parsed as 01 09 -2025, which is a valid date
+                        parsedDate = getAlt . foldMap (Alt . flip (parseTime swedishTimeLocale) s) $
+                          (\a b c -> a <> "%d" <> b <> "%m" <> c <> "%Y") <$>
+                            ("" : (("%A" <> ) <$> separators)) <*>
+                            separators <*>
+                            separators
+                        sameDay = pure day == parsedDate
                      in if | sameDay && length v' >= 9 -> pure v'
                            | sameDay                   -> pure mempty
                            | otherwise                 -> fail "Unable to parse day"))
