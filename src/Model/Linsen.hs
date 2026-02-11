@@ -27,6 +27,7 @@ import qualified Data.ByteString.Lazy.Char8    as BL8
 import           Data.Char                                ( isSpace )
 import           Data.Functor                             ( (<&>) )
 import           Data.List.Extra                          ( (!?) )
+import           Data.List.NonEmpty                       ( NonEmpty )
 import           Data.Monoid                              ( Alt(..) )
 import           Data.Text.Lazy                           ( Text
                                                           , all
@@ -66,9 +67,9 @@ fetch =
   get "https://cafe-linsen.se/api/menu" >>= asValue >>= (^.^ responseBody)
 
 parse
-  :: Day                  -- ^ Day to parse
-  -> Value                -- ^ JSON result from `fetch`
-  -> Either NoMenu [Menu] -- ^ Either list of parsed `Menu`s or `NoMenu` error
+  :: Day                           -- ^ Day to parse
+  -> Value                         -- ^ JSON result from `fetch`
+  -> Either NoMenu (NonEmpty Menu) -- ^ Either non-empty list of parsed `Menu`s or `NoMenu` error
 parse day =
     failWithNoMenu
       (parseEither

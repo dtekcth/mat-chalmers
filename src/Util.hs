@@ -6,6 +6,7 @@ import           Data.ByteString.Lazy                     ( ByteString )
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.Word8                    as W8
 
+import           Data.List.NonEmpty                       ( NonEmpty(..) )
 import           Data.Thyme                               ( TimeLocale (..) )
 import           Effectful                                ( Eff )
 import           Effectful.Exception                      ( SomeException )
@@ -22,11 +23,10 @@ import           Lens.Micro.Platform
 takeNext :: [a] -> [a]
 takeNext = take 1 . drop 1
 
--- | Turn a list of Menu into an `Either NoMenu [Menu]`
-menusToEitherNoLunch :: [Menu] -> Either NoMenu [Menu]
+menusToEitherNoLunch :: [Menu] -> Either NoMenu (NonEmpty Menu)
 menusToEitherNoLunch = \case
   [] -> Left NoLunch
-  xs -> Right xs
+  (x:xs) -> Right (x :| xs)
 
 -- | Remove text tags that only contain whitespace.
 removeWhitespaceTags :: [Tag ByteString] -> [Tag ByteString]
@@ -72,5 +72,5 @@ swedishTimeLocale = TimeLocale
         }
 
 -- If something raises an exception while fetching and parsing data, default handler for saving said exception.
-networkExceptionHandler :: (SomeException -> Eff es (Either NoMenu [Menu]))
+networkExceptionHandler :: (SomeException -> Eff es (Either NoMenu (NonEmpty Menu)))
 networkExceptionHandler = pure . Left . NMExceptionRaised . show
