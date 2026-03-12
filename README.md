@@ -31,7 +31,7 @@ the `jassob` or `pingu` cache:
 
 ```
 cachix use jassob   # Only needed once
-cachix use pingu    # Probably more up to date as of 5/6-24
+cachix use pingu    # Probably more up to date as of 12/3-26
 ```
 
 ### Updating the view?
