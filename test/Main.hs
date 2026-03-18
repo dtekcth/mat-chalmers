@@ -52,7 +52,7 @@ main = hspec $ do
         ])
     $ parse
         ["Swedish", "Svenska"]
-        (fromJust . decode $ BL8.pack
+        (fromJust $ decode
           "{\"data\":{\"dishOccurrencesByTimeRange\":[{\"displayNames\":[{\"name\":\"Chicken africana, banan, mango raja, ris\",\"categoryName\":\"Swedish\"},{\"name\":\"Chicken africana, banana, mango raja, rice\",\"categoryName\":\"English\"}],\"startDate\":\"09/25/2023 00:00:00\",\"dishType\":{\"name\":\"Street food\"},\"dish\":{\"name\":\"Kyckling, het paprikas\195\165s & ris\"}},{\"displayNames\":[{\"name\":\"Indian linseed stew, zucchini, aubergine, ginger, coriander\",\"categoryName\":\"English\"},{\"name\":\"Indisklinsgryta, zucchini, aubergin, ingef\195\164ra, koriander, ris\",\"categoryName\":\"Swedish\"}],\"startDate\":\"09/25/2023 00:00:00\",\"dishType\":{\"name\":\"Greens\"},\"dish\":{\"name\":\"Vegan, pasta, linsbolognese\"}},{\"displayNames\":[{\"name\":\"F\195\164rskost bakad sej, vitvinss\195\165s, broccoli, potatis\",\"categoryName\":\"Swedish\"},{\"name\":\"Cream cheese baked saithe, whitewine sauce, broccoli, potatoes\",\"categoryName\":\"English\"}],\"startDate\":\"09/25/2023 00:00:00\",\"dishType\":{\"name\":\"Nordic\"},\"dish\":{\"name\":\"Bakad fisk, vitvinss\195\165s, potatispur\195\169\"}}]}}\n"
         )
     )
@@ -75,7 +75,7 @@ main = hspec $ do
         ])
     $ parse
         ["Swedish", "Svenska"]
-        (fromJust . decode $ BL8.pack "{\"data\":{\"dishOccurrencesByTimeRange\":[{\"dish\":{\"name\":\"Fl\195\164skfil\195\169, svamps\195\165s & rostad klyftpotatis\"},\"dishType\":null,\"displayNames\":[{\"categoryName\":\"Swedish\",\"name\":\"Fl\195\164skfil\195\169, svamps\195\165s & rostad klyftpotatis\"}],\"startDate\":\"08/14/2024 00:00:00\"},{\"dish\":{\"name\":\"B\195\182nbiff, rostad matvetesallad, purjol\195\182k, citroncr\195\168me\\n\"},\"dishType\":{\"name\":\"Greens\"},\"displayNames\":[{\"categoryName\":\"Swedish\",\"name\":\"B\195\182nburgare, syrad vitk\195\165l- morot, vitl\195\182ksdressing & rostad potatis\"},{\"categoryName\":\"English\",\"name\":\"Beanburger, pickled cabbage- carrot, garlic dressin & roasted potatoe\"}],\"startDate\":\"08/14/2024 00:00:00\"},{\"dish\":{\"name\":\"Bakad fisk, vitvinss\195\165s, potatispur\195\169\"},\"dishType\":{\"name\":\"Street food\"},\"displayNames\":[{\"categoryName\":\"Swedish\",\"name\":\"F\195\164rskost bakad fisk, vitvinss\195\165s, broccoli, potatis\"},{\"categoryName\":\"English\",\"name\":\"Cream cheese baked fish, whitewine sauce, broccoli, potatoes\"}],\"startDate\":\"08/14/2024 00:00:00\"},{\"dish\":{\"name\":\"K\195\182ttbullar, gr\195\164dds\195\165s, potatispur\195\169, lingon\"},\"dishType\":{\"name\":\"Nordic\"},\"displayNames\":[{\"categoryName\":\"English\",\"name\":\"Meat balls, cream sauce, mashed potato, lingonberries, pickled cucumber\"},{\"categoryName\":\"Swedish\",\"name\":\"K\195\182ttbullar, gr\195\164dds\195\165s, potatispur\195\169, r\195\165r\195\182rda lingon, pressgurka\"}],\"startDate\":\"08/14/2024 00:00:00\"}]}}"
+        (fromJust $ decode "{\"data\":{\"dishOccurrencesByTimeRange\":[{\"dish\":{\"name\":\"Fl\195\164skfil\195\169, svamps\195\165s & rostad klyftpotatis\"},\"dishType\":null,\"displayNames\":[{\"categoryName\":\"Swedish\",\"name\":\"Fl\195\164skfil\195\169, svamps\195\165s & rostad klyftpotatis\"}],\"startDate\":\"08/14/2024 00:00:00\"},{\"dish\":{\"name\":\"B\195\182nbiff, rostad matvetesallad, purjol\195\182k, citroncr\195\168me\\n\"},\"dishType\":{\"name\":\"Greens\"},\"displayNames\":[{\"categoryName\":\"Swedish\",\"name\":\"B\195\182nburgare, syrad vitk\195\165l- morot, vitl\195\182ksdressing & rostad potatis\"},{\"categoryName\":\"English\",\"name\":\"Beanburger, pickled cabbage- carrot, garlic dressin & roasted potatoe\"}],\"startDate\":\"08/14/2024 00:00:00\"},{\"dish\":{\"name\":\"Bakad fisk, vitvinss\195\165s, potatispur\195\169\"},\"dishType\":{\"name\":\"Street food\"},\"displayNames\":[{\"categoryName\":\"Swedish\",\"name\":\"F\195\164rskost bakad fisk, vitvinss\195\165s, broccoli, potatis\"},{\"categoryName\":\"English\",\"name\":\"Cream cheese baked fish, whitewine sauce, broccoli, potatoes\"}],\"startDate\":\"08/14/2024 00:00:00\"},{\"dish\":{\"name\":\"K\195\182ttbullar, gr\195\164dds\195\165s, potatispur\195\169, lingon\"},\"dishType\":{\"name\":\"Nordic\"},\"displayNames\":[{\"categoryName\":\"English\",\"name\":\"Meat balls, cream sauce, mashed potato, lingonberries, pickled cucumber\"},{\"categoryName\":\"Swedish\",\"name\":\"K\195\182ttbullar, gr\195\164dds\195\165s, potatispur\195\169, r\195\165r\195\182rda lingon, pressgurka\"}],\"startDate\":\"08/14/2024 00:00:00\"}]}}"
         )
     )
 
@@ -155,4 +155,26 @@ main = hspec $ do
         (L.parse
               (fromGregorian 2026 01 30)
               (fromJust $ decode s5))
+    )
+
+  describe "Wijkanders" $ it
+    "parses a blob of JSON without error"
+    ( testFun
+        ((Right . NE.fromList) [ Menu
+            "Vegetarisk"
+            "Grekisk paj, spenat, fetaost, oliver, soltorkade tomater & ruccola"
+        , Menu
+            "Fisk"
+            "Bakad fisk, jordärtskockspuré, blåmusselsky & dill"
+        , Menu
+            "Kött"
+            "Oxbringa, senapssås, kokt potatis, pepparrot & persilja"
+        , Menu
+            "Övrigt"
+            "Wijkanders Ceasarsallad"
+        ])
+    $ parse
+        ["Swedish", "Svenska"]
+        (fromJust $ decode "{\"data\":{\"dishOccurrencesByTimeRange\":[{\"displayNames\":[{\"name\":\"Greek pie, spinach, feta cheese, olives, sun-dried tomatoes & arugula salad\",\"categoryName\":\"Engelska\"},{\"name\":\"Grekisk paj, spenat, fetaost, oliver, soltorkade tomater & ruccola\",\"categoryName\":\"Svenska\"}],\"startDate\":\"03/18/2026 00:00:00\",\"dishType\":{\"name\":\"Vegetarisk\"},\"dish\":{\"name\":\"Paj, mejeri, ost, \195\164gg, n\195\182tter, sallad\"}},{\"displayNames\":[{\"name\":\"Baked fish, jerusalem artichoke pure\195\169, blue mussel cloud & dill\",\"categoryName\":\"Engelska\"},{\"name\":\"Bakad fisk, jord\195\164rtskockspur\195\169, bl\195\165musselsky & dill\",\"categoryName\":\"Svenska\"}],\"startDate\":\"03/18/2026 00:00:00\",\"dishType\":{\"name\":\"Fisk\"},\"dish\":{\"name\":\"Bakad fisk, vitvinss\195\165s, potatispur\195\169\"}},{\"displayNames\":[{\"name\":\"Oxbringa, senapss\195\165s, kokt potatis, pepparrot & persilja\",\"categoryName\":\"Svenska\"},{\"name\":\"Brisket of beef, mustard sauce, boiled potatoes, horseradish & parsley\",\"categoryName\":\"Engelska\"}],\"startDate\":\"03/18/2026 00:00:00\",\"dishType\":{\"name\":\"K\195\182tt\"},\"dish\":{\"name\":\"Oxbringa, rotfruktsstomp & senapss\195\165s\"}},{\"displayNames\":[{\"name\":\"Wijkanders Ceasarsallad\",\"categoryName\":\"Svenska\"},{\"name\":\"Wijkanders Ceasarsallad\",\"categoryName\":\"Engelska\"}],\"startDate\":\"03/18/2026 00:00:00\",\"dishType\":null,\"dish\":{\"name\":\"Wijkanders Ceasarsallad\"}}]}}"
+        )
     )
