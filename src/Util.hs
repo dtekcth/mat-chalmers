@@ -2,36 +2,20 @@
 
 module Util where
 
-import           Data.ByteString.Lazy                     ( ByteString )
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.Word8                    as W8
-
 import           Data.List.NonEmpty                       ( NonEmpty(..) )
 import           Data.Thyme                               ( TimeLocale (..) )
 import           Effectful                                ( Eff )
 import           Effectful.Exception                      ( SomeException )
-import           Text.HTML.TagSoup                        ( Tag
-                                                          , isTagText
-                                                          )
-import           Text.HTML.TagSoup.Match                  ( tagText )
-
 import           Model.Types                              ( Menu
                                                           , NoMenu(..)
                                                           )
 import           Lens.Micro.Platform
-
-takeNext :: [a] -> [a]
-takeNext = take 1 . drop 1
 
 menusToEitherNoLunch :: [Menu] -> Either NoMenu (NonEmpty Menu)
 menusToEitherNoLunch = \case
   [] -> Left NoLunch
   (x:xs) -> Right (x :| xs)
 
--- | Remove text tags that only contain whitespace.
-removeWhitespaceTags :: [Tag ByteString] -> [Tag ByteString]
-removeWhitespaceTags =
-  filter (or . ([not . isTagText, tagText (not . BL.all W8.isSpace)] <*>) . pure)
 
 (^.^) :: Monad m => s -> Getting a s a -> m a
 (^.^)  = (pure .) . (^.)

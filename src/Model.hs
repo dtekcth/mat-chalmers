@@ -60,7 +60,6 @@ import           Text.Printf                              ( printf )
 import           Config
 import           Model.Types
 import           Model.Karen
-import           Model.Wijkanders
 import           Model.Linsen
 
 -- | Refreshes menus.
@@ -127,7 +126,7 @@ update = do
              "karrestaurangen"
              "21f31565-5c2b-4b47-d2a1-08d558129279"
     , karenR "S.M.A.K." "smak" "3ac68e11-bcee-425e-d2a8-08d558129279"
-    , fetchAndCreateWijkanders day'
+    , karenR "Wijkanders" "wijkanders" "C296E4FE-641C-4599-5874-08DE731FD655"
     , fetchAndCreateLinsen day'
     ]
 
