@@ -100,10 +100,10 @@ fetch restaurantUUID day =
 
 -- | Parses menus from Kåren's GraphQL API.
 parse
-  :: Language                      -- ^ Language
+  :: [Language]                    -- ^ Languages
   -> Value                         -- ^ JSON result from `fetch`
   -> Either NoMenu (NonEmpty Menu) -- ^ Either non-empty list of parsed `Menu`s or `NoMenu` error
-parse lang =
+parse langs =
     failWithNoMenu
       (parseEither
         (   withObject "Parse meals"
@@ -122,16 +122,16 @@ parse lang =
   menuParser :: Value -> Parser Menu
   menuParser = withObject "Menu Object" $ \obj ->
     Menu
-      <$> (obj .: "dishType" >>= maybe (pure "Unknown menu") (.: "name"))
+      <$> (obj .: "dishType" >>= maybe (pure "Övrigt") (.: "name"))
       <*> ((obj .: "displayNames") >>= withArray
             "An array of meal names"
             (   mapM
                 ( withObject "The name of the meal in many languages"
                 $ \o' -> (,) <$> (o' .: "categoryName") <*> (o' .: "name")
                 )
-            >=> ( maybe (fail $ "Couldn't find the language: " <> show lang)
+            >=> ( maybe (fail $ "Couldn't find the language: " <> show langs)
                         (pure . snd)
-                . find ((== lang) . fst)
+                . find ((`elem` langs) . fst)
                 )
             )
           )
@@ -153,4 +153,4 @@ fetchAndCreateRestaurant day title tag uuid =
       <> uuid
       )
     <$> handle networkExceptionHandler
-          (parse "Swedish" <$> fetch (unpack uuid) day)
+          (parse ["Swedish", "Svenska"] <$> fetch (unpack uuid) day)
