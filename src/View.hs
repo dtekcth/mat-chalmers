@@ -69,5 +69,5 @@ sitefooter = footer_
     a_ [href_ "https://github.com/dtekcth/mat-chalmers/issues/new", class_ "text-orange-500 visited:text-orange-800"]
        "File an issue!"
     " // "
-    a_ [href_ "https://kortladdning3.chalmerskonferens.se/", class_ "text-orange-500 visited:text-orange-800"] "Top-up your card"
+    a_ [href_ "https://microdeb.me/chalmersstudentkar/cardroute", class_ "text-orange-500 visited:text-orange-800"] "Top-up your card"
   )
