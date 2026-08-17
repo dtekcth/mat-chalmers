@@ -54,8 +54,8 @@ import           Util                                     ( menusToEitherNoLunch
 -- brittany-disable-next-binding
 graphQLQuery :: String
 graphQLQuery
-  = [str|query DishOccurrencesByTimeRangeQuery($mealProvidingUnitID: String, $startDate: String, $endDate: String) {
-        |  dishOccurrencesByTimeRange(mealProvidingUnitID: $mealProvidingUnitID, startDate: $startDate, endDate: $endDate) {
+  = [str|query DishOccurrencesByDay($mealProvidingUnitID: String, $day: String) {
+        |  dishOccurrencesByDay(mealProvidingUnitID: $mealProvidingUnitID, day: $day) {
         |    ...MenuDishOccurrence
         |  }
         |}
@@ -90,11 +90,10 @@ fetch restaurantUUID day =
  where
   requestData = object
     [ "query" .= graphQLQuery
-    , "operationName" .= ("DishOccurrencesByTimeRangeQuery" :: String)
+    , "operationName" .= ("DishOccurrencesByDay" :: String)
     , "variables" .= object
       [ "mealProvidingUnitID" .= restaurantUUID
-      , "startDate" .= showGregorian day
-      , "endDate" .= showGregorian day
+      , "day" .= showGregorian day
       ]
     ]
 
@@ -108,7 +107,7 @@ parse langs =
       (parseEither
         (   withObject "Parse meals"
         $   (.: "data")
-        >=> (.: "dishOccurrencesByTimeRange")
+        >=> (.: "dishOccurrencesByDay")
         >=> mapM menuParser
         )
       )
