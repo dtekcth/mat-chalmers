@@ -14,7 +14,7 @@ on:
 
 jobs:
   create-release-and-deploy:
-    uses: dtekcth/workflows/.github/workflows/create-release-and-deploy.yml@c30a8ecf6ebd1d4194869cb98458abfe1cd5e702 # v1.3.6
+    uses: dtekcth/workflows/.github/workflows/create-release-and-deploy.yml@49637020f4d7f23a0f4f2c41b50aac6cfa2cfc73 # v1.4.0
     permissions:
       contents: write
       packages: write
