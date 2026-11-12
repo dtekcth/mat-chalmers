@@ -51,6 +51,7 @@ import           Web.Twain                                ( get
                                                           , notFound
                                                           , redirect302
                                                           , send
+                                                          , json
                                                           )
 
 import           Config
@@ -117,4 +118,5 @@ webserver Config{_cPort=webserverPort} viewRef upd =
     (notFound (send $ html "not found..."))
     [ get "/"  (liftIO (readIORef viewRef) >>= send . html . encodeUtf8 . render)
     , get "/r" (liftIO (runEff . runConcurrent $ tryPutMVar upd ()) >> send (redirect302 "/"))
+    , get "/api/v1" (liftIO (readIORef viewRef) >>= send . json)
     ]
