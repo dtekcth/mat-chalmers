@@ -15,6 +15,7 @@ import           Data.Aeson                               ( (.=)
                                                           , object
                                                           , ToJSON
                                                           , toJSON
+                                                          , Value (Null)
                                                           )
 import           Data.Aeson.Types                         ( emptyArray )
 import           Lens.Micro.Platform                      ( makeLenses )
@@ -42,11 +43,12 @@ data Restaurant = Restaurant
   } deriving (Show)
 
 instance ToJSON Restaurant where
-  toJSON (Restaurant {..}) = object (
+  toJSON (Restaurant {..}) = object $
     [ "name" .= name
     , "url" .= url
-    , "menu" .= either (const emptyArray) toJSON menu
-    ] ++ either (\a -> ["reason-empty-menu" .= toJSON a]) (const []) menu)
+    ] ++ either ((: [ "menu" .= emptyArray ]) . ( "reason-empty-menu" .= ) . toJSON)
+                ((: [ "reason-empty-menu" .= Null ]) . ( "menu" .= ) . toJSON)
+                menu
 
 data NoMenu
   = NoLunch
