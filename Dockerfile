@@ -1,4 +1,4 @@
-from haskell:9.6.7 as bin
+from haskell:9.10.3 as bin
 workdir /app/user
 copy *.cabal ./
 
