@@ -71,10 +71,9 @@ data Menu = Menu
   deriving (Eq, Show)
 
 instance ToJSON Menu where
-  toJSON (Menu {..}) = object
-    [ "name" .= _mName
-    , "food" .= _mFood
-    ]
+  toJSON = (object .) . (<>) <$>
+             (pure . ("name" .=) . _mName) <*>
+             (pure . ("food" .=) . _mFood)
 
 
 makeLenses ''Menu
