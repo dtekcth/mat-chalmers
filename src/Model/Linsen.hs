@@ -129,7 +129,7 @@ parse day =
                           (FishDish, vs) -> [vs]
                           (VegDish , vs) -> [vs]
                           _       -> [])
-               <=< ap (zipWithM sumFood) tail
+               <=< ap (zipWithM sumFood) (drop 1)
 
   sumFood :: Object -> Object -> Parser Menu
   sumFood a b = Menu <$> getFood a <*> getFood b

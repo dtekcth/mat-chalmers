@@ -4,7 +4,6 @@
 
 module Config where
 
-import           Data.Foldable                            ( foldl' )
 import           Lens.Micro.Platform
 
 -- | Configuration record

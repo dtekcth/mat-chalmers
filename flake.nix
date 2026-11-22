@@ -4,13 +4,16 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    # Temporary until nix builds it again
+    wreq-effectful.url = "github:The1Penguin/wreq-effectful";
+    wreq-effectful.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   nixConfig.allow-import-from-derivation = true; # cabal2nix uses IFD
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, wreq-effectful }:
     let
-      ghcVer = "ghc96";
+      ghcVer = "ghc910";
       makeHaskellOverlay = overlay: final: prev: {
         haskell = prev.haskell // {
           packages = prev.haskell.packages // {
@@ -77,6 +80,7 @@
                        ${prev.tailwindcss}/bin/tailwindcss --content src/View.hs --output static/style.css --minify
               '';
             });
+            wreq-effectful = wreq-effectful.packages."x86_64-linux".wreq-effectful;
 
             # here's how to do hacks to the package set
             # don't run the test suite
