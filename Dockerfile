@@ -15,7 +15,7 @@ run curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/downlo
 run cabal v2-install --install-method copy --installdir . --overwrite-policy=always
 
 
-from debian:12.5-slim
+from debian:13.7-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
 run apt-get update && apt-get install --no-install-recommends -y ca-certificates \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
